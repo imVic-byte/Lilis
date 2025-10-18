@@ -1,0 +1,102 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Pedido</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    {% include 'main/navbar.html' %}
+
+    <div class="container py-5">
+        <form method="POST" action="{% url 'purchase_order_confirm' %}">
+            {% csrf_token %}
+            <input type="hidden" name="supplier_info" value='{
+                "id": "{{ supplier.id }}",
+                "bussiness_name": "{{ supplier.bussiness_name|escapejs }}",
+                "rut": "{{ supplier.rut|escapejs }}",
+                "email": "{{ supplier.email|escapejs }}",
+                "phone": "{{ supplier.phone|escapejs }}",
+                "trade_terms": "{{ supplier.trade_terms|escapejs }}"
+            }'>
+
+            <div class="row mb-4">
+                <div class="col-md-8 offset-md-2">
+                    <div class="row">
+                        <div class="card col-6 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ supplier.bussiness_name }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">RUT: {{ supplier.rut }}</h6>
+                                <p class="mb-1"><strong>Email:</strong> {{ supplier.email|default:"No especificado" }}</p>
+                                <p class="mb-1"><strong>Teléfono:</strong> {{ supplier.phone|default:"No especificado" }}</p>
+                                <p class="mb-0"><strong>Términos comerciales:</strong> {{ supplier.trade_terms|default:"No especificado" }}</p>
+                            </div>
+                        </div>
+                        <div class="card col-6 shadow-sm">
+                            <div class="card-body">
+                                <strong>Creado por: {{user.username}} - {{user.email}}</strong>
+                                <strong>Con fecha: {% now "d/m/Y" %}</strong>
+                                {{ form|crispy }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-10 offset-md-1">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Materias Primas Seleccionadas</h5>
+                            <table class="table table-bordered table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Precio unitario</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for raw in raw_materials %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ raw.name }}</td>
+                                        <td>${{ raw.price }}</td>
+                                        <td>{{raw.quantity}}</td>
+                                        <td class="subtotal">${{ raw.subtotal|floatformat:2 }}</td>
+
+                                        <!-- Input hidden para enviar JSON -->
+                                        <input type="hidden" name="raw_{{ forloop.counter }}" class="raw-json" value='{
+                                            "id": "{{ raw.id }}",
+                                            "name": "{{ raw.name|escapejs }}",
+                                            "description": "{{ raw.description|escapejs }}",
+                                            "price": "{{ raw.price }}",
+                                            "quantity": "{{ raw.quantity }}",
+                                            "subtotal": "{{ raw.subtotal|floatformat:2 }}",
+                                            "expiration_date": "{{ raw.expiration_date|escapejs }}",
+                                            "is_active": true
+                                        }'>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <div class="text-end mt-3">
+                                <h5>Total del Pedido: $<span id="total_order">{{ total_order|floatformat:2 }}</span></h5>
+                                <input type="hidden" name="total_price" value="{{ total_order }}">
+                                <button type="submit" class="btn btn-success btn-lg">Realizar Pedido</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+[
+  { "model": "Products.PriceHistories", "pk": 1, "fields": { "fk_raw_supplier": 1, "price": "1200.50", "date": "2025-01-10" } },
+  { "model": "Products.PriceHistories", "pk": 2, "fields": { "fk_raw_supplier": 2, "price": "800.00", "date": "2025-02-15" } },
+  { "model": "Products.PriceHistories", "pk": 3, "fields": { "fk_raw_supplier": 3, "price": "950.75", "date": "2025-03-20" } },
+
+  { "model": "Products.PriceHistories", "pk": 4, "fields": { "fk_raw_supplier": 4, "price": "1500.00", "date": "2025-01-18" } },
+  { "model": "Products.PriceHistories", "pk": 5, "fields": { "fk_raw_supplier": 5, "price": "2200.00", "date": "2025-02-12" } },
+  { "model": "Products.PriceHistories", "pk": 6, "fields": { "fk_raw_supplier": 6, "price": "3100.40", "date": "2025-03-25" } },
+
+  { "model": "Products.PriceHistories", "pk": 7, "fields": { "fk_raw_supplier": 7, "price": "500.00", "date": "2025-01-30" } },
+  { "model": "Products.PriceHistories", "pk": 8, "fields": { "fk_raw_supplier": 8, "price": "750.00", "date": "2025-02-05" } },
+  { "model": "Products.PriceHistories", "pk": 9, "fields": { "fk_raw_supplier": 9, "price": "680.25", "date": "2025-03-10" } },
+
+  { "model": "Products.PriceHistories", "pk": 10, "fields": { "fk_raw_supplier": 10, "price": "2000.00", "date": "2025-01-22" } },
+  { "model": "Products.PriceHistories", "pk": 11, "fields": { "fk_raw_supplier": 11, "price": "1850.90", "date": "2025-02-18" } },
+  { "model": "Products.PriceHistories", "pk": 12, "fields": { "fk_raw_supplier": 12, "price": "2300.60", "date": "2025-03-28" } },
+
+  { "model": "Products.PriceHistories", "pk": 13, "fields": { "fk_raw_supplier": 13, "price": "1450.00", "date": "2025-01-12" } },
+  { "model": "Products.PriceHistories", "pk": 14, "fields": { "fk_raw_supplier": 14, "price": "1750.30", "date": "2025-02-08" } },
+  { "model": "Products.PriceHistories", "pk": 15, "fields": { "fk_raw_supplier": 15, "price": "1600.80", "date": "2025-03-16" } }
+]

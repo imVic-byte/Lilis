@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lilis</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #d20a10;">
+    <div class="container-fluid">
+      <a class="" href="{% url 'dashboard' %}"> <img
+          src="https://www.lilis.cl/wp-content/uploads/2022/06/Logo-lilis-dorado-03.png" height="75px" width="75px"
+          alt=""></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+        aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="{% url 'products_list' %}">Productos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="#">Proveedores</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="{% url 'rawmaterial_list' %}">Materia Prima</a>
+          </li>
+          <li class="nav-item ">
+            <a class="nav-link text-warning " href="#">Usuarios</a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav mb-2 mb-lg-0">
+          {% if user.is_authenticated %}
+          <li class="nav-item me-2">
+            <a class="nav-link text-warning" href="">{{ request.user.name }}</a>
+
+
+          </li>
+          <li class="nav-item">
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="nav-link text-warning">Cerrar sesión</button>
+            </form>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="{% url 'login' %}">Iniciar Sesión</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
