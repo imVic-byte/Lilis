@@ -285,7 +285,7 @@ class RawMaterialForm(forms.ModelForm):
 class PriceHistoriesForm(forms.ModelForm):
     class Meta:
         model = PriceHistories
-        fields = ['unit_price', 'date', 'iva']
+        fields = ['product','unit_price', 'date', 'iva']
         labels = {
             'unit_price': 'Precio',
             'date': 'Fecha',
