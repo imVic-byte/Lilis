@@ -1,5 +1,4 @@
 from django.db import models
-from Accounts.models import Profile
 
 class Supplier(models.Model):
     bussiness_name = models.CharField(max_length=100)
@@ -23,24 +22,29 @@ class RawMaterial(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     is_perishable = models.BooleanField(default=False)
+    expiration_date = models.DateField(null=True, blank=True)
+    created_at = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="raw_materials")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="raw_materials")
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')])
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.name
     
-
 class Product(models.Model):
     name = models.CharField(max_length=100)
     sku = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey("Category", on_delete=models.PROTECT, related_name="products")
     is_perishable = models.BooleanField(default=False)
+    expiration_date = models.DateField(null=True, blank=True)
+    created_at = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')])
-
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    
     def __str__(self):
         return f'{self.name} - {self.sku}'
 
@@ -57,11 +61,9 @@ class Batch(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
     raw_material = models.ForeignKey(RawMaterial, on_delete=models.CASCADE, null=True)
     batch_code = models.CharField(max_length=100, unique=True)
-    expiration_date = models.DateField()
     min_quantity = models.DecimalField(max_digits=10, decimal_places=2)
     current_quantity = models.DecimalField(max_digits=10, decimal_places=2)
     max_quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.batch_code}"
