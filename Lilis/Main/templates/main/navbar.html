@@ -56,14 +56,19 @@
             <a class="nav-link text-warning " href="{% url 'product_batch_list' %}">Lotes de Productos</a>
           </li>
           {% endif %}
-          {% if perms.Sells.view_clients %}
+          {% if perms.Sells.view_client %}
           <li class="nav-item ">
             <a class="nav-link text-warning " href="{% url 'client_list_actives' %}">Clientes</a>
           </li>
           {% endif %}
-          {% if perms.Sells.view_ %}
+          {% if perms.Sells.view_location %}
           <li class="nav-item ">
             <a class="nav-link text-warning " href="{% url 'location_list' %}">Direcciones</a>
+          </li>
+          {% endif %}
+          {% if perms.Sells.view_warehouse %}
+          <li class="nav-item ">
+            <a class="nav-link text-warning " href="{% url 'warehouse_list' %}">Bodegas</a>
           </li>
           {% endif %}
         </ul>

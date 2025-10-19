@@ -107,14 +107,14 @@ def warehouse_view(request, id):
         warehouse = warehouse_service.model.objects.get(id=id)
         return render(request, 'sells/warehouse_view.html', {'warehouse': warehouse})
     else:
-        return redirect('list_warehouses')
+        return redirect('warehouse_list')
 
 def warehouse_create(request):
     form = warehouse_service.form_class()
     if request.method == 'POST':
         success, obj = warehouse_service.save(request.POST)
         if success:
-            return redirect('list_warehouses')
+            return redirect('warehouse_list')
         else:
             return render(request, 'sells/warehouse_create.html', {'form': obj})
     return render(request, 'sells/warehouse_create.html', {'form': form})
@@ -123,7 +123,7 @@ def warehouse_update(request, id):
     if request.method == 'POST':
         success, obj = warehouse_service.update(id, request.POST)
         if success:
-            return redirect('list_warehouses')
+            return redirect('warehouse_list')
         else:
             return render(request, 'sells/warehouse_update.html', {'form': obj})
     else:
@@ -135,7 +135,7 @@ def warehouse_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete(id)
         if success:
-            return redirect('sells/list_warehouses')
-    return redirect('list_warehouses')
+            return redirect('warehouse_list')
+    return redirect('warehouse_list')
 
 ###
