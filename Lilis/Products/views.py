@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .CRUD import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
+from .services import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
 from django.contrib.auth.decorators import login_required, permission_required
 
 category_service = CategoryService()
@@ -12,8 +12,8 @@ price_histories_service = PriceHistoriesService()
 
 #CATEGORIAS
 def category_list(request):
-    categories = category_service.get_categories()
-    return render(request, 'category.html', {'categories': categories})
+    categories = category_service.list()
+    return render(request, 'main/category_list.html', {'categories': categories})
 
 def category_create(request):
     form = category_service.form_class()
@@ -22,8 +22,8 @@ def category_create(request):
         if success:
             return redirect('category_list')
         else:
-            return render(request, 'category.html', {'form': obj})
-    return render(request, 'category.html', {'form': form})
+            return render(request, 'main/category_create.html', {'form': obj})
+    return render(request, 'main/category_create.html', {'form': form})
 
 def category_update(request, id):
     if request.method == 'POST':
@@ -33,7 +33,7 @@ def category_update(request, id):
     else:
         category = category_service.get(id)
         form = category_service.form_class(instance=category)
-    return render(request, 'category.html', {'form': form})
+    return render(request, 'main/category_update.html', {'form': form})
 
 def category_delete(request, id):
     if request.method == 'GET':

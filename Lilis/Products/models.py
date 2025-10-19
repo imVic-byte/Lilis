@@ -44,7 +44,7 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')])
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
     def __str__(self):
         return f'{self.name} - {self.sku}'
 
@@ -71,3 +71,11 @@ class Batch(models.Model):
     def get_product_price(self):
         last_price = self.product.price_histories.order_by('-date').first()
         return last_price.unit_price
+    
+    def get_total_product_stock(self):
+        stock = self.current_quantity * self.product.quantity
+        return stock
+    
+    def get_total_raw_material_stock(self):
+        stock = self.current_quantity * self.raw_material.quantity
+        return stock

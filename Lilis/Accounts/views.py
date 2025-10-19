@@ -1,72 +1,59 @@
 from django.contrib.auth import login
 from django.shortcuts import render, redirect
-from .forms import RegistroForm, UserForm, ProfileForm
-from django.contrib.auth.models import User
-from .models import Profile
+from .services import UserService
+from django.contrib.auth.decorators import login_required, permission_required
 
-class UserService:
-    def get(self, id):
-        try:
-            return User.objects.get(id=id)
-        except User.DoesNotExist:
-            return None
-
-    def list(self):
-        return User.objects.all()
-
-    def delete(self, id):
-        try:
-            instance = User.objects.get(id=id)
-            instance.delete()
-            return True
-        except User.DoesNotExist:
-            return False
-
-    def save(self, data):
-        user_form = UserForm(data)
-        profile_form = ProfileForm(data)
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save()
-            profile = profile_form.save(commit=False)
-            profile.user = user
-            profile.save()
-            return True, user
-        return False, (user_form, profile_form)
-
-    def update(self, id, data):
-        try:
-            user_instance = User.objects.get(id=id)
-            profile_instance = Profile.objects.get(user=user_instance)
-            user_form = UserForm(data, instance=user_instance)
-            profile_form = ProfileForm(data, instance=profile_instance)
-
-            if user_form.is_valid() and profile_form.is_valid():
-                user = user_form.save()
-                profile = profile_form.save(commit=False)
-                
-                new_role = profile_form.cleaned_data.get('role')
-                if new_role != profile_instance.role:
-                    user.groups.clear()
-                    if new_role:
-                        user.groups.add(new_role.group)
-
-                profile.save()
-                return True, (user_form, profile_form)
-            return False, (user_form, profile_form)
-        except (User.DoesNotExist, Profile.DoesNotExist):
-            return False, None
-
-
+user_service = UserService()
 
 def registro(request):
     if request.method == 'POST':
-        form = RegistroForm(request.POST)
+        form = user_service.form_class(request.POST)
         if form.is_valid():
-            usuario = form.save()
-            login(request, usuario)
-            return redirect('dashboard')
+            success, usuario = user_service.save_user(request.POST)
+            if success:
+                login(request, usuario)
+                return redirect('dashboard')
         else:
             return render(request, 'registration/registro.html', {'form': form})
     else:
-        form = RegistroForm()
+        form = user_service.form_class()
     return render(request, 'registration/registro.html', {'form': form})
+
+def password_reset(request):
+    return render(request, 'registration/password_reset.html')
+
+@login_required
+@permission_required('Accounts.view_user',raise_exception=False)
+def user_list(request):
+    users = user_service.list()
+    return render(request, "main/user_list.html", {"users": users})
+
+
+@login_required
+
+def user_update(request, id):
+    user = user_service.get(id)
+    if request.method == "POST":
+        success, forms = user_service.update(id, request.POST)
+        if success:
+            return redirect("user_list")
+        else:
+            user_form, profile_form = forms
+    else:
+        user_form = user_service.form_class(instance=user)
+        profile_form = user_service.model.profile(instance=user.profile)
+
+    return render(
+        request,
+        "main/user_update.html",
+        {"user_form": user_form, "profile_form": profile_form, "user": user},
+    )
+
+
+@login_required
+def user_delete(request, id):
+    if request.method == "GET":
+        success = user_service.delete(id)
+        if success:
+            return redirect('user_list')
+    return redirect("user_list")

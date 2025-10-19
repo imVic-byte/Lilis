@@ -4,16 +4,29 @@ from Products.models import Product, Category, Supplier, RawMaterial, PriceHisto
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'sku', 'description', 'category', 'is_perishable', 'measurement_unit']
+        fields = ['name', 'sku', 'description', 'category', 'is_perishable', 'measurement_unit', 'quantity', 'created_at', 'expiration_date',]
         labels = {
             'name': 'Nombre',
             'sku': 'Código SKU',
             'description': 'Descripción',
             'category': 'Categoría',
             'is_perishable': 'Es Perecible',
-            'measurement_unit': 'Unidad de Medida'
-
+            'measurement_unit': 'Unidad de Medida',
+            'quantity' : 'Cantidad',
+            'created_at' : 'Fecha de creación',
+            'expiration_date' : 'Fecha de vencimiento',
         }
+        widgets = {
+            'expiration_date': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'required': True}
+            ),
+            'created_at': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'required': True}
+            ),
+        }
+        
     def clean_name(self):
         name = self.cleaned_data.get('name')
         if not name:

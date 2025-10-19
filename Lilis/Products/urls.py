@@ -51,4 +51,5 @@ urlpatterns = [
     *raw_materials,
     *suppliers,
     *batchs,
+    *categorys,
 ]

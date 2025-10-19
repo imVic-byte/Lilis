@@ -27,6 +27,9 @@
             <a class="nav-link text-warning" href="{% url 'products_list' %}">Productos</a>
           </li>
           {% endif %}
+          <li class="nav-item">
+            <a class="nav-link text-warning" href="{% url 'category_list' %}">Categorias</a>
+          </li>
           {% if perms.Products.view_supplier %}
           <li class="nav-item">
             <a class="nav-link text-warning" href="{% url 'supplier_list' %}">Proveedores</a>
@@ -34,7 +37,7 @@
           {% endif %}
           {% if perms.Products.view_rawmaterial %}
             <li class="nav-item">
-              <a class="nav-link text-warning" href="{% url 'rawmaterial_list' %}">Materia Prima</a>
+              <a class="nav-link text-warning" href="{% url 'raw_material_list' %}">Materia Prima</a>
             </li>
           {% endif %}
           {% if perms.auth.view_user %}
