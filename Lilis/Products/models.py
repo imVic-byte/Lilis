@@ -31,7 +31,7 @@ class RawMaterial(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return self.name
+        return self.name    
     
 class Product(models.Model):
     name = models.CharField(max_length=100)
@@ -55,7 +55,7 @@ class PriceHistories(models.Model):
     iva = models.DecimalField(max_digits=10, decimal_places=2, default=1.19)
 
     def __str__(self):
-        return f'{self.fk_raw_supplier.fk_raw_material.name} - {self.price} - {self.date}'
+        return f'{self.product.name} - {self.price} - {self.date}'
 
 class Batch(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
