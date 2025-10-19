@@ -81,7 +81,7 @@ class SaleOrder(models.Model):
 
 class SaleOrderDetail(models.Model):
     sale_order = models.ForeignKey(SaleOrder, on_delete=models.PROTECT, related_name="details")
-    product = models.ForeignKey(Product , on_delete=models.PROTECT, related_name="order_details")
+    product = models.ForeignKey(Product , on_delete=models.PROTECT, related_name="order_details", null=True)
     quantity = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 

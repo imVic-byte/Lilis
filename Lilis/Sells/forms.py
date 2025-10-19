@@ -5,14 +5,14 @@ import datetime
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['bussines_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limt', 'debt' ,'max_debt']
+        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt']
         labels = {
-            'bussines_name': 'Razon social de la empresa',
+            'bussiness_name': 'Razon social de la empresa',
             'fantasy_name': 'Nombre fantasia de la empresa',
             'rut': 'Rut de la empresa',
             'email': 'Correo electronico',
             'phone': 'Telefono',
-            'credit_limt': 'Limite de credito',
+            'credit_limit': 'Limite de credito',
             'debt': 'Deuda',
             'max_debt': 'Maximo de deuda'
         }

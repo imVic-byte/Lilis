@@ -56,6 +56,11 @@
             <a class="nav-link text-warning " href="{% url 'product_batch_list' %}">Lotes de Productos</a>
           </li>
           {% endif %}
+          {% if perms.Products.view_clients %}
+          <li class="nav-item ">
+            <a class="nav-link text-warning " href="{% url 'client_list_actives' %}">Clientes</a>
+          </li>
+          {% endif %}
         </ul>
 
         <ul class="navbar-nav mb-2 mb-lg-0">

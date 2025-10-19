@@ -10,15 +10,22 @@ transaction_service = TransactionService()
 #CLIENTESSS
 def client_list_all(request):
     clients = client_service.list()
-    return render(request, 'client_list.html', {'clients': clients})
+    return render(request, 'sells/client_list.html', {'clients': clients})
 
 def client_list_actives(request):
     clients = client_service.list_actives()
-    return render(request, 'client_list.html', {'clients': clients})
+    return render(request, 'sells/client_list.html', {'clients': clients})
 
 def client_list_inactives(request):
     clients = client_service.list_inactives()
-    return render(request, 'client_list.html', {'clients': clients})
+    return render(request, 'sells/client_list.html', {'clients': clients})
+
+def client_view(request, id):
+    if request.method == 'GET':
+        client = client_service.get(id)
+        return render(request, 'sells/client_view.html', {'b': client})
+    else:
+        return redirect('client_list_actives')
 
 def client_create(request):
     form = client_service.form_class()
@@ -27,8 +34,8 @@ def client_create(request):
         if success:
             return redirect('client_list_actives')
         else:
-            return render(request, 'client_create.html', {'form': obj})
-    return render(request, 'client_create.html', {'form': form})
+            return render(request, 'sells/client_create.html', {'form': obj})
+    return render(request, 'sells/client_create.html', {'form': form})
 
 def client_update(request, id):
     if request.method == 'POST':
@@ -36,11 +43,11 @@ def client_update(request, id):
         if success:
             return redirect('client_list_actives')
         else:
-            return render(request, 'client_update.html', {'form': obj})
+            return render(request, 'sells/client_update.html', {'form': obj})
     else:
         client = client_service.get(id)
         form = client_service.form_class(instance=client)
-    return render(request, 'client_update.html', {'form': form})
+    return render(request, 'sells/client_update.html', {'form': form})
     
 def client_delete(request, id):
     if request.method == 'GET':
@@ -50,11 +57,18 @@ def client_delete(request, id):
     return redirect('client_list_actives')
 
 #LOCATIONS
-def list_locations(request):
+def location_list(request):
     locations = warehouse_service.location_model.objects.all()
     return render(request, 'warehouse_list.html', {'locations': locations})
 
-def create_location(request):
+def location_view(request, id):
+    if request.method == 'GET':
+        location = warehouse_service.location_model.objects.get(id=id)
+        return render(request, 'warehouse_view.html', {'location': location})
+    else:
+        return redirect('list_locations')
+
+def location_create(request):
     form = warehouse_service.location_form_class()
     if request.method == 'POST':
         success, obj = warehouse_service.create_location(request.POST)
@@ -64,7 +78,7 @@ def create_location(request):
             return render(request, 'warehouse_create.html', {'form': obj})
     return render(request, 'warehouse_create.html', {'form': form})
 
-def update_location(request, id):
+def location_update(request, id):
     if request.method == 'POST':
         success, obj = warehouse_service.update_location(id, request.POST)
         if success:
@@ -76,7 +90,7 @@ def update_location(request, id):
         form = warehouse_service.location_form_class(instance=location)
     return render(request, 'warehouse_update.html', {'form': form})
 
-def delete_location(request, id):
+def location_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete_location(id)
         if success:
@@ -84,11 +98,18 @@ def delete_location(request, id):
     return redirect('list_locations')
 
 ##warehouses
-def list_warehouses(request):
+def warehouse_list(request):
     warehouses = warehouse_service.model.objects.all()
     return render(request, 'warehouse_list.html', {'warehouses': warehouses})
 
-def create_warehouse(request):
+def warehouse_view(request, id):
+    if request.method == 'GET':
+        warehouse = warehouse_service.model.objects.get(id=id)
+        return render(request, 'warehouse_view.html', {'warehouse': warehouse})
+    else:
+        return redirect('list_warehouses')
+
+def warehouse_create(request):
     form = warehouse_service.form_class()
     if request.method == 'POST':
         success, obj = warehouse_service.save(request.POST)
@@ -98,7 +119,7 @@ def create_warehouse(request):
             return render(request, 'warehouse_create.html', {'form': obj})
     return render(request, 'warehouse_create.html', {'form': form})
 
-def update_warehouse(request, id):
+def warehouse_update(request, id):
     if request.method == 'POST':
         success, obj = warehouse_service.update(id, request.POST)
         if success:
@@ -110,7 +131,7 @@ def update_warehouse(request, id):
         form = warehouse_service.form_class(instance=warehouse)
     return render(request, 'warehouse_update.html', {'form': form})
 
-def delete_warehouse(request, id):
+def warehouse_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete(id)
         if success:
