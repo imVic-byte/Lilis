@@ -27,9 +27,10 @@
             <div class="col-md-4 mb-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">{{ p.product.name }}</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.batch_code}}</h6>
-                        <p class="card-text">Cantidad: {{ p.current_quantity }}</p>
+                        <h5 class="card-title">Lote de: {{ p.product.name }}</h5>
+                        <h5 class="card-text">Código: {{ p.batch_code }}</h5>
+                        <p class="card-text">Cantidad Minima: {{ p.min_quantity }} {{ p.product.name }}/s</p>
+                        <p class="card-text">Cantidad Actual: {{ p.current_quantity }} de {{ p.max_quantity  }} {{ p.product.name }}/s</p>
                         <a href="{% url 'product_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
                             Editar
                         </a>

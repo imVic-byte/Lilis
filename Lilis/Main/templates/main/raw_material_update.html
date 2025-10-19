@@ -26,22 +26,8 @@
                 <form method="POST" class="row">
                     {% csrf_token %}
 
-                    <div class="col-6">
+                    <div class="col">
                         {{ form|crispy }}
-                    </div>
-                    <div class="col-6 align-items-center flex-column flex d-sm-inline-flex">
-                        <ul>
-                            <p>Proveedor:</p>
-                            {% for raw_supplier in material.raw_materials.all %}
-                            <p>{{ raw_supplier.fk_supplier.bussiness_name }} - {{ raw_supplier.fk_supplier.rut }}</p>
-                            {% for price in raw_supplier.price_histories.all %}
-                            <p>Precio: ${{ price.price }}</p>
-                            <p>Fecha: {{ price.date }}</p>
-                            <a href="{% url 'update_price' price.id %}" class="btn btn-primary btn-lg">Actualizar Precio</a>
-                            {% endfor %}
-                        </ul>
-                        {% endfor %}
-                        </ul>
                     </div>
                     <div class="d-grid mt-3">
                         <button type="submit" class="btn btn-success btn-lg">Guardar</button>

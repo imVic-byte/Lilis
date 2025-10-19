@@ -78,25 +78,13 @@ class CategoryForm(forms.ModelForm):
         return category
 
 class ProductBatchForm(forms.ModelForm):
-    expiration_date = forms.DateField(
-        required=False,
-        input_formats=['%d/%m/%Y'],
-        widget=forms.DateInput(
-            attrs={
-                'type': 'text',     
-                'placeholder': 'dd/mm/yyyy',
-                'class': 'form-control'
-            }
-        )
-    )
     class Meta:
         model = Batch
-        fields = ['product', 'batch_code', 'expiration_date', 'min_quantity', 'current_quantity', 'max_quantity']
+        fields = ['product', 'batch_code', 'min_quantity', 'current_quantity', 'max_quantity']
         labels = {
             'product': 'Producto',
             'batch_code': 'Codigo de lote',
-            'expiration_date': 'Fecha de vencimiento',
-            'Min_quantity': 'Cantidad Minima (Generar Aviso)',
+            'min_quantity': 'Cantidad Minima (Generar Aviso)',
             'current_quantity': 'Cantidad actual',
             'max_quantity' : 'Cantidad Maxima'
         }
@@ -107,36 +95,7 @@ class ProductBatchForm(forms.ModelForm):
         if len(batch_code) < 3:
             raise forms.ValidationError('El codigo de lote debe tener mas de 3 caracteres.')
         return batch_code
-    
-    def clean_initial_quantity(self):
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        if initial_quantity is None or initial_quantity < 0:
-            raise forms.ValidationError('La cantidad inicial debe ser un numero positivo.')
-        return initial_quantity
 
-    def clean_current_quantity(self):
-        current_quantity = self.cleaned_data.get('current_quantity')
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        if current_quantity is None or current_quantity < 0:
-            raise forms.ValidationError('La cantidad actual debe ser un numero positivo.')
-        if initial_quantity is not None and current_quantity > initial_quantity:
-            raise forms.ValidationError('La cantidad actual no puede ser mayor a la cantidad inicial.')
-        return current_quantity 
-    
-    def clean_max_quantity(self):
-        max_quantity = self.cleaned_data.get('max_quantity')
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        current_quantity = self.cleaned_data.get('current_quantity')
-        if max_quantity is None or max_quantity < 0 or max_quantity < initial_quantity or max_quantity < current_quantity:
-            raise forms.ValidationError('La cantidad maxima debe ser un numero positivo.')
-        return max_quantity
-    
-    def clear_expiration_date(self):
-        expiration_date = self.cleaned_data.get('expiration_date')
-        created_at = self.cleaned_data.get('created_at')
-        if expiration_date < created_at:
-            raise forms.ValidationError('La fecha de expiracion no puede ser anterior a la fecha de creacion.')
-        
     def save(self, commit=True):
         batch = super().save(commit=False)
         if commit:
@@ -144,24 +103,12 @@ class ProductBatchForm(forms.ModelForm):
         return batch
     
 class RawBatchForm(forms.ModelForm):
-    expiration_date = forms.DateField(
-        required=False,
-        input_formats=['%d/%m/%Y'],
-        widget=forms.DateInput(
-            attrs={
-                'type': 'text', 
-                'placeholder': 'dd/mm/yyyy',
-                'class': 'form-control'
-            }
-        )
-    )
     class Meta:
         model = Batch
-        fields = ['raw_material', 'batch_code', 'expiration_date', 'min_quantity', 'current_quantity', 'max_quantity']
+        fields = ['raw_material', 'batch_code', 'min_quantity', 'current_quantity', 'max_quantity']
         labels = {
             'raw_material': 'Materia Prima',
             'batch_code': 'Codigo de lote',
-            'expiration_date': 'Fecha de vencimiento',
             'min_quantity': 'Cantidad minima (Generar Aviso)',
             'current_quantity': 'Cantidad actual',
             'max_quantity' : 'Cantidad Maxima'
@@ -173,36 +120,8 @@ class RawBatchForm(forms.ModelForm):
         if len(batch_code) < 3:
             raise forms.ValidationError('El codigo de lote debe tener mas de 3 caracteres.')
         return batch_code
-    
-    def clean_initial_quantity(self):
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        if initial_quantity is None or initial_quantity < 0:
-            raise forms.ValidationError('La cantidad inicial debe ser un numero positivo.')
-        return initial_quantity
 
-    def clean_current_quantity(self):
-        current_quantity = self.cleaned_data.get('current_quantity')
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        if current_quantity is None or current_quantity < 0:
-            raise forms.ValidationError('La cantidad actual debe ser un numero positivo.')
-        if initial_quantity is not None and current_quantity > initial_quantity:
-            raise forms.ValidationError('La cantidad actual no puede ser mayor a la cantidad inicial.')
-        return current_quantity 
     
-    def clean_max_quantity(self):
-        max_quantity = self.cleaned_data.get('max_quantity')
-        initial_quantity = self.cleaned_data.get('min_quantity')
-        current_quantity = self.cleaned_data.get('current_quantity')
-        if max_quantity is None or max_quantity < 0 or max_quantity < initial_quantity or max_quantity < current_quantity:
-            raise forms.ValidationError('La cantidad maxima debe ser un numero positivo.')
-        return max_quantity
-    
-    def clear_expiration_date(self):
-        expiration_date = self.cleaned_data.get('expiration_date')
-        created_at = self.cleaned_data.get('created_at')
-        if expiration_date < created_at:
-            raise forms.ValidationError('La fecha de expiracion no puede ser anterior a la fecha de creacion.')
-        
     def save(self, commit=True):
         batch = super().save(commit=False)
         if commit:
@@ -266,15 +185,29 @@ class SupplierForm(forms.ModelForm):
 class RawMaterialForm(forms.ModelForm):
     class Meta:
         model = RawMaterial
-        fields = ['name', 'description', 'is_perishable', 'supplier' , 'category' , 'measurement_unit']
+        fields = ['name', 'description', 'is_perishable', 'supplier' , 'category' , 'measurement_unit', 'quantity', 'created_at', 'expiration_date']
         labels = {
             'name': 'Nombre',
             'description': 'Descripción',
             'is_perishable' : 'Es perecible',
             'supplier': 'Proveedor',
             'category': 'Categoria',
-            'measurement_unit' : 'Unidad de medida'
+            'measurement_unit' : 'Unidad de medida',
+            'quantity' : 'Cantidad',
+            'created_at' : 'Fecha de creacion',
+            'expiration_date' : 'Fecha de vencimiento'
         }
+        widgets = {
+            'expiration_date': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'required': True}
+            ),
+            'created_at': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={'type': 'date', 'required': True}
+            ),
+        }
+
     def clean_name(self):
         name = self.cleaned_data.get('name')
         if not name:

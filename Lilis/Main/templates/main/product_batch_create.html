@@ -24,8 +24,6 @@
                 <form method="POST">
                     {% csrf_token %}
                     {{ form|crispy }}
-                    <label for="price">Precio CLP*</label>
-                    <input name="price" id="price" type="number" class="mb-2 form-control" required>
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-success btn-lg">Guardar</button>
                     </div>

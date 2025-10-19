@@ -47,7 +47,7 @@
           {% endif %}
           {% if perms.Products.view_batch %}
           <li class="nav-item ">
-            <a class="nav-link text-warning " href="#">Lotes de Materia prima</a>
+            <a class="nav-link text-warning " href="{% url 'raw_batch_list' %}">Lotes de Materia prima</a>
           </li>
           {% endif %}
 

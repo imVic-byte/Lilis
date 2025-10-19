@@ -14,170 +14,77 @@
     <div class="container py-5">
         <div class="row">
             <div class="col-12 text-center">
-                <h1>Lista de Proveedores</h1>
+                <h1 class="">Lista de Proveedores</h1>
             </div>
-            <div class="col text-end mb-2">
+            <div class="col text-end mb-2 ">
                 <a href="{% url 'supplier_create' %}" class="mt-2 text-end btn btn-success">
                     Agregar Proveedor
                 </a>
             </div>
         </div>
 
+
         <div class="row">
-            {% for s in suppliers %}
-            <form method="POST" action="{% url 'view_purchase_order' %}" class="supplier-form">
-                {% csrf_token %}
-                <input type="hidden" name="supplier_info" value='{
-                        "id": "{{ s.id }}", 
-                        "bussiness_name": "{{ s.bussiness_name|escapejs }}", 
-                        "rut": "{{ s.rut|escapejs }}", 
-                        "email": "{{ s.email|escapejs }}",
-                        "phone": "{{ s.phone|escapejs }}",
-                        "trade_terms": "{{ s.trade_terms|escapejs }}"
-                    }'>
-                <div class="col-md-12 mb-4">
-                    <div class="card shadow-sm h-100 supplier-card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ s.bussiness_name }}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">RUT: {{ s.rut }}</h6>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <strong>Email:</strong> {{ s.email|default:"No especificado" }}<br>
-                                    <strong>Teléfono:</strong> {{ s.phone|default:"No especificado" }}<br>
-                                    <strong>Términos comerciales:</strong>
-                                    {% if s.trade_terms %}
-                                    {{ s.trade_terms|truncatewords:20 }}
-                                    {% else %}
-                                    No especificado
-                                    {% endif %}
-                                </li>
-                            </ul>
-
-                            <div class="row mt-3">
-                                {% for raw in s.temp_raw_materials %}
-                                <div class="col-md-6 mb-3">
-                                    <div class="card shadow-sm h-100 raw-material-card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ raw.name|default:"No especificado" }}</h5>
-                                            <p class="card-text mb-1">
-                                                <strong>Costo:</strong> $
-                                                <span class="price">{{ raw.current_price|default:"0" }}</span>
-                                                por unidad
-                                            </p>
-                                            <p class="card-text mb-1">
-                                                <strong>Fecha de vencimiento:</strong>
-                                                {{ raw.expiration_date|default:"No especificado" }}
-                                            </p>
-
-                                            <div class="input-group ms-3 my-2 w-75">
-                                                <div class="row align-items-center">
-                                                    <button
-                                                        class="bg-danger text-white col-2 btn btn-outline-secondary btn-sm decrease"
-                                                        type="button">−</button>
-                                                    <input type="number" class="col-2 quantity text-center" value="0"
-                                                        min="0">
-                                                    <button
-                                                        class="bg-success text-white col-2 btn btn-outline-secondary btn-sm increase"
-                                                        type="button">+</button>
-                                                    <p class="card-text col-5 text-center mb-0">
-                                                        <strong>Total:</strong>
-                                                        $<span class="total">0.00</span>
-                                                    </p>
-                                                </div>
-                                                <input type="hidden" name="raw_{{ forloop.counter }}" class="raw-json" value='{
-                                        "id": "{{ raw.id }}",
-                                        "name": "{{ raw.name|escapejs }}",
-                                        "price": "{{ raw.current_price }}",
-                                        "expiration_date": "{{ raw.expiration_date }}",
-                                        "category": "{{ raw.category|escapejs }}",
-                                        "description": "{{ raw.description|escapejs }}",
-                                        "fk_supplier": "{{ raw.fk_supplier }}",
-                                        "is_active": "{{ raw.is_active }}",
-                                        "quantity": "0"
-                                    }'>
-                                            </div>
-                                            
-                                        </div>
+            {% for p in suppliers %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ p.fantasy_name }}</h5>
+                        <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>RUT: </strong> {{ p.rut }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Email: </strong> {{ p.email }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Telefono: </strong> {{ p.phone }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Terminos: </strong>{{ p.trade_terms }}
+                            </li>
+                        </ul>
+                        
+                        <a href="{% url 'supplier_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                            Editar
+                        </a>
+                        <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal{{ p.id }}">
+                            Eliminar
+                        </button>
+                        <div class="modal fade" id="confirmDeleteModal{{ p.id }}" tabindex="-1"
+                            aria-labelledby="modalLabel{{ p.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white p-2">
+                                        <h6 class="modal-title" id="modalLabel{{ p.id }}">Confirmar</h6>
+                                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
+                                            aria-label="Cerrar"></button>
+                                    </div>
+                                    <div class="modal-body p-2 text-center">
+                                        ¿Eliminar <strong>{{ p.name }}</strong>?
+                                    </div>
+                                    <div class="modal-footer p-2 justify-content-center">
+                                        <button type="button" class="btn btn-secondary btn-sm"
+                                            data-bs-dismiss="modal">Cancelar</button>
+                                        <a href="{% url 'supplier_delete' p.id %}"
+                                            class="btn btn-danger btn-sm">Eliminar</a>
                                     </div>
                                 </div>
-                                
-                                {% endfor %}
                             </div>
-                            <div class="row mt-3">
-                                <div class="col text-end">
-                                    <h5><strong>Total del proveedor:</strong> $<span class="supplier-total">0.00</span>
-                                    </h5>
-                                    <button type="submit" class="btn btn-primary btn-lg confirm-order">Realizar
-                                        Pedido</button>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
+            {% empty %}
+            <p class="text-center">No hay Proveedores registrados.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="text-center">No hay proveedores registrados.</p>
-        {% endfor %}
-    </div>
     </div>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.addEventListener("click", (e) => {
-                if (e.target.classList.contains("increase")) {
-                    const input = e.target.closest(".input-group").querySelector(".quantity");
-                    input.value = parseInt(input.value || 0) + 1;
-                    updateTotal(input);
-                } else if (e.target.classList.contains("decrease")) {
-                    const input = e.target.closest(".input-group").querySelector(".quantity");
-                    if (input.value > 0) {
-                        input.value = parseInt(input.value) - 1;
-                        updateTotal(input);
-                    }
-                }
-            });
-
-            document.addEventListener("input", (e) => {
-                if (e.target.classList.contains("quantity")) {
-                    updateTotal(e.target);
-                }
-            });
-
-            function updateTotal(inputElement) {
-                const cardBody = inputElement.closest(".card-body");
-                const price = parseFloat(cardBody.querySelector(".price").textContent) || 0;
-                const quantity = parseInt(inputElement.value) || 0;
-                const totalEl = cardBody.querySelector(".total");
-                totalEl.textContent = (price * quantity).toFixed(2);
-
-                updateSupplierTotal(inputElement);
-                const rawHidden = cardBody.closest(".raw-material-card").querySelector(".raw-json");
-                if (rawHidden) {
-                    const data = JSON.parse(rawHidden.value);
-                    data.quantity = quantity;
-                    rawHidden.value = JSON.stringify(data);
-                }
-            }
-
-
-
-            function updateSupplierTotal(inputElement) {
-                const supplierCard = inputElement.closest(".supplier-card");
-                const allTotals = supplierCard.querySelectorAll(".total");
-                let sum = 0;
-                allTotals.forEach(t => sum += parseFloat(t.textContent) || 0);
-
-                const supplierTotalEl = supplierCard.querySelector(".supplier-total");
-                if (supplierTotalEl) {
-                    supplierTotalEl.textContent = sum.toFixed(2);
-                }
-            }
-        });
-    </script>
 </body>
 
 </html>

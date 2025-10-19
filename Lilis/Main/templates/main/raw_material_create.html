@@ -21,12 +21,8 @@
                 <div class="card-body">
                     <form method="POST" class="row">
                         {% csrf_token %}
-                        <div class="col-6">
+                        <div class="col">
                         {{ form|crispy }}
-                        </div>
-                        <div class="col-6">
-                        {{ raw_supplier_form|crispy }}
-                        {{ prices_form|crispy }}
                         </div>
                         <div class="d-grid mt-3">
                             <button type="submit" class="btn btn-success btn-lg">Guardar</button>
