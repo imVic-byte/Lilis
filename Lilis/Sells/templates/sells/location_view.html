@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de la Ubicación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+    {% include 'main/navbar.html' %}
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">Detalle de la Ubicación</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-center mb-3">
+                            {{ location.name }}
+                        </h5>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Nombre:</strong> {{ location.name }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Ciudad:</strong> {{ location.city }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>País:</strong> {{ location.country }}
+                            </li>
+                        </ul>
+
+                        <div class="mt-4 text-center">
+                            <a href="{% url 'location_update' location.id %}" class="btn btn-primary me-2">
+                                Editar
+                            </a>
+                            <a href="{% url 'location_list' %}" class="btn btn-secondary">
+                                Volver a la lista
+                            </a>
+                            <button type="button" class="btn btn-danger ms-2" data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModal{{ location.id }}">
+                                Eliminar
+                            </button>
+
+                            <!-- Modal de confirmación -->
+                            <div class="modal fade" id="confirmDeleteModal{{ location.id }}" tabindex="-1"
+                                aria-labelledby="modalLabel{{ location.id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white p-2">
+                                            <h6 class="modal-title" id="modalLabel{{ location.id }}">Confirmar eliminación</h6>
+                                            <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
+                                                aria-label="Cerrar"></button>
+                                        </div>
+                                        <div class="modal-body p-2 text-center">
+                                            ¿Eliminar la ubicación <strong>{{ location.name }}</strong>?
+                                        </div>
+                                        <div class="modal-footer p-2 justify-content-center">
+                                            <button type="button" class="btn btn-secondary btn-sm"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <a href="{% url 'location_delete' location.id %}"
+                                                class="btn btn-danger btn-sm">Eliminar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

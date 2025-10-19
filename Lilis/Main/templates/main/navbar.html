@@ -56,9 +56,14 @@
             <a class="nav-link text-warning " href="{% url 'product_batch_list' %}">Lotes de Productos</a>
           </li>
           {% endif %}
-          {% if perms.Products.view_clients %}
+          {% if perms.Sells.view_clients %}
           <li class="nav-item ">
             <a class="nav-link text-warning " href="{% url 'client_list_actives' %}">Clientes</a>
+          </li>
+          {% endif %}
+          {% if perms.Sells.view_ %}
+          <li class="nav-item ">
+            <a class="nav-link text-warning " href="{% url 'location_list' %}">Direcciones</a>
           </li>
           {% endif %}
         </ul>
@@ -67,8 +72,6 @@
           {% if user.is_authenticated %}
           <li class="nav-item me-2">
             <a class="nav-link text-warning" href="">{{ request.user.username }}</a>
-
-
           </li>
           <li class="nav-item">
             <form method="POST" action="{% url 'logout' %}">
