@@ -47,6 +47,10 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.sku}'
+    
+    def get_product_price(self):
+        last_price = self.price_histories.order_by('-date').first()
+        return last_price.unit_price
 
 class PriceHistories(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="price_histories")

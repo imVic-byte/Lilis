@@ -30,6 +30,8 @@ def category_update(request, id):
         success, obj = category_service.update(id, request.POST)
         if success:
             return redirect('category_list')
+        else:
+            return render(request, 'main/category_update.html', {'form': obj})
     else:
         category = category_service.get(id)
         form = category_service.form_class(instance=category)
@@ -74,6 +76,8 @@ def product_update(request, id):
         success, obj = product_service.update(id, request.POST)
         if success:
             return redirect('products_list')
+        else:
+            return render(request, 'main/product_update.html', {'form': obj})
     else:
         product = product_service.get(id)
         form = product_service.form_class(instance=product)

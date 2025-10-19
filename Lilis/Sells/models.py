@@ -1,5 +1,5 @@
 from django.db import models
-from Products.models import Batch
+from Products.models import Product, Batch
 from Accounts.models import Profile
 
 class Client(models.Model):
@@ -48,11 +48,16 @@ class Transaction(models.Model):
     batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name="transactions")
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="transactions")
     date = models.DateField(auto_now_add=True)
-    type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida')], default='I')
+    type = models.CharField(
+        max_length=20,
+        choices=[('I', 'Ingreso'), ('S', 'Salida')],
+        default='I'
+    )
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.type} - Lote: {self.bash.name} - hacia bodega: {self.warehouse.name} - con fecha: {self.date}'
-  
+        return f'{self.get_type_display()} - Lote: {self.batch.batch_code} - Bodega: {self.warehouse.name} - {self.date}'
+
 
 class SaleOrder(models.Model):
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="purchase_orders")
@@ -76,12 +81,12 @@ class SaleOrder(models.Model):
 
 class SaleOrderDetail(models.Model):
     sale_order = models.ForeignKey(SaleOrder, on_delete=models.PROTECT, related_name="details")
-    batch = models.ForeignKey(Batch , on_delete=models.PROTECT, related_name="order_details")
+    product = models.ForeignKey(Product , on_delete=models.PROTECT, related_name="order_details")
     quantity = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def subtotal(self):
-        subtotal = self.batch.get_product_price * self.quantity
+        subtotal = self.product.get_product_price * self.quantity
         self.subtotal = subtotal
         self.save(update_fields=["subtotal"])
         return subtotal
