@@ -6,18 +6,17 @@ from Main.CRUD import CRUD
 class UserService(CRUD ):
     def __init__(self):
         self.model = User
+        self.profile_model = Profile
         self.form_class = RegistroForm
+        self.user_form_class = UserForm
+        self.profile_form_class = ProfileForm
 
     def save_user(self, data):
-        user_form = UserForm(data)
-        profile_form = ProfileForm(data)
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save()
-            profile = profile_form.save(commit=False)
-            profile.user = user
-            profile.save()
+        form = self.form_class(data)
+        if form.is_valid():
+            user = form.save()
             return True, user
-        return False, (user_form, profile_form)
+        return False, form
 
     def update_user(self, id, data):
         try:

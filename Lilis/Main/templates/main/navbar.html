@@ -27,9 +27,11 @@
             <a class="nav-link text-warning" href="{% url 'products_list' %}">Productos</a>
           </li>
           {% endif %}
+          {% if perms.Products.view_category %}
           <li class="nav-item">
             <a class="nav-link text-warning" href="{% url 'category_list' %}">Categorias</a>
           </li>
+          {% endif %}
           {% if perms.Products.view_supplier %}
           <li class="nav-item">
             <a class="nav-link text-warning" href="{% url 'supplier_list' %}">Proveedores</a>
@@ -66,7 +68,7 @@
             <a class="nav-link text-warning " href="{% url 'location_list' %}">Direcciones</a>
           </li>
           {% endif %}
-          {% if perms.Sells.view_warehouse %}
+          {% if perms.Sells.change_warehouse %}
           <li class="nav-item ">
             <a class="nav-link text-warning " href="{% url 'warehouse_list' %}">Bodegas</a>
           </li>

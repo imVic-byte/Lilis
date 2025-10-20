@@ -7,12 +7,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
 ROLES = [
-    {"name": "Administrador", "description": "Acceso completo"},
-    {"name": "Operador De Compras", "description": "Acceso limitado a compras"},
-    {"name": "Operador De Ventas", "description": "Acceso limitado a ventas"},
-    {"name": "Operador De Inventario", "description": "Acceso limitado a Inventario"},
-    {"name": "Operador De Produccion", "description": "Acceso limitado a Produccion"},
-    {"name": "Analista Financiero", "description": "Acceso limitado a Finanzas"},
+    {"description": "Acceso Completo"},
+    {"description": "Acceso limitado a Compras"},
+    {"description": "Acceso limitado a Ventas"},
+    {"description": "Acceso limitado a Inventario"},
+    {"description": "Acceso limitado a Produccion"},
+    {"description": "Acceso limitado a Finanzas"},
 ]
 
 MODULES = [
@@ -22,32 +22,32 @@ MODULES = [
 ]
 
 MATRIX = {
-    'Administrador': {
+    'Acceso Completo': {
         'products' : 'all',
         'sells' : 'all',
         'accounts' : 'all'
     },
-    'Operador De Compras': {
+    'Acceso limitado a Compras': {
         'products' : 'all',
         'sells' : ('view',),
         'accounts' : ('view',)
     },
-    'Operador De Ventas': {
+    'Acceso limitado a Ventas': {
         'products' : ('view',),
         'sells' : 'all',
         'accounts' : ('view',)
     },
-    'Operador De Inventario': {
+    'Acceso limitado a Inventario': {
         'products' : 'all',
         'sells' : 'all',
         'accounts' : ('view',)
     },
-    'Operador De Produccion': {
+    'Acceso limitado a Produccion': {
         'products' : ('view','change',),
         'sells' : ('view','change',),
         'accounts' : ('view',),
     },
-    'Analista Financiero': {
+    'Acceso limitado a Finanzas': {
         'products' : ('view',),
         'sells' : ('view',),
         'accounts' : ('view',),
@@ -59,11 +59,11 @@ SYNC_NATIVE_DJANGO_PERMS = True
 APP_MODEL_MAP = {
     "sells": {
         "app_label": "sells",
-        "models": ['client', 'location', 'warehouse'],
+        "models": ['client', 'location', 'warehouse', 'wareclient', 'transaction', 'saleorder', 'saleorderdetail'],
     },
     "products": {
         "app_label": "products",
-        "models": ['supplier', 'rawmaterial', 'category', 'product', 'rawsupplier', 'pricehistories', 'batch'],
+        "models": ['supplier', 'rawmaterial', 'category', 'product', 'pricehistories', 'batch'],
     },
     "accounts": {
         "app_label": "accounts",
@@ -119,18 +119,16 @@ class Command(BaseCommand):
         # 2) Roles (Group + Role 1:1)
         groups_roles = {}
         for r in ROLES:
-            if r['name'] is None:
+            if r['description'] is None:
                 continue
             else:
-                g, _ = Group.objects.update_or_create(name=r['name'])
+                g, _ = Group.objects.update_or_create(name=r['description'])
                 role, _ = Role.objects.update_or_create(
-                    group=g,
-                    
+                    group=g,       
                     defaults={
-                        "name": r["name"],
                         "description": r["description"]}
                 )
-                groups_roles[r['name']] = (g, role)
+                groups_roles[r['description']] = (g, role)
 
         # 3) Aplicar matriz + sincronizar permisos nativos (Admin)
         for rname, modmap in MATRIX.items():
@@ -160,12 +158,12 @@ class Command(BaseCommand):
                 if SYNC_NATIVE_DJANGO_PERMS:
                     _sync_native_perms_for_role(group, mcode, actions)
 
-            if rname == 'Administrador':
+            if rname == 'Acceso Completo':
                 _sync_native_perms_for_role(group,'auth','all')
             else:
                 _sync_native_perms_for_role(group,'auth',('view',))
 
-        self.stdout.write(self.style.SUCCESS("EcoEnergy: roles, módulos y matriz listos"))
+        self.stdout.write(self.style.SUCCESS("Lilis: roles, módulos y matriz listos"))
         if SYNC_NATIVE_DJANGO_PERMS:
             self.stdout.write(self.style.SUCCESS("Permisos nativos sincronizados para el Admin"))
         else:
