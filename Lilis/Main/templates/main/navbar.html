@@ -22,7 +22,7 @@
 
       <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          {% if perms.Products.view_product %}
+          {% if perms.Products.d_product %}
           <li class="nav-item">
             <a class="nav-link text-warning" href="{% url 'products_list' %}">Productos</a>
           </li>
