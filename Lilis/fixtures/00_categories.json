@@ -1,0 +1,7 @@
+[
+  { "model": "Products.Category", "pk": 1, "fields": { "name": "Chocolates", "description": "Diferentes tipos de chocolate" } },
+  { "model": "Products.Category", "pk": 2, "fields": { "name": "Dulces", "description": "Caramelos y piruletas" } },
+  { "model": "Products.Category", "pk": 3, "fields": { "name": "Galletas", "description": "Variedad de galletas y bizcochos" } },
+  { "model": "Products.Category", "pk": 4, "fields": { "name": "Pasteles", "description": "Pasteles y repostería" } },
+  { "model": "Products.Category", "pk": 5, "fields": { "name": "Snacks", "description": "Snacks dulces empaquetados" } }
+]

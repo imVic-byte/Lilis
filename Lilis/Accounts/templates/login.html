@@ -1,15 +1,7 @@
+{% extends 'main/base.html' %}
 {% load crispy_forms_tags %}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-
-<body>
-    {% include 'main/navbar.html' %}
+{% block title %} Iniciar Sesion {% endblock title %}
+{% block content %}
     <div class="mt-3 container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
         <div class="card shadow-sm w-100" style="max-width: 500px;">
             <div class="card-header text-center text-warning" style="background-color: #d20a10;">
@@ -20,15 +12,9 @@
                     {% csrf_token %}
                     {{ form|crispy }}
                     <button type="submit" class="btn btn-danger text-warning btn-lg">Ingresar</button>
-                    <a class="btn btn-danger text-warning btn-lg" href="{% url 'registro' %}">Crear Usuario</a>
                     <a href="{% url 'password_reset' %}">Recuperar contraseña</a>
                 </form>
             </div>
         </div>
     </div>
-
-
-</body>
-</div>
-
-</html>
+{% endblock content %}

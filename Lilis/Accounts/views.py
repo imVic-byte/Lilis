@@ -15,19 +15,19 @@ def registro(request):
                 login(request, usuario)
                 return redirect('dashboard')
         else:
-            return render(request, 'registration/registro.html', {'form': form})
+            return render(request, 'registro.html', {'form': form})
     else:
         form = user_service.form_class()
-    return render(request, 'registration/registro.html', {'form': form})
+    return render(request, 'registro.html', {'form': form})
 
 def password_reset(request):
-    return render(request, 'registration/password_reset.html')
+    return render(request, 'password_reset.html')
 
 @login_required
 @permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_list(request):
     users = user_service.list()
-    return render(request, "main/user_list.html", {"users": users})
+    return render(request, "user_list.html", {"users": users})
 
 
 @login_required
@@ -46,7 +46,7 @@ def user_update(request, id):
 
     return render(
         request,
-        "main/user_update.html",
+        "user_update.html",
         {"user_form": user_form, "profile_form": profile_form, "user": user},
     )
 

@@ -238,7 +238,7 @@ class PriceHistoriesForm(forms.ModelForm):
             'iva' : 'IVA'
         }
 
-    def clean_price(self):
+    def clean_unit_price(self):
         price = self.cleaned_data.get('unit_price')
         if price is None or price < 0:
             raise forms.ValidationError('El precio debe ser un numero positivo.')

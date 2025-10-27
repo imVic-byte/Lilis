@@ -1,0 +1,152 @@
+[
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 1, 
+    "fields": { 
+      "name": "Granos de Cacao", 
+      "description": "Granos de cacao premium", 
+      "stock_quantity": 200.00, 
+      "expiration_date": "2026-01-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 2, 
+    "fields": { 
+      "name": "Leche en Polvo", 
+      "description": "Leche en polvo entera", 
+      "stock_quantity": 150.00, 
+      "expiration_date": "2026-05-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 3, 
+    "fields": { 
+      "name": "Azúcar", 
+      "description": "Azúcar refinada", 
+      "stock_quantity": 300.00, 
+      "expiration_date": "2027-01-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 4, 
+    "fields": { 
+      "name": "Cacao Oscuro", 
+      "description": "Cacao oscuro de alta calidad", 
+      "stock_quantity": 100.00, 
+      "expiration_date": "2026-08-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 5, 
+    "fields": { 
+      "name": "Extracto de Vainilla", 
+      "description": "Extracto natural de vainilla", 
+      "stock_quantity": 50.00, 
+      "expiration_date": "2025-12-15" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 6, 
+    "fields": { 
+      "name": "Chocolate con Leche", 
+      "description": "Bloques de chocolate con leche", 
+      "stock_quantity": 80.00, 
+      "expiration_date": "2026-03-10" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 7, 
+    "fields": { 
+      "name": "Jarabe de Glucosa", 
+      "description": "Jarabe de glucosa de maíz", 
+      "stock_quantity": 120.00, 
+      "expiration_date": "2025-09-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 8, 
+    "fields": { 
+      "name": "Saborizante de Frutas", 
+      "description": "Saborizante de frutas mixtas", 
+      "stock_quantity": 60.00, 
+      "expiration_date": "2026-02-20" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 9, 
+    "fields": { 
+      "name": "Gelatina", 
+      "description": "Gelatina en polvo", 
+      "stock_quantity": 90.00, 
+      "expiration_date": "2025-11-11" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 10, 
+    "fields": { 
+      "name": "Harina de Trigo", 
+      "description": "Harina de trigo fina", 
+      "stock_quantity": 200.00, 
+      "expiration_date": "2026-06-06" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 11, 
+    "fields": { 
+      "name": "Mantequilla", 
+      "description": "Mantequilla salada", 
+      "stock_quantity": 70.00, 
+      "expiration_date": "2025-12-30" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 12, 
+    "fields": { 
+      "name": "Huevo en Polvo", 
+      "description": "Huevo en polvo secado por aspersión", 
+      "stock_quantity": 50.00, 
+      "expiration_date": "2026-09-15" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 13, 
+    "fields": { 
+      "name": "Almidón de Maíz", 
+      "description": "Almidón de maíz refinado", 
+      "stock_quantity": 130.00, 
+      "expiration_date": "2026-04-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 14, 
+    "fields": { 
+      "name": "Sal", 
+      "description": "Sal yodada", 
+      "stock_quantity": 180.00, 
+      "expiration_date": "2027-07-01" 
+    } 
+  },
+  { 
+    "model": "Products.RawMaterial", 
+    "pk": 15, 
+    "fields": { 
+      "name": "Maní", 
+      "description": "Maní crudo", 
+      "stock_quantity": 100.00, 
+      "expiration_date": "2026-11-01" 
+    } 
+  }
+]

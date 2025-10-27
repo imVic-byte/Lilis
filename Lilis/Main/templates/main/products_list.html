@@ -1,106 +1,41 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'main/base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body class="bg-light">
-    {% include 'main/navbar.html' %}
-    <div class="container py-5">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h1 class="">Lista de Productos</h1>
-            </div>
-            <div class="col text-end mb-2 ">
-                <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-success">
-                    Agregar Producto
-                </a>
-            </div>
+{% block title %} Productos {% endblock title %}
+{% block content %}
+    <div class="row">
+        <div class="col-12 text-center">
+            <h1 class="page-title">Lista de Productos</h1>
         </div>
-        <div class="row">
-            {% for p in products %}
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ p.name }}</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.sku }}</h6>
-                        <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>Categoría:</strong> {{ p.category.name }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Stock Actual:</strong> {{ p.quantity }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Perecible:</strong> 
-                                {% if p.is_perishable %}
-                                Si
-                                {% else %}
-                                No
-                                {% endif %}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Creado el:</strong>
-                                {% if p.created_at %}
-                                {{ p.created_at }}
-                                {% else %}
-                                No aplica
-                                {% endif %}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Vence el:</strong>
-                                {% if p.expiration_date %}
-                                {{ p.expiration_date }}
-                                {% else %}
-                                No aplica
-                                {% endif %}
-                            </li>
-                        </ul>
-                        <a href="{% url 'product_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                            Editar
-                        </a>
-                        <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
-                            data-bs-target="#confirmDeleteModal{{ p.id }}">
-                            Eliminar
-                        </button>
-                        <div class="modal fade" id="confirmDeleteModal{{ p.id }}" tabindex="-1"
-                            aria-labelledby="modalLabel{{ p.id }}" aria-hidden="true">
-                            <div class="modal-dialog modal-sm"> <!-- <- modal pequeño -->
-                                <div class="modal-content">
-                                    <div class="modal-header bg-danger text-white p-2">
-                                        <h6 class="modal-title" id="modalLabel{{ p.id }}">Confirmar</h6>
-                                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
-                                            aria-label="Cerrar"></button>
-                                    </div>
-                                    <div class="modal-body p-2 text-center">
-                                        ¿Eliminar <strong>{{ p.name }}</strong>?
-                                    </div>
-                                    <div class="modal-footer p-2 justify-content-center">
-                                        <button type="button" class="btn btn-secondary btn-sm"
-                                            data-bs-dismiss="modal">Cancelar</button>
-                                        <a href="{% url 'product_delete' p.id %}"
-                                            class="btn btn-danger btn-sm">Eliminar</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <p class="text-center">No hay productos registrados.</p>
-            {% endfor %}
+        <div class="col text-end mb-2 ">
+            <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-success">
+                Agregar Producto
+            </a>
         </div>
     </div>
+    <div class="row">
+        {% for p in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ p.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.sku }}</h6>
+                    <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
+                    <ul class="list-group list-group-flush">
+                        </ul>
+                    <a href="{% url 'product_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                        Editar
+                    </a>
+                    <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#confirmDeleteModal{{ p.id }}">
+                        Eliminar
+                    </button>
+                    
+                    </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No hay productos registrados.</p>
+        {% endfor %}
+    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>
+    {% endblock content %}

@@ -10,6 +10,21 @@ class RegistroForm(forms.ModelForm):
             'placeholder': 'Ej: juanperez'
         })
     )
+
+    first_name = forms.CharField(
+        label="Nombre",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Juan'
+        })
+    )
+    last_name = forms.CharField(
+        label="Apellido",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Pérez'
+        })
+    )
     email = forms.EmailField(
         label="Correo electrónico",
         widget=forms.EmailInput(attrs={
@@ -81,7 +96,9 @@ class RegistroForm(forms.ModelForm):
         user = User.objects.create_user(
             username=self.cleaned_data["username"],
             email=self.cleaned_data["email"],
-            password=self.cleaned_data["password1"]
+            password=self.cleaned_data["password1"],
+            first_name=self.cleaned_data["first_name"],
+            last_name=self.cleaned_data["last_name"],
         )
 
         selected_role = self.cleaned_data.get("role")

@@ -12,7 +12,6 @@ class Module(models.Model):
 
 class Role(models.Model):
     group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name="role")
-    #name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
 
 
