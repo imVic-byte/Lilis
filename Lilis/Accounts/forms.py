@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Profile
+from Main.validators import *
 
 class RegistroForm(forms.ModelForm):
     username = forms.CharField(
@@ -81,9 +82,7 @@ class RegistroForm(forms.ModelForm):
 
     def clean_rut(self):
         rut = self.cleaned_data.get("run")
-        if len(rut) != 10:
-            raise forms.ValidationError("El RUT debe tener 10 caracteres.")
-        return rut
+        return validate_rut_format(rut)
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")

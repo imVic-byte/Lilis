@@ -1,11 +1,12 @@
 {% extends 'main/base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} Actualizar Usuario {% endblock title %}
+{% block title %} Agregar Producto {% endblock title %}
 {% block content %}
-    <div class="container d-flex justify-content-center align-items-center mt-3" style="min-height: 100vh;">
-        <div class="card shadow-sm w-100" style="max-width: 500px;">
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm w-100">
             <div class="card-header text-center bg-primary text-white">
-                <h4>Actualizar Usuario</h4>
+                <h4>Agregar Usuario</h4>
             </div>
             <div class="card-body">
                 {% if form.errors %}
@@ -14,7 +15,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Form funcional con csrf_token -->
                 <form method="POST">
                     {% csrf_token %}
                     {{ form|crispy }}
@@ -25,4 +25,5 @@
             </div>
         </div>
     </div>
+</div>
 {% endblock content %}
