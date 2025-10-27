@@ -2,6 +2,7 @@ from django.contrib.auth import login
 from django.shortcuts import render, redirect
 from .services import UserService
 from django.contrib.auth.decorators import login_required, permission_required
+from Main.decorator import permission_or_redirect
 
 user_service = UserService()
 
@@ -23,14 +24,14 @@ def password_reset(request):
     return render(request, 'registration/password_reset.html')
 
 @login_required
-@permission_required('Accounts.view_user',raise_exception=False)
+@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_list(request):
     users = user_service.list()
     return render(request, "main/user_list.html", {"users": users})
 
 
 @login_required
-
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
 def user_update(request, id):
     user = user_service.get(id)
     if request.method == "POST":
@@ -51,6 +52,7 @@ def user_update(request, id):
 
 
 @login_required
+@permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
 def user_delete(request, id):
     if request.method == "GET":
         success = user_service.delete(id)

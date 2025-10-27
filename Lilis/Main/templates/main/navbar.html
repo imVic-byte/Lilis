@@ -68,7 +68,7 @@
             <a class="nav-link text-warning " href="{% url 'location_list' %}">Direcciones</a>
           </li>
           {% endif %}
-          {% if perms.Sells.change_warehouse %}
+          {% if perms.Sells.view_warehouse %}
           <li class="nav-item ">
             <a class="nav-link text-warning " href="{% url 'warehouse_list' %}">Bodegas</a>
           </li>
