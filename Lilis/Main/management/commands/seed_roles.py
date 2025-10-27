@@ -28,29 +28,22 @@ MATRIX = {
         'accounts' : 'all'
     },
     'Acceso limitado a Compras': {
-        'products' : 'all',
-        'sells' : ('view',),
-        'accounts' : ('view',)
+        'products' : 'all'
     },
     'Acceso limitado a Ventas': {
-        'products' : ('view',),
-        'sells' : 'all',
-        'accounts' : ('view',)
+        'sells' : 'all'
     },
     'Acceso limitado a Inventario': {
         'products' : 'all',
-        'sells' : 'all',
-        'accounts' : ('view',)
+        'sells' : 'all'
     },
     'Acceso limitado a Produccion': {
         'products' : ('view','change',),
-        'sells' : ('view','change',),
-        'accounts' : ('view',),
+        'sells' : ('view','change', 'add'),
     },
     'Acceso limitado a Finanzas': {
         'products' : ('view',),
-        'sells' : ('view',),
-        'accounts' : ('view',),
+        'sells' : ('view',)
     },  
 }
 
