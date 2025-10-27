@@ -42,3 +42,5 @@ def validate_password(password):
 
     if not any(char.isdigit() for char in password):
         raise forms.ValidationError('La contrasena debe contener al menos un número.')
+    
+    return password

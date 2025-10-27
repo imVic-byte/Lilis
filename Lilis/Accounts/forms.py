@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Profile
-from Main.validators import *
+from Main.validators import validate_rut_format, validate_phone_format, validate_password
 
 class RegistroForm(forms.ModelForm):
     username = forms.CharField(
@@ -71,6 +71,10 @@ class RegistroForm(forms.ModelForm):
             }),
         }
 
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        return validate_password(password)
+    
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
@@ -86,9 +90,8 @@ class RegistroForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
-        if len(phone) !=9:
-            raise forms.ValidationError("El teléfono debe tener 9 caracteres.")
-        return phone
+        return validate_phone_format(phone)
+    
     
     def save(self, commit=True):
     # Crear el usuario
@@ -99,7 +102,7 @@ class RegistroForm(forms.ModelForm):
             first_name=self.cleaned_data["first_name"],
             last_name=self.cleaned_data["last_name"],
         )
-
+    
         selected_role = self.cleaned_data.get("role")
 
         # Crear el perfil asociado al usuario
