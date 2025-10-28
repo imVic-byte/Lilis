@@ -2,40 +2,69 @@
 
 {% block title %} Productos {% endblock title %}
 {% block content %}
-    <div class="row">
-        <div class="col-12 text-center">
-            <h1 class="page-title">Lista de Productos</h1>
-        </div>
-        <div class="col text-end mb-2 ">
-            <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-success">
-                Agregar Producto
-            </a>
-        </div>
+<div class="row">
+    <div class="col-12 text-center">
+        <h1 class="page-title">Lista de Productos</h1>
     </div>
-    <div class="row">
-        {% for p in products %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ p.name }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.sku }}</h6>
-                    <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
-                    <ul class="list-group list-group-flush">
-                        </ul>
-                    <a href="{% url 'product_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                        Editar
-                    </a>
-                    <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
-                        data-bs-target="#confirmDeleteModal{{ p.id }}">
-                        Eliminar
-                    </button>
-                    
-                    </div>
+    <div class="col text-end mb-2 ">
+        <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-weno">
+            Agregar Producto
+        </a>
+    </div>
+</div>
+<div class="row">
+    {% for p in products %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ p.name }}</h5>
+                <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Categoría:</strong> {{ p.category.name }}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Stock Actual:</strong> {{ p.quantity }}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Perecible:</strong>
+                        {% if p.is_perishable %}
+                        Si
+                        {% else %}
+                        No
+                        {% endif %}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Creado el:</strong>
+                        {% if p.created_at %}
+                        {{ p.created_at }}
+                        {% else %}
+                        No aplica
+                        {% endif %}
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Vence el:</strong>
+                        {% if p.expiration_date %}
+                        {{ p.expiration_date }}
+                        {% else %}
+                        No aplica
+                        {% endif %}
+                    </li>
+                </ul>
+                <a href="{% url 'product_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                    Editar
+                </a>
+                <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
+                    data-bs-target="#confirmDeleteModal{{ p.id }}">
+                    Eliminar
+                </button>
+
             </div>
         </div>
-        {% empty %}
-        <p class="text-center">No hay productos registrados.</p>
-        {% endfor %}
     </div>
+    {% empty %}
+    <p class="text-center">No hay productos registrados.</p>
+    {% endfor %}
+</div>
 
-    {% endblock content %}
+{% endblock content %}

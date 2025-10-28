@@ -65,7 +65,7 @@ APP_MODEL_MAP = {
     "auth": {
         "app_label":"auth",
         "models": ['user'],
-    }
+    } 
 }
 
 def _as_tuple(actions):

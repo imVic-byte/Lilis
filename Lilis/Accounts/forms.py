@@ -88,6 +88,7 @@ class RegistroForm(forms.ModelForm):
         rut = self.cleaned_data.get("run")
         return validate_rut_format(rut)
 
+
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
         return validate_phone_format(phone)

@@ -1,22 +1,23 @@
 from django import forms
-
+from itertools import cycle
 def validate_rut_format(rut_numero):
-    rut_str = str(rut_numero).zfill(8)
-    multiplicadores = [2, 3, 4, 5, 6, 7]
-    suma = 0
-    for i, digito in enumerate(reversed(rut_str)):
-        multiplicador = multiplicadores[i % 6]
-        suma += int(digito) * multiplicador
+    rut = rut.upper().replace("-", "").replace(".", "")
+    rut_aux = rut[:-1]
+    dv = rut[-1:]
 
-    resto = suma % 11
-    digito_verificador = 11 - resto
+    if not rut_aux.isdigit() or not (1_000_000 <= int(rut_aux) <= 25_000_000):
+        return False
 
-    if digito_verificador == 11:
-        return '0'
-    elif digito_verificador == 10:
-        return 'K'
-    else:
-        return str(digito_verificador)
+    revertido = map(int, reversed(rut_aux))
+    factors = cycle(range(2, 8))
+    suma = sum(d * f for d, f in zip(revertido, factors))
+    residuo = suma % 11
+
+    if dv == 'K':
+        return residuo == 1
+    if dv == '0':
+        return residuo == 11
+    return residuo == 11 - int(dv)
 
 def validate_phone_format(value):
     if not isinstance(value, str):

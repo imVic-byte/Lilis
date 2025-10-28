@@ -9,19 +9,19 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.btn-success {
+.btn-weno {
   background-color: var(--lilis-gold);
   border-color: var(--lilis-gold);
   color: #212529;
 }
 
-.btn-success:hover {
+.btn-weno:hover {
   background-color: #e6ac00;
   border-color: #e6ac00;
   color: #212529;
 }
 
-.btn-success:active {
+.btn-weno:active {
   background-color: #d39e00;
   border-color: #d39e00;
   color: #212529 !important;
