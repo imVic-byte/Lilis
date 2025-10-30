@@ -6,6 +6,17 @@ from Main.decorator import permission_or_redirect
 
 user_service = UserService()
 
+@login_required
+@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
+def user_list(request):
+    users = user_service.list()
+    return render(request, "user_list.html", {"users": users})
+
+def password_reset(request):
+    return render(request, 'password_reset.html')
+
+@login_required
+@permission_or_redirect('Accounts.add_user','dashboard', 'No teni permiso')
 def registro(request):
     if request.method == 'POST':
         form = user_service.form_class(request.POST)
@@ -20,35 +31,19 @@ def registro(request):
         form = user_service.form_class()
     return render(request, 'registro.html', {'form': form})
 
-def password_reset(request):
-    return render(request, 'password_reset.html')
-
-@login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
-def user_list(request):
-    users = user_service.list()
-    return render(request, "user_list.html", {"users": users})
-
-
 @login_required
 @permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
 def user_update(request, id):
-    user = user_service.get(id)
+    user = user_service.model.objects.select_related('profile').get(id=id)
     if request.method == "POST":
-        success, forms = user_service.update(id, request.POST)
+        success, obj = user_service.update_user(id, request.POST)
         if success:
             return redirect("user_list")
         else:
-            user_form, profile_form = forms
+            form = obj
     else:
-        user_form = user_service.form_class(instance=user)
-        profile_form = user_service.model.profile(instance=user.profile)
-
-    return render(
-        request,
-        "user_update.html",
-        {"user_form": user_form, "profile_form": profile_form, "user": user},
-    )
+        form = user_service.form_class(user_instance=user, instance=user.profile)
+    return render(request, "registro.html", {"form": form})
 
 
 @login_required

@@ -32,7 +32,7 @@ class RoleModulePermission(models.Model):
     def __str__(self):
         return f"{self.role.name} - {self.module.name} (view:{self.can_view}, add:{self.can_add}, edit:{self.can_edit}, delete:{self.can_delete})"
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, related_name="profile")
     run = models.CharField(max_length=12, unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     role = models.ForeignKey("Role", on_delete=models.PROTECT, related_name="profiles")
