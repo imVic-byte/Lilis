@@ -41,4 +41,12 @@ class UserService(CRUD ):
         except (User.DoesNotExist, Profile.DoesNotExist):
             return False, None
 
+    def delete_user(self, id):
+        try:
+            user = self.model.objects.get(id=id)
+            user.profile.delete()
+            user.delete()
+            return True
+        except self.model.DoesNotExist:
+            return False
 

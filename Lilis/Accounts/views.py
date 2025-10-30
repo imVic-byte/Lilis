@@ -55,7 +55,7 @@ def user_update(request, id):
 @permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
 def user_delete(request, id):
     if request.method == "GET":
-        success = user_service.delete(id)
+        success = user_service.delete_user(id)
         if success:
             return redirect('user_list')
     return redirect("user_list")
