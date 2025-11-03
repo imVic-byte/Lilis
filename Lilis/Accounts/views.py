@@ -42,8 +42,8 @@ def user_update(request, id):
         else:
             form = obj
     else:
-        form = user_service.form_class(user_instance=user, instance=user.profile)
-    return render(request, "registro.html", {"form": form})
+        form = user_service.cargar_formulario(user)
+    return render(request, "user_update.html", {"form": form})
 
 
 @login_required

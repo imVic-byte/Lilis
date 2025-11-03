@@ -1,4 +1,4 @@
-from .forms import RegistroForm, UserForm, ProfileForm
+from .forms import RegistroForm, UserForm, ProfileForm, UpdateForm
 from django.contrib.auth.models import User
 from .models import Profile
 from Main.CRUD import CRUD
@@ -10,7 +10,7 @@ class UserService(CRUD ):
         self.form_class = RegistroForm
         self.user_form_class = UserForm
         self.profile_form_class = ProfileForm
-
+        self.update_form_class = UpdateForm
     def save_user(self, data):
         form = self.form_class(data)
         if form.is_valid():
@@ -21,12 +21,27 @@ class UserService(CRUD ):
     def update_user(self, id, data):
         try:
             usuario = self.model.objects.select_related('profile').get(id=id)
-            form = self.form_class(data, instance=usuario.profile, user_instance=usuario)
+            profile = usuario.profile
+            form = self.update_form_class(data, instance=profile, user_instance=usuario)
             if form.is_valid():
-                obj = form.save()
-                return True, obj
+                usuario.username = form.cleaned_data["username"]
+                usuario.email = form.cleaned_data["email"]
+                usuario.first_name = form.cleaned_data["first_name"]
+                usuario.last_name = form.cleaned_data["last_name"]
+                password = form.cleaned_data["password1"]
+                if password:
+                    usuario.set_password(password)
+                usuario.save()
+                profile.run = form.cleaned_data["run"]
+                profile.phone = form.cleaned_data["phone"]
+                profile.role = form.cleaned_data["role"]
+                profile.save()
+                selected_role = form.cleaned_data.get("role")
+                if selected_role:
+                    usuario.groups.clear()
+                    usuario.groups.add(selected_role.group)
+                return True, usuario
             return False, form
-                
         except self.model.DoesNotExist:
             return False, None
 
@@ -44,3 +59,19 @@ class UserService(CRUD ):
             return self.profile_model.objects.get(id=id)
         except self.model.DoesNotExist:
             return None
+    
+    def cargar_formulario(self, usuario):
+        usuario = self.model.objects.select_related('profile').get(id=usuario.id)
+        profile = usuario.profile
+        form = self.update_form_class(
+            initial={
+                "username": usuario.username,
+                "first_name": usuario.first_name,
+                "last_name": usuario.last_name,
+                "email": usuario.email,
+                "run": profile.run,
+                "phone": profile.phone,
+                "role": profile.role,
+            },
+        )
+        return form

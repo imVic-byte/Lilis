@@ -1,7 +1,7 @@
 from django import forms
 from itertools import cycle
 def validate_rut_format(rut_numero):
-    rut = rut.upper().replace("-", "").replace(".", "")
+    rut = rut_numero.upper().replace("-", "").replace(".", "")
     rut_aux = rut[:-1]
     dv = rut[-1:]
 

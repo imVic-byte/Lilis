@@ -7,117 +7,117 @@
         <h1 class="page-title">Lista de Usuarios</h1>
     </div>
     <div class="col text-end mb-2 ">
-        
-        <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
-            Ver Tabla
-        </button>
-
         <a href="{% url 'registro' %}" class="mt-2 text-end btn btn-weno">
             Agregar Usuario
         </a>
     </div>
 </div>
 
-<div id="user-cards-view">
-    <div class="row">
-        {% for user_obj in users %}
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ user_obj.first_name }} {{ user_obj.last_name }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">@{{ user_obj.username }}</h6>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Email:</strong>{{ user_obj.email|default:"No especificado" }}
-                        </li>
-                        <li class="list-group-item"><strong>Teléfono:</strong> {{ user_obj.profile.phone|default:"No especificado" }}</li>
-                        <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
-                    </ul>
-                    {% if perms.auth.change_user %}
-                    <a href="{% url 'user_update' user_obj.id %}" class="mt-2 text-end btn btn-primary">Editar</a>
-                    {% endif %}
-                    {% if perms.auth.delete_user %}
-                    <button type="button" 
-                            class="mt-2 text-end btn btn-danger btn-delete" 
-                            data-url="{% url 'user_delete' user_obj.id %}"
-                            data-item-name="@{{ user_obj.username }}">
-                        Eliminar
-                    </button>
-                    {% endif %}
+<div class="row">
+    {% for user_obj in users %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_obj.first_name }} {{ user_obj.last_name }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">@{{ user_obj.username }}</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Email:</strong>{{ user_obj.email|default:"No especificado" }}
+                    </li>
+                    <li class="list-group-item"><strong>Teléfono:</strong> {{ user_obj.profile.phone|default:"No especificado" }}</li>
+                    <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
+                </ul>
+                {% if perms.auth.change_user %}
+                <a href="{% url 'user_update' user_obj.id %}" class="mt-2 text-end btn btn-primary">Editar</a>
+                {% endif %}
+                {% if perms.auth.delete_user %}
+                <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
+                    data-bs-target="#confirmDeleteModal{{ user_obj.id }}">
+                    Eliminar
+                </button>
+                {% endif %}
+                <div class="modal fade" id="confirmDeleteModal{{ user_obj.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white p-2">
+                                <h6 class="modal-title">Confirmar</h6>
+                                <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-2 text-center">
+                                ¿Eliminar a <strong>{{ user_obj.username }}</strong>?
+                            </div>
+                            <div class="modal-footer p-2 justify-content-center">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <a href="{% url 'user_delete' user_obj.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <p class="text-center">No hay usuarios registrados.</p>
-        {% endfor %}
     </div>
-</div>
-
-<div id="user-table-view" style="display: none;">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Usuario</th>
-                        <th>Email</th>
-                        <th>Teléfono</th>
-                        <th>Rol</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user_obj in users %}
-                    <tr>
-                        <td>{{ user_obj.first_name }} {{ user_obj.last_name }}</td>
-                        <td>@{{ user_obj.username }}</td>
-                        <td>{{ user_obj.email|default:"-" }}</td>
-                        <td>{{ user_obj.profile.phone|default:"-" }}</td>
-                        <td>{{ user_obj.profile.role.group.name|default:"-" }}</td>
-                        <td>
-                            {% if perms.auth.change_user %}
-                            <a href="{% url 'user_update' user_obj.id %}" class="btn btn-primary btn-sm">Editar</a>
-                            {% endif %}
-                            {% if perms.auth.delete_user %}
-                            <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'user_delete' user_obj.id %}"
-                                    data-item-name="@{{ user_obj.username }}">
-                                Eliminar
-                            </button>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center">No hay usuarios registrados.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {% empty %}
+    <p class="text-center">No hay usuarios registrados.</p>
+    {% endfor %}
 </div>
 {% endblock content %}
 
 {% block scripts %}
-    {{ block.super }} <script> //block.super hace que este codigo pueda coexistir con el codigo del base.html
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggleBtn = document.getElementById('toggle-view-btn');
-        const cardsView = document.getElementById('user-cards-view');
-        const tableView = document.getElementById('user-table-view');
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    const csrftoken = getCookie('csrftoken');
 
-        toggleBtn.addEventListener('click', function() {
-            if (cardsView.style.display === 'none') {
-                cardsView.style.display = 'block';
-                tableView.style.display = 'none';
-                toggleBtn.textContent = 'Ver Tabla';
-            } else {
-                cardsView.style.display = 'none';
-                tableView.style.display = 'block';
-                toggleBtn.textContent = 'Ver Tarjetas';
+    const row = btn.closest('tr');
+    const zonaId = btn.dataset.id;
+    const url = btn.dataset.url;
+    const nombre = row.querySelector('.user_obj.id')?.textContent?.trim() || 'la zona';
+
+    const confirm = await Swal.fire({
+        title: `¿Eliminar ${nombre}?`,
+        text: "Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',                   // usamos POST por CSRF
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
         });
-});
-    </script>
-{% endblock %}
+
+        if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(txt || 'Error HTTP');
+        }
+        const data = await resp.json();
+        if (data.ok) {
+            // Quitar la fila del DOM
+            row.remove();
+
+            // Opcional: reindexar primera columna (#)
+            Array.from(document.querySelectorAll('#tablaZonas tbody tr')).forEach((tr, i) => {
+                tr.children[0].textContent = (i + 1).toString();
+            });
+
+            Swal.fire({ icon: "success", title: data.message, timer: 1800, showConfirmButton: false });
+        } else {
+            Swal.fire({ icon: "error", title: data.message || "No se pudo eliminar" });
+        }
+    } catch (err) {
+        Swal.fire({ icon: "error", title: "Error al eliminar", text: err.message });
+    }
+
+</script>
+{% endblock scripts%}
