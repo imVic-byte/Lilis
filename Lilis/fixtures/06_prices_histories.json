@@ -1,21 +1,61 @@
 [
-  { "model": "Products.PriceHistories", "pk": 1, "fields": { "fk_raw_supplier": 1, "price": "1200.50", "date": "2025-01-10" } },
-  { "model": "Products.PriceHistories", "pk": 2, "fields": { "fk_raw_supplier": 2, "price": "800.00", "date": "2025-02-15" } },
-  { "model": "Products.PriceHistories", "pk": 3, "fields": { "fk_raw_supplier": 3, "price": "950.75", "date": "2025-03-20" } },
+  {"model": "Products.PriceHistories", "pk": 1, "fields": {"product": 1, "unit_price": "1000.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 2, "fields": {"product": 1, "unit_price": "1050.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 3, "fields": {"product": 1, "unit_price": "1100.00", "date": "2025-06-01", "iva": "1.19"}},
 
-  { "model": "Products.PriceHistories", "pk": 4, "fields": { "fk_raw_supplier": 4, "price": "1500.00", "date": "2025-01-18" } },
-  { "model": "Products.PriceHistories", "pk": 5, "fields": { "fk_raw_supplier": 5, "price": "2200.00", "date": "2025-02-12" } },
-  { "model": "Products.PriceHistories", "pk": 6, "fields": { "fk_raw_supplier": 6, "price": "3100.40", "date": "2025-03-25" } },
+  {"model": "Products.PriceHistories", "pk": 4, "fields": {"product": 2, "unit_price": "2500.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 5, "fields": {"product": 2, "unit_price": "2550.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 6, "fields": {"product": 2, "unit_price": "2600.00", "date": "2025-06-01", "iva": "1.19"}},
 
-  { "model": "Products.PriceHistories", "pk": 7, "fields": { "fk_raw_supplier": 7, "price": "500.00", "date": "2025-01-30" } },
-  { "model": "Products.PriceHistories", "pk": 8, "fields": { "fk_raw_supplier": 8, "price": "750.00", "date": "2025-02-05" } },
-  { "model": "Products.PriceHistories", "pk": 9, "fields": { "fk_raw_supplier": 9, "price": "680.25", "date": "2025-03-10" } },
+  {"model": "Products.PriceHistories", "pk": 7, "fields": {"product": 3, "unit_price": "500.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 8, "fields": {"product": 3, "unit_price": "520.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 9, "fields": {"product": 3, "unit_price": "540.00", "date": "2025-06-01", "iva": "1.19"}},
 
-  { "model": "Products.PriceHistories", "pk": 10, "fields": { "fk_raw_supplier": 10, "price": "2000.00", "date": "2025-01-22" } },
-  { "model": "Products.PriceHistories", "pk": 11, "fields": { "fk_raw_supplier": 11, "price": "1850.90", "date": "2025-02-18" } },
-  { "model": "Products.PriceHistories", "pk": 12, "fields": { "fk_raw_supplier": 12, "price": "2300.60", "date": "2025-03-28" } },
+  {"model": "Products.PriceHistories", "pk": 10, "fields": {"product": 4, "unit_price": "750.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 11, "fields": {"product": 4, "unit_price": "780.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 12, "fields": {"product": 4, "unit_price": "800.00", "date": "2025-06-01", "iva": "1.19"}},
 
-  { "model": "Products.PriceHistories", "pk": 13, "fields": { "fk_raw_supplier": 13, "price": "1450.00", "date": "2025-01-12" } },
-  { "model": "Products.PriceHistories", "pk": 14, "fields": { "fk_raw_supplier": 14, "price": "1750.30", "date": "2025-02-08" } },
-  { "model": "Products.PriceHistories", "pk": 15, "fields": { "fk_raw_supplier": 15, "price": "1600.80", "date": "2025-03-16" } }
+  {"model": "Products.PriceHistories", "pk": 13, "fields": {"product": 5, "unit_price": "3000.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 14, "fields": {"product": 5, "unit_price": "3050.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 15, "fields": {"product": 5, "unit_price": "3100.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 16, "fields": {"product": 6, "unit_price": "12000.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 17, "fields": {"product": 6, "unit_price": "12200.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 18, "fields": {"product": 6, "unit_price": "12500.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 19, "fields": {"product": 7, "unit_price": "450.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 20, "fields": {"product": 7, "unit_price": "470.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 21, "fields": {"product": 7, "unit_price": "490.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 22, "fields": {"product": 8, "unit_price": "2200.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 23, "fields": {"product": 8, "unit_price": "2250.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 24, "fields": {"product": 8, "unit_price": "2300.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 25, "fields": {"product": 9, "unit_price": "800.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 26, "fields": {"product": 9, "unit_price": "820.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 27, "fields": {"product": 9, "unit_price": "850.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 28, "fields": {"product": 10, "unit_price": "1600.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 29, "fields": {"product": 10, "unit_price": "1650.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 30, "fields": {"product": 10, "unit_price": "1700.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 31, "fields": {"product": 11, "unit_price": "100.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 32, "fields": {"product": 11, "unit_price": "110.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 33, "fields": {"product": 11, "unit_price": "120.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 34, "fields": {"product": 12, "unit_price": "5400.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 35, "fields": {"product": 12, "unit_price": "5450.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 36, "fields": {"product": 12, "unit_price": "5500.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 37, "fields": {"product": 13, "unit_price": "890.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 38, "fields": {"product": 13, "unit_price": "920.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 39, "fields": {"product": 13, "unit_price": "950.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 40, "fields": {"product": 14, "unit_price": "1300.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 41, "fields": {"product": 14, "unit_price": "1350.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 42, "fields": {"product": 14, "unit_price": "1400.00", "date": "2025-06-01", "iva": "1.19"}},
+
+  {"model": "Products.PriceHistories", "pk": 43, "fields": {"product": 15, "unit_price": "7000.00", "date": "2025-01-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 44, "fields": {"product": 15, "unit_price": "7050.00", "date": "2025-03-01", "iva": "1.19"}},
+  {"model": "Products.PriceHistories", "pk": 45, "fields": {"product": 15, "unit_price": "7100.00", "date": "2025-06-01", "iva": "1.19"}}
 ]

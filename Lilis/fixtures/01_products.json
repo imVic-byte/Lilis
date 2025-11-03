@@ -1,0 +1,242 @@
+[
+  { 
+    "model": "Products.Product", 
+    "pk": 1, 
+    "fields": { 
+      "name": "Tableta de Chocolate Amargo", 
+      "sku": "PROD-001", 
+      "description": "Chocolate amargo 70% cacao", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-03-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 500.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 2, 
+    "fields": { 
+      "name": "Chocolate con Leche", 
+      "sku": "PROD-002", 
+      "description": "Tableta de chocolate con leche 45% cacao", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-02-15", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 400.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 3, 
+    "fields": { 
+      "name": "Chocolate Blanco", 
+      "sku": "PROD-003", 
+      "description": "Chocolate blanco cremoso con vainilla natural", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-04-10", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 350.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 4, 
+    "fields": { 
+      "name": "Galletas de Mantequilla", 
+      "sku": "PROD-004", 
+      "description": "Galletas dulces con mantequilla artesanal", 
+      "category": 2, 
+      "is_perishable": true, 
+      "expiration_date": "2025-12-30", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 600.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 5, 
+    "fields": { 
+      "name": "Barra Energética de Maní", 
+      "sku": "PROD-005", 
+      "description": "Barra energética con maní y miel natural", 
+      "category": 3, 
+      "is_perishable": true, 
+      "expiration_date": "2026-05-15", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 450.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 6, 
+    "fields": { 
+      "name": "Caramelos Frutales", 
+      "sku": "PROD-006", 
+      "description": "Caramelos duros de sabores mixtos", 
+      "category": 3, 
+      "is_perishable": false, 
+      "expiration_date": "2027-01-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "KG", 
+      "quantity": 250.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 7, 
+    "fields": { 
+      "name": "Bombones Rellenos", 
+      "sku": "PROD-007", 
+      "description": "Bombones de chocolate rellenos con crema de avellanas", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-01-20", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 300.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 8, 
+    "fields": { 
+      "name": "Galletas con Chips de Chocolate", 
+      "sku": "PROD-008", 
+      "description": "Galletas con trozos de chocolate semi amargo", 
+      "category": 2, 
+      "is_perishable": true, 
+      "expiration_date": "2026-03-30", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 550.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 9, 
+    "fields": { 
+      "name": "Chocolates de Frutas", 
+      "sku": "PROD-009", 
+      "description": "Bombones de chocolate rellenos con frutas confitadas", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-02-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 280.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 10, 
+    "fields": { 
+      "name": "Brownies", 
+      "sku": "PROD-010", 
+      "description": "Brownies de chocolate con nueces", 
+      "category": 2, 
+      "is_perishable": true, 
+      "expiration_date": "2026-01-15", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 320.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 11, 
+    "fields": { 
+      "name": "Trufas de Cacao", 
+      "sku": "PROD-011", 
+      "description": "Trufas artesanales cubiertas con cacao amargo", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-04-20", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 270.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 12, 
+    "fields": { 
+      "name": "Cupcakes de Vainilla", 
+      "sku": "PROD-012", 
+      "description": "Cupcakes de vainilla con cobertura de crema", 
+      "category": 2, 
+      "is_perishable": true, 
+      "expiration_date": "2025-12-20", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 200.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 13, 
+    "fields": { 
+      "name": "Turrón de Maní", 
+      "sku": "PROD-013", 
+      "description": "Turrón dulce con base de maní tostado", 
+      "category": 3, 
+      "is_perishable": false, 
+      "expiration_date": "2026-11-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "KG", 
+      "quantity": 180.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 14, 
+    "fields": { 
+      "name": "Chocolate con Almendras", 
+      "sku": "PROD-014", 
+      "description": "Chocolate con leche y almendras enteras", 
+      "category": 1, 
+      "is_perishable": true, 
+      "expiration_date": "2026-05-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 350.00 
+    } 
+  },
+  { 
+    "model": "Products.Product", 
+    "pk": 15, 
+    "fields": { 
+      "name": "Galletas Integrales", 
+      "sku": "PROD-015", 
+      "description": "Galletas integrales con avena y miel", 
+      "category": 2, 
+      "is_perishable": true, 
+      "expiration_date": "2026-02-25", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "measurement_unit": "U", 
+      "quantity": 400.00 
+    } 
+  }
+]
