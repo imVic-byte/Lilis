@@ -1,31 +1,95 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
+
+# ¡Importante! Asegúrate de que estas importaciones están
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+
 from .services import ClientService, WarehouseService, SaleOrderService, TransactionService
 from Main.decorator import permission_or_redirect
+
 client_service = ClientService()
 warehouse_service = WarehouseService()
 sale_order_service = SaleOrderService()
 transaction_service = TransactionService()
 
-#CLIENTESSS
+# ===================================
+# VISTAS DE CLIENTES
+# ===================================
+
 @login_required
 @permission_or_redirect('.view_client','dashboard', 'No teni permiso')
 def client_list_all(request):
-    clients = client_service.list()
-    return render(request, 'client_list.html', {'clients': clients})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
 
+    # 3. Obtener queryset base (solo "todos")
+    qs = client_service.list().order_by('fantasy_name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(fantasy_name__icontains=q) |
+            Q(bussiness_name__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring para los enlaces de paginación
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto para el template
+    context = {
+        "page_obj": page_obj,      # ¡Aquí está la variable correcta!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'client_list.html', context)
+
+
+# --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
 @login_required
 @permission_or_redirect('.view_client','dashboard', 'No teni permiso')
 def client_list_actives(request):
     clients = client_service.list_actives()
-    return render(request, 'client_list.html', {'clients': clients})
+    # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
+    return render(request, 'client_list.html', {'clients': clients}) 
 
 @login_required
 @permission_or_redirect('.view_client','dashboard', 'No teni permiso')
 def client_list_inactives(request):
     clients = client_service.list_inactives()
+    # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
     return render(request, 'client_list.html', {'clients': clients})
 
+# --- Resto de vistas de Cliente (con redirects actualizados) ---
 @login_required
 @permission_or_redirect('.view_client','dashboard', 'No teni permiso')
 def client_view(request, id):
@@ -33,7 +97,7 @@ def client_view(request, id):
         client = client_service.get(id)
         return render(request, 'client_view.html', {'b': client})
     else:
-        return redirect('client_list_actives')
+        return redirect('client_list_all') # ¡Redirect actualizado!
 
 @login_required
 @permission_or_redirect('.add_client','dashboard', 'No teni permiso')
@@ -42,7 +106,7 @@ def client_create(request):
     if request.method == 'POST':
         success, obj = client_service.save(request.POST)
         if success:
-            return redirect('client_list_actives')
+            return redirect('client_list_all') # ¡Redirect actualizado!
         else:
             return render(request, 'client_create.html', {'form': obj})
     return render(request, 'client_create.html', {'form': form})
@@ -53,7 +117,7 @@ def client_update(request, id):
     if request.method == 'POST':
         success, obj = client_service.update(id, request.POST)
         if success:
-            return redirect('client_list_actives')
+            return redirect('client_list_all') # ¡Redirect actualizado!
         else:
             return render(request, 'client_update.html', {'form': obj})
     else:
@@ -67,15 +131,65 @@ def client_delete(request, id):
     if request.method == 'GET':
         success = client_service.delete(id)
         if success:
-            return redirect('client_list_actives')
-    return redirect('client_list_actives')
+            return redirect('client_list_all') # ¡Redirect actualizado!
+    return redirect('client_list_all') # ¡Redirect actualizado!
 
-#LOCATIONS
+# ===================================
+# VISTAS DE LOCATIONS (Indentación Corregida)
+# ===================================
 @login_required
 @permission_or_redirect('.view_location','dashboard', 'No teni permiso')
 def location_list(request):
-    locations = warehouse_service.location_model.objects.all()
-    return render(request, 'location_list.html', {'locations': locations})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    qs = warehouse_service.location_model.objects.all().order_by('name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(city__icontains=q) |
+            Q(country__icontains=q)
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'locations' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'location_list.html', context)
 
 @login_required
 @permission_or_redirect('.view_location','dashboard', 'No teni permiso')
@@ -121,12 +235,63 @@ def location_delete(request, id):
             return redirect('location_list')
     return redirect('location_list')
 
-##warehouses
+# ===================================
+# VISTAS DE WAREHOUSES (Indentación Corregida)
+# ===================================
 @login_required
 @permission_or_redirect('.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_list(request):
-    warehouses = warehouse_service.model.objects.all()
-    return render(request, 'warehouse_list.html', {'warehouses': warehouses})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    # ¡Optimizamos con select_related para traer la ubicación!
+    qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(address__icontains=q) |
+            Q(location__name__icontains=q) # Búsqueda en la FK
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'warehouses' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'warehouse_list.html', context)
 
 @login_required
 @permission_or_redirect('.view_warehouse','dashboard', 'No teni permiso')
@@ -171,5 +336,3 @@ def warehouse_delete(request, id):
         if success:
             return redirect('warehouse_list')
     return redirect('warehouse_list')
-
-###
