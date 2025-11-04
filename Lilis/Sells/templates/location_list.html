@@ -70,34 +70,13 @@
                         <a href="{% url 'location_view' p.id %}" class="btn btn-weno me-2">
                             Ver
                         </a>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                            data-bs-target="#confirmDeleteModal{{ p.id }}">
+                        <button type="button" 
+                                    class="mt-2 btn-danger btn btn-delete" 
+                                    data-url="{% url 'location_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
                             Eliminar
-                        </button>
-                    </div>
-
-                    <div class="modal fade" id="confirmDeleteModal{{ p.id }}" tabindex="-1"
-                        aria-labelledby="modalLabel{{ p.id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-sm">
-                            <div class="modal-content">
-                                <div class="modal-header bg-danger text-white p-2">
-                                    <h6 class="modal-title" id="modalLabel{{ p.id }}">Confirmar</h6>
-                                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
-                                        aria-label="Cerrar"></button>
-                                </div>
-                                <div class="modal-body p-2 text-center">
-                                    ¿Eliminar dirección <strong>{{ p.name }}</strong>?
-                                </div>
-                                <div class="modal-footer p-2 justify-content-center">
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                        data-bs-dismiss="modal">Cancelar</button>
-                                    <a href="{% url 'location_delete' p.id %}"
-                                        class="btn btn-danger btn-sm">Eliminar</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                      
+                            </button>
+                    </div>  
                 </div>
             </div>
         </div>
@@ -128,9 +107,11 @@
                         <td>
                             <a href="{% url 'location_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
                             <a href="{% url 'location_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#confirmDeleteModal{{ p.id }}">
-                                Eliminar
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm btn-delete" 
+                                    data-url="{% url 'location_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                            Eliminar
                             </button>
                         </td>
                     </tr>
