@@ -1,5 +1,4 @@
 {% extends 'main/base.html' %}
-
 {% block title %} Usuarios {% endblock title %}
 {% block content %}
 <div class="row mb-3">
@@ -40,6 +39,11 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
+        
+        <button type="button" class="btn btn-success mt-2 export-btn" data-target="user-table-view" data-filename="page-title">
+            Exportar CSV
+        </button>
+
         <a href="{% url 'registro' %}" class="mt-2 text-end btn btn-weno">
             Agregar Usuario
         </a>
@@ -56,7 +60,8 @@
                     <h5 class="card-title">{{ user_obj.first_name }} {{ user_obj.last_name }}</h5>
                     <h6 class="card-subtitle mb-2 text-muted">@{{ user_obj.username }}</h6>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Email:</strong> {{ user_obj.email|default:"No especificado" }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ user_obj.email|default:"No especificado" }}
+                        </li>
                         <li class="list-group-item"><strong>Teléfono:</strong> {{ user_obj.profile.phone|default:"No especificado" }}</li>
                         <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
                     </ul>

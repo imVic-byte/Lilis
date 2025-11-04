@@ -9,7 +9,7 @@
 </div>
 
 <div class="row mb-3 justify-content-center">
-    <div class="col-md-12">
+    <div class="col-md-10">
         <form method="GET" action="{% url 'client_list_all' %}" class="form">
             <div class="input-group">
 
@@ -39,6 +39,9 @@
     <div class="col text-end">
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
+        </button>
+        <button type="button" class="btn btn-success mt-2 export-btn" data-target="client-table-view" data-filename="page-title">
+            Exportar CSV
         </button>
         <a href="{% url 'client_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Cliente
