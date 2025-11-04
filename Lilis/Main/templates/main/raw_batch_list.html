@@ -57,7 +57,7 @@
                     <h5 class="card-title">Lote de: {{ p.raw_material.name }}</h5>
                     <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
                     <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Proveedor:</strong> {{ p.raw_material.supplier.name|default:"N/A" }}</li>
+                        <li class="list-group-item"><strong>Proveedor:</strong> {{ p.raw_material.supplier.fantasy_name }} </li>
                         <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
                         <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
                     </ul>
@@ -105,7 +105,7 @@
                     <tr>
                         <td><strong>{{ p.batch_code }}</strong></td>
                         <td>{{ p.raw_material.name }}</td>
-                        <td>{{ p.raw_material.supplier.name|default:"N/A" }}</td>
+                        <td>{{ p.raw_material.supplier.fantasy_name|default:"N/A" }}</td>
                         <td>{{ p.current_quantity }}</td>
                         <td>{{ p.max_quantity }}</td>
                         <td>{{ p.min_quantity }}</td>

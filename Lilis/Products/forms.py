@@ -86,7 +86,7 @@ class ProductBatchForm(forms.ModelForm):
             'batch_code': 'Codigo de lote',
             'min_quantity': 'Cantidad Minima (Generar Aviso)',
             'current_quantity': 'Cantidad actual',
-            'max_quantity' : 'Cantidad Maxima'
+            'max_quantity' : 'Cantidad Maxima',
         }
     def clean_batch_code(self):
         batch_code = self.cleaned_data.get('batch_code')

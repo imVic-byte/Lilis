@@ -1,6 +1,7 @@
 from .models import Client, Location, Warehouse, WareClient,Transaction, SaleOrder, SaleOrderDetail
 from django import forms
 import datetime
+from Main.validators import validate_rut_format, validate_phone_format, validate_email, validate_password
 
 class ClientForm(forms.ModelForm):
     class Meta:
@@ -16,6 +17,12 @@ class ClientForm(forms.ModelForm):
             'debt': 'Deuda',
             'max_debt': 'Maximo de deuda'
         }
+    
+    def clean_rut(self):
+        rut = self.cleaned_data.get('rut')
+        if not validate_rut_format(rut):
+            raise forms.ValidationError('El formato del RUT es invalido.')
+        return rut
         
     def save(self, commit=True):
         client = super(ClientForm, self).save(commit=False)

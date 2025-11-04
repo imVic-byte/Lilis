@@ -298,7 +298,7 @@ def warehouse_list(request):
 def warehouse_view(request, id):
     if request.method == 'GET':
         warehouse = warehouse_service.model.objects.get(id=id)
-        return render(request, 'warehouse_view.html', {'warehouse': warehouse})
+        return render(request, 'warehouse_view.html', {'w': warehouse})
     else:
         return redirect('warehouse_list')
 
