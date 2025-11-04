@@ -197,10 +197,6 @@ class UpdateFieldForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
-        super().__init__(*args, **kwargs)
-
     def clean(self):
         cleaned_data = super().clean()
         field = cleaned_data.get("field_name")
