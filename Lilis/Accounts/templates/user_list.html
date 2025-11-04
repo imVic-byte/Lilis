@@ -66,7 +66,7 @@
                         <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
                     </ul>
                     {% if perms.auth.change_user %}
-                    <a href="{% url 'user_update' user_obj.id %}" class="mt-2 text-end btn btn-primary">Editar</a>
+                    <a href="{% url 'user_view' user_obj.id %}" class="mt-2 text-end btn btn-primary">Editar</a>
                     {% endif %}
                     {% if perms.auth.delete_user %}
                     <button type="button" 
@@ -110,7 +110,7 @@
                         <td>{{ user_obj.profile.role.group.name|default:"-" }}</td>
                         <td>
                             {% if perms.auth.change_user %}
-                            <a href="{% url 'user_update' user_obj.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <a href="{% url 'user_view' user_obj.id %}" class="btn btn-primary btn-sm">Editar</a>
                             {% endif %}
                             {% if perms.auth.delete_user %}
                             <button type="button" 

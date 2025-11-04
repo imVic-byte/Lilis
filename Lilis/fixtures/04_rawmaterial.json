@@ -5,8 +5,14 @@
     "fields": { 
       "name": "Granos de Cacao", 
       "description": "Granos de cacao premium", 
-      "stock_quantity": 200.00, 
-      "expiration_date": "2026-01-01" 
+      "is_perishable": true, 
+      "expiration_date": "2026-01-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 1, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 200.00 
     } 
   },
   { 
@@ -15,8 +21,14 @@
     "fields": { 
       "name": "Leche en Polvo", 
       "description": "Leche en polvo entera", 
-      "stock_quantity": 150.00, 
-      "expiration_date": "2026-05-01" 
+      "is_perishable": true, 
+      "expiration_date": "2026-05-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 2, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 150.00 
     } 
   },
   { 
@@ -25,8 +37,14 @@
     "fields": { 
       "name": "Azúcar", 
       "description": "Azúcar refinada", 
-      "stock_quantity": 300.00, 
-      "expiration_date": "2027-01-01" 
+      "is_perishable": false, 
+      "expiration_date": "2027-01-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 3, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 300.00 
     } 
   },
   { 
@@ -35,8 +53,14 @@
     "fields": { 
       "name": "Cacao Oscuro", 
       "description": "Cacao oscuro de alta calidad", 
-      "stock_quantity": 100.00, 
-      "expiration_date": "2026-08-01" 
+      "is_perishable": true, 
+      "expiration_date": "2026-08-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 1, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 100.00 
     } 
   },
   { 
@@ -45,8 +69,14 @@
     "fields": { 
       "name": "Extracto de Vainilla", 
       "description": "Extracto natural de vainilla", 
-      "stock_quantity": 50.00, 
-      "expiration_date": "2025-12-15" 
+      "is_perishable": true, 
+      "expiration_date": "2025-12-15", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 4, 
+      "category": 2, 
+      "measurement_unit": "L", 
+      "quantity": 50.00 
     } 
   },
   { 
@@ -55,8 +85,14 @@
     "fields": { 
       "name": "Chocolate con Leche", 
       "description": "Bloques de chocolate con leche", 
-      "stock_quantity": 80.00, 
-      "expiration_date": "2026-03-10" 
+      "is_perishable": true, 
+      "expiration_date": "2026-03-10", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 2, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 80.00 
     } 
   },
   { 
@@ -65,8 +101,14 @@
     "fields": { 
       "name": "Jarabe de Glucosa", 
       "description": "Jarabe de glucosa de maíz", 
-      "stock_quantity": 120.00, 
-      "expiration_date": "2025-09-01" 
+      "is_perishable": false, 
+      "expiration_date": "2025-09-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 5, 
+      "category": 2, 
+      "measurement_unit": "L", 
+      "quantity": 120.00 
     } 
   },
   { 
@@ -75,8 +117,14 @@
     "fields": { 
       "name": "Saborizante de Frutas", 
       "description": "Saborizante de frutas mixtas", 
-      "stock_quantity": 60.00, 
-      "expiration_date": "2026-02-20" 
+      "is_perishable": true, 
+      "expiration_date": "2026-02-20", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 4, 
+      "category": 2, 
+      "measurement_unit": "L", 
+      "quantity": 60.00 
     } 
   },
   { 
@@ -85,8 +133,14 @@
     "fields": { 
       "name": "Gelatina", 
       "description": "Gelatina en polvo", 
-      "stock_quantity": 90.00, 
-      "expiration_date": "2025-11-11" 
+      "is_perishable": false, 
+      "expiration_date": "2025-11-11", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 5, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 90.00 
     } 
   },
   { 
@@ -95,8 +149,14 @@
     "fields": { 
       "name": "Harina de Trigo", 
       "description": "Harina de trigo fina", 
-      "stock_quantity": 200.00, 
-      "expiration_date": "2026-06-06" 
+      "is_perishable": false, 
+      "expiration_date": "2026-06-06", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 3, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 200.00 
     } 
   },
   { 
@@ -105,8 +165,14 @@
     "fields": { 
       "name": "Mantequilla", 
       "description": "Mantequilla salada", 
-      "stock_quantity": 70.00, 
-      "expiration_date": "2025-12-30" 
+      "is_perishable": true, 
+      "expiration_date": "2025-12-30", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 4, 
+      "category": 3, 
+      "measurement_unit": "KG", 
+      "quantity": 70.00 
     } 
   },
   { 
@@ -115,8 +181,14 @@
     "fields": { 
       "name": "Huevo en Polvo", 
       "description": "Huevo en polvo secado por aspersión", 
-      "stock_quantity": 50.00, 
-      "expiration_date": "2026-09-15" 
+      "is_perishable": true, 
+      "expiration_date": "2026-09-15", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 2, 
+      "category": 3, 
+      "measurement_unit": "KG", 
+      "quantity": 50.00 
     } 
   },
   { 
@@ -125,8 +197,14 @@
     "fields": { 
       "name": "Almidón de Maíz", 
       "description": "Almidón de maíz refinado", 
-      "stock_quantity": 130.00, 
-      "expiration_date": "2026-04-01" 
+      "is_perishable": false, 
+      "expiration_date": "2026-04-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 5, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 130.00 
     } 
   },
   { 
@@ -135,8 +213,14 @@
     "fields": { 
       "name": "Sal", 
       "description": "Sal yodada", 
-      "stock_quantity": 180.00, 
-      "expiration_date": "2027-07-01" 
+      "is_perishable": false, 
+      "expiration_date": "2027-07-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 3, 
+      "category": 1, 
+      "measurement_unit": "KG", 
+      "quantity": 180.00 
     } 
   },
   { 
@@ -145,8 +229,14 @@
     "fields": { 
       "name": "Maní", 
       "description": "Maní crudo", 
-      "stock_quantity": 100.00, 
-      "expiration_date": "2026-11-01" 
+      "is_perishable": true, 
+      "expiration_date": "2026-11-01", 
+      "created_at": "2025-11-03", 
+      "is_active": true, 
+      "supplier": 1, 
+      "category": 3, 
+      "measurement_unit": "KG", 
+      "quantity": 100.00 
     } 
   }
 ]

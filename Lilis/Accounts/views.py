@@ -34,21 +34,6 @@ def registro(request):
     return render(request, 'registro.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
-def user_update(request, id):
-    user = user_service.model.objects.select_related('profile').get(id=id)
-    if request.method == "POST":
-        success, obj = user_service.update_user(id, request.POST)
-        if success:
-            return redirect("user_list")
-        else:
-            form = obj
-    else:
-        form = user_service.form_class(user_instance=user, instance=user.profile)
-    return render(request, "registro.html", {"form": form})
-
-
-@login_required
 @permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
 def user_delete(request, id):
     if request.method == "GET":
@@ -57,6 +42,36 @@ def user_delete(request, id):
             return redirect('user_list')
     return redirect("user_list")
 
+@login_required
+@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
+def user_view(request, id):
+    user = user_service.model.objects.select_related('profile').get(id=id)
+    return render(request, "user_view.html", {"user": user})
+
+
+
+@login_required
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
+def edit_field(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        print("POST data:", request.POST)
+        form = user_service.update_field_form_class(request.POST)
+        if form.is_valid():
+            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
+            if success:
+                return redirect('user_list')
+    else:
+        form = user_service.update_field_form_class(
+            initial={'field_name': field_name, 'new_data': previous_data}
+        )
+    return render(
+        request, 
+        "edit_field.html", 
+        {"field_name": field_name, "previous_data": previous_data, 'form': form}
+    )
 
 @login_required
 @permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
