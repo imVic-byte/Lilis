@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from django.shortcuts import render, redirect
 from .services import UserService
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 
 user_service = UserService()
@@ -32,21 +32,6 @@ def registro(request):
     return render(request, 'registro.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
-def user_update(request, id):
-    user = user_service.model.objects.select_related('profile').get(id=id)
-    if request.method == "POST":
-        success, obj = user_service.update_user(id, request.POST)
-        if success:
-            return redirect("user_list")
-        else:
-            form = obj
-    else:
-        form = user_service.cargar_formulario(user)
-    return render(request, "user_update.html", {"form": form})
-
-
-@login_required
 @permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
 def user_delete(request, id):
     if request.method == "GET":
@@ -55,10 +40,16 @@ def user_delete(request, id):
             return redirect('user_list')
     return redirect("user_list")
 
+@login_required
+@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_view(request, id):
     user = user_service.model.objects.select_related('profile').get(id=id)
     return render(request, "user_view.html", {"user": user})
 
+
+
+@login_required
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
 def edit_field(request):
     user_id = request.GET.get("user_id")
     field_name = request.GET.get("field_name")

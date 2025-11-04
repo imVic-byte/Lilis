@@ -9,7 +9,6 @@ urlpatterns = [
     path('password_reset/', views.password_reset, name='password_reset'),
     path('user_list', views.user_list, name='user_list'),
     path('user_delete/<int:id>', views.user_delete, name='user_delete'),
-    path('user_update/<int:id>', views.user_update, name='user_update'),
     path('user_view/<int:id>', views.user_view, name='user_view'),
     path('edit_field/', views.edit_field, name='edit_field'),
 ]
