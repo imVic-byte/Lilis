@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 
+
 class Module(models.Model):
     code = models.SlugField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
@@ -43,3 +44,4 @@ class Profile(models.Model):
     def get_staff(self):
         return f'{self.user.is_staff}'
     
+
