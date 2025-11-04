@@ -1,4 +1,4 @@
-from .forms import RegistroForm, UserForm, ProfileForm, UpdateForm
+from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm
 from django.contrib.auth.models import User
 from .models import Profile
 from Main.CRUD import CRUD
@@ -10,7 +10,7 @@ class UserService(CRUD ):
         self.form_class = RegistroForm
         self.user_form_class = UserForm
         self.profile_form_class = ProfileForm
-        self.update_form_class = UpdateForm
+        self.update_field_form_class = UpdateFieldForm
     def save_user(self, data):
         form = self.form_class(data)
         if form.is_valid():
@@ -75,3 +75,20 @@ class UserService(CRUD ):
             },
         )
         return form
+    
+    def edit_field(self, user_id, field_name, data):
+        try:
+            usuario = self.model.objects.select_related('profile').get(id=user_id)
+            profile = usuario.profile
+            if field_name == 'run' or field_name == 'phone' or field_name == 'role':
+                setattr(profile, field_name, data)
+                print(field_name,data)
+                profile.save()
+                return True
+            else:
+                setattr(usuario, field_name, data)
+                print(field_name,data)
+                usuario.save()
+                return True
+        except self.model.DoesNotExist: 
+            return False, None

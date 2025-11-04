@@ -1,0 +1,83 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Usuario {{ request.user.username }} {% endblock title %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Detalle del Usuario</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Nombre de usuario:</strong> {{ user.username }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=username&previous_data={{ user.username|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>RUT:</strong> {{ user.profile.run }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=run&previous_data={{ user.profile.run|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Nombre:</strong> {{ user.first_name }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=first_name&previous_data={{ user.first_name|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Apellido:</strong> {{ user.last_name }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=last_name&previous_data={{ user.last_name|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Rol:</strong> {{ user.profile.role.description }}
+                        </div>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Email:</strong> {{ user.email|default:"No registrado" }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=email&previous_data={{ user.email|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Teléfono:</strong> {{ user.profile.phone|default:"No registrado" }}
+                        </div>
+                        <a href="{% url 'edit_field' %}?field_name=phone&previous_data={{ user.profile.phone|urlencode }}&user_id={{ user.id }}" 
+                           class="text-decoration-none text-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

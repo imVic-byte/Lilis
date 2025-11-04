@@ -54,3 +54,28 @@ def user_delete(request, id):
         if success:
             return redirect('user_list')
     return redirect("user_list")
+
+def user_view(request, id):
+    user = user_service.model.objects.select_related('profile').get(id=id)
+    return render(request, "user_view.html", {"user": user})
+
+def edit_field(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        print("POST data:", request.POST)
+        form = user_service.update_field_form_class(request.POST)
+        if form.is_valid():
+            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
+            if success:
+                return redirect('user_list')
+    else:
+        form = user_service.update_field_form_class(
+            initial={'field_name': field_name, 'new_data': previous_data}
+        )
+    return render(
+        request, 
+        "edit_field.html", 
+        {"field_name": field_name, "previous_data": previous_data, 'form': form}
+    )

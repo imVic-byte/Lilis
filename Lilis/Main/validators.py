@@ -1,5 +1,7 @@
 from django import forms
 from itertools import cycle
+import re
+
 def validate_rut_format(rut_numero):
     rut = rut_numero.upper().replace("-", "").replace(".", "")
     rut_aux = rut[:-1]
@@ -45,3 +47,16 @@ def validate_password(password):
         raise forms.ValidationError('La contrasena debe contener al menos un número.')
     
     return password
+
+
+
+def validate_email(email):
+    patron = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    
+    if not isinstance(email, str) or not email:
+        return False
+
+    if re.match(patron, email):
+        return email
+    else:
+        return False

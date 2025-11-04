@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Profile, Role
-from Main.validators import validate_rut_format, validate_phone_format, validate_password
+from Main.validators import validate_rut_format, validate_phone_format, validate_password, validate_email
 
 class RegistroForm(forms.ModelForm):
 
@@ -190,73 +190,60 @@ class ProfileForm(forms.ModelForm):
             "role": "Rol",
         }
 
-class UpdateForm(forms.Form):
-    run = forms.CharField(
-        max_length=12,
-        label="RUT",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12345678-9'})
-    )
-    phone = forms.CharField(
-        max_length=20,
-        required=False,
-        label="Teléfono",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 987654321'})
+class UpdateFieldForm(forms.Form):
+    field_name = forms.CharField(widget=forms.HiddenInput())
+    new_data = forms.CharField(
+        label="",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 
-    username = forms.CharField(
-        max_length=150,
-        label="Nombre de usuario",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: juanperez'})
-    )
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
 
-    first_name = forms.CharField(
-        max_length=30,
-        label="Nombre",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Juan'})
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        field = cleaned_data.get("field_name")
+        value = cleaned_data.get("new_data")
 
-    last_name = forms.CharField(
-        max_length=150,
-        label="Apellido",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Pérez'})
-    )
+        if not field:
+            raise forms.ValidationError("No se especificó el campo a modificar.")
+        if value is None or value == "":
+            raise forms.ValidationError("El nuevo valor no puede estar vacío.")
 
-    email = forms.EmailField(
-        label="Correo electrónico",
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@correo.cl'})
-    )
-    def clean_email(self):
-        email = self.cleaned_data.get("email")
-        if User.objects.filter(email=email).exclude(username=self.cleaned_data.get("username")).exists():
-            raise forms.ValidationError("El correo electrónico ya está en uso por otro usuario.")
-        return email
-    
-    def clean_run(self):
-        rut = self.cleaned_data.get("run")
+        clean_method = getattr(self, f"clean_{field}", None)
+        if callable(clean_method):
+            cleaned_data["new_data"] = clean_method(value)
+        else:
+            raise forms.ValidationError(f"El campo '{field}' no es editable.")
+        return cleaned_data
+
+    def clean_email(self, email):
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("El correo electrónico ya está en uso.")
+        if validate_email(email):
+            return email
+        raise forms.ValidationError("El correo electrónico no es válido.")
+
+    def clean_run(self, rut):
         if validate_rut_format(rut):
             return rut
-        else:
-            raise forms.ValidationError("El formato del RUT es incorrecto.")
-        
-    def clean_phone(self):
-        phone = self.cleaned_data.get("phone")
+        raise forms.ValidationError("El formato del RUT es incorrecto.")
+
+    def clean_phone(self, phone):
         return validate_phone_format(phone)
-    
-    def clean_first_name(self):
-        first_name = self.cleaned_data.get("first_name")
-        if not first_name:
+
+    def clean_first_name(self, first_name):
+        if not first_name.strip():
             raise forms.ValidationError("El nombre no puede estar vacío.")
         return first_name
-    
-    def clean_last_name(self):
-        last_name = self.cleaned_data.get("last_name")
-        if not last_name:
+
+    def clean_last_name(self, last_name):
+        if not last_name.strip():
             raise forms.ValidationError("El apellido no puede estar vacío.")
         return last_name
-    
-    def clean_username(self):
-        username = self.cleaned_data.get("username")
-        if User.objects.filter(username=username).exclude(email=self.cleaned_data.get("email")).exists():
+
+    def clean_username(self, username):
+        if User.objects.filter(username=username).exists():
             raise forms.ValidationError("El nombre de usuario ya está en uso por otro usuario.")
         return username
-    
