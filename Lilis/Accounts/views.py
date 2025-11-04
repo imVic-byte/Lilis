@@ -3,6 +3,8 @@ from django.shortcuts import render, redirect
 from .services import UserService
 from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 user_service = UserService()
 
@@ -54,3 +56,68 @@ def user_delete(request, id):
         if success:
             return redirect('user_list')
     return redirect("user_list")
+
+
+@login_required
+@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
+def user_list(request):
+    
+    q = (request.GET.get("q") or "").strip()
+
+    # ===================================
+    #   ¡CAMBIO! Lógica para 'por página' (1-10)
+    # ===================================
+    default_per_page = 10  # Mantenemos 10 como el default
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    # ¡CAMBIO! Nueva validación para el rango 1-10
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+    # ===================================
+
+    # 2. Queryset (sin cambios)
+    qs = user_service.list().select_related("profile", "profile__role").order_by("username")
+
+    # 3. Filtro (sin cambios)
+    if q:
+        qs = qs.filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(username__icontains=q) |
+            Q(profile__run__icontains=q) | 
+            Q(profile__role__group__name__icontains=q)
+        )
+
+    # 4. Paginador (sin cambios, usa la variable per_page)
+    paginator = Paginator(qs, per_page) 
+    page_number = request.GET.get("page")
+
+    # 5. Obtener página (sin cambios)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Querystring (sin cambios)
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Contexto (¡importante!)
+    context = {
+        "page_obj": page_obj,  
+        "q": q,
+        "querystring": querystring,
+        "total": qs.count(),
+        "per_page": per_page, # ¡Pasamos el 'per_page' para el select!
+    }
+    return render(request, "user_list.html", context)
+
+
+
+    

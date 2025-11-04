@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from .services import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
 from django.contrib.auth.decorators import login_required, permission_required
 from Main.decorator import permission_or_redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 category_service = CategoryService()
 product_service = ProductService()
@@ -13,8 +15,55 @@ price_histories_service = PriceHistoriesService()
 @login_required
 @permission_or_redirect('Products.view_category','dashboard', 'No teni permiso')
 def category_list(request):
-    categories = category_service.list()
-    return render(request, 'main/category_list.html', {'categories': categories})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    qs = category_service.list().order_by('name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q)
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'categories' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/category_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.add_category','dashboard', 'No teni permiso')
@@ -56,8 +105,57 @@ def category_delete(request, id):
 @login_required
 @permission_or_redirect('Products.view_products','dashboard', 'No teni permiso')
 def products_list(request):
-    products = product_service.list()
-    return render(request, 'main/products_list.html', {'products': products})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    # ¡Optimizamos con select_related para traer la categoría!
+    qs = product_service.list().select_related("category").order_by('name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q) |
+            Q(category__name__icontains=q) # Búsqueda en la FK
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'products' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/products_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_products','dashboard', 'No teni permiso')
@@ -106,8 +204,58 @@ def product_delete(request, id):
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_list(request):
-    suppliers = supplier_service.list()
-    return render(request, 'main/supplier_list.html', {'suppliers': suppliers})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    qs = supplier_service.list().order_by('fantasy_name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(fantasy_name__icontains=q) |
+            Q(bussiness_name__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'suppliers' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/supplier_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
@@ -152,8 +300,61 @@ def supplier_delete(request, id):
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_list(request):
-    raw_materials = raw_material_service.list_actives()
-    return render(request, 'main/raw_material_list.html', {'raw_materials': raw_materials})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base (mantenemos list_actives())
+    # ¡Optimizamos con select_related para traer proveedor y categoría!
+    qs = raw_material_service.list_actives().select_related(
+        "supplier", 
+        "category"
+    ).order_by('name')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(supplier__fantasy_name__icontains=q) |
+            Q(category__name__icontains=q)
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'raw_materials' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/raw_material_list.html', context)
+
 
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
@@ -199,8 +400,56 @@ def raw_material_delete(request, id):
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def product_batch_list(request):
-    batches = batch_service.list_products()
-    return render(request, 'main/product_batch_list.html', {'batches': batches})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    # ¡Optimizamos con select_related para traer el producto!
+    qs = batch_service.list_products().select_related("product").order_by('batch_code')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(product__name__icontains=q) | # Buscar por nombre de producto
+            Q(batch_code__icontains=q)      # Buscar por código de lote
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'batches' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/product_batch_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
@@ -244,8 +493,60 @@ def product_batch_delete(request, id):
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def raw_batch_list(request):
-    batches = batch_service.list_raw_materials()
-    return render(request, 'main/raw_batch_list.html', {'batches': batches})
+    
+    # 1. Obtener filtros de la URL
+    q = (request.GET.get("q") or "").strip()
+    
+    # 2. Obtener 'por página' (rango 1-10)
+    default_per_page = 10
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    
+    if per_page > 10 or per_page <= 0:
+        per_page = default_per_page
+
+    # 3. Obtener queryset base
+    # ¡Optimizamos con select_related para traer materia prima y proveedor!
+    qs = batch_service.list_raw_materials().select_related(
+        "raw_material", 
+        "raw_material__supplier"
+    ).order_by('batch_code')
+
+    # 4. Aplicar filtro de búsqueda
+    if q:
+        qs = qs.filter(
+            Q(raw_material__name__icontains=q) | # "nombre"
+            Q(batch_code__icontains=q) |         # "codigo"
+            Q(raw_material__supplier__name__icontains=q) # "proveedor"
+        )
+
+    # 5. Aplicar paginación
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # 6. Preparar querystring
+    params = request.GET.copy()
+    params.pop("page", None)
+    querystring = params.urlencode()
+
+    # 7. Preparar contexto
+    context = {
+        "page_obj": page_obj,      # ¡Cambiamos 'batches' por 'page_obj'!
+        "q": q,
+        "per_page": per_page,
+        "querystring": querystring,
+        "total": qs.count(),
+    }
+    return render(request, 'main/raw_batch_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')

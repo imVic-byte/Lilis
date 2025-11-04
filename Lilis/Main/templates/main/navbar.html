@@ -57,7 +57,7 @@
                 {% endif %}
                     <ul class="dropdown-menu">
                         {% if perms.Sells.view_client %}
-                        <li><a class="dropdown-item" href="{% url 'client_list_actives' %}">Clientes</a></li>
+                        <li><a class="dropdown-item" href="{% url 'client_list_all' %}">Clientes</a></li>
                         {% endif %}
                         {% if perms.Sells.view_location %}
                         <li><a class="dropdown-item" href="{% url 'location_list' %}">Direcciones</a></li>
