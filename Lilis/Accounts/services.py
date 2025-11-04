@@ -20,25 +20,27 @@ class UserService(CRUD ):
 
     def update_user(self, id, data):
         try:
-            user_instance = User.objects.get(id=id)
-            profile_instance = Profile.objects.get(user=user_instance)
-            user_form = UserForm(data, instance=user_instance)
-            profile_form = ProfileForm(data, instance=profile_instance)
-
-            if user_form.is_valid() and profile_form.is_valid():
-                user = user_form.save()
-                profile = profile_form.save(commit=False)
+            usuario = self.model.objects.select_related('profile').get(id=id)
+            form = self.form_class(data, instance=usuario.profile, user_instance=usuario)
+            if form.is_valid():
+                obj = form.save()
+                return True, obj
+            return False, form
                 
-                new_role = profile_form.cleaned_data.get('role')
-                if new_role != profile_instance.role:
-                    user.groups.clear()
-                    if new_role:
-                        user.groups.add(new_role.group)
-
-                profile.save()
-                return True, (user_form, profile_form)
-            return False, (user_form, profile_form)
-        except (User.DoesNotExist, Profile.DoesNotExist):
+        except self.model.DoesNotExist:
             return False, None
 
+    def delete_user(self, id):
+        try:
+            user = self.model.objects.get(id=id)
+            user.profile.delete()
+            user.delete()
+            return True
+        except self.model.DoesNotExist:
+            return False
 
+    def get_profile(self, id):
+        try:
+            return self.profile_model.objects.get(id=id)
+        except self.model.DoesNotExist:
+            return None

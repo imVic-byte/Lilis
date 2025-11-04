@@ -1,13 +1,40 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Profile
+from Main.validators import validate_rut_format, validate_phone_format, validate_password
 
 class RegistroForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        self.user_instance = kwargs.pop("user_instance", None)
+        super().__init__(*args, **kwargs)
+
+        if self.user_instance:
+            self.fields["username"].initial = self.user_instance.username
+            self.fields["first_name"].initial = self.user_instance.first_name
+            self.fields["last_name"].initial = self.user_instance.last_name
+            self.fields["email"].initial = self.user_instance.email
+
     username = forms.CharField(
         label="Nombre de usuario",
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ej: juanperez'
+        })
+    )
+
+    first_name = forms.CharField(
+        label="Nombre",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Juan'
+        })
+    )
+    last_name = forms.CharField(
+        label="Apellido",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Pérez'
         })
     )
     email = forms.EmailField(
@@ -55,6 +82,10 @@ class RegistroForm(forms.ModelForm):
             }),
         }
 
+    def clean_password1(self):
+        password = self.cleaned_data.get("password1")
+        return validate_password(password)
+    
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
@@ -66,27 +97,25 @@ class RegistroForm(forms.ModelForm):
 
     def clean_rut(self):
         rut = self.cleaned_data.get("run")
-        if len(rut) != 10:
-            raise forms.ValidationError("El RUT debe tener 10 caracteres.")
-        return rut
+        return validate_rut_format(rut)
+
 
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
-        if len(phone) !=9:
-            raise forms.ValidationError("El teléfono debe tener 9 caracteres.")
-        return phone
+        return validate_phone_format(phone)
+    
     
     def save(self, commit=True):
-    # Crear el usuario
         user = User.objects.create_user(
             username=self.cleaned_data["username"],
             email=self.cleaned_data["email"],
-            password=self.cleaned_data["password1"]
+            password=self.cleaned_data["password1"],
+            first_name=self.cleaned_data["first_name"],
+            last_name=self.cleaned_data["last_name"],
         )
-
+    
         selected_role = self.cleaned_data.get("role")
 
-        # Crear el perfil asociado al usuario
         profile = Profile(
             user=user,
             run=self.cleaned_data.get("run"),

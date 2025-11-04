@@ -17,12 +17,12 @@ class ClientForm(forms.ModelForm):
             'max_debt': 'Maximo de deuda'
         }
         
-        def save(self, commit=True):
-            client = super(ClientForm, self).save(commit=False)
-            if commit:
-                client.save()
-                return client
+    def save(self, commit=True):
+        client = super(ClientForm, self).save(commit=False)
+        if commit:
+            client.save()
             return client
+        return client
         
 class LocationForm(forms.ModelForm):
     class Meta:
@@ -34,12 +34,12 @@ class LocationForm(forms.ModelForm):
             'country': 'Pais'
         }
         
-        def save(self, commit=True):
-            location = super(LocationForm, self).save(commit=False)
-            if commit:
-                location.save()
-                return location
+    def save(self, commit=True):
+        location = super(LocationForm, self).save(commit=False)
+        if commit:
+            location.save()
             return location
+        return location
         
 class WarehouseForm(forms.ModelForm):
     class Meta:
@@ -52,12 +52,12 @@ class WarehouseForm(forms.ModelForm):
             'location': 'Localidad'
         }
         
-        def save(self, commit=True):
-            warehouse = super(WarehouseForm, self).save(commit=False)   
-            if commit:
-                warehouse.save()
-                return warehouse
+    def save(self, commit=True):
+        warehouse = super(WarehouseForm, self).save(commit=False)   
+        if commit:
+            warehouse.save()
             return warehouse
+        return warehouse
         
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -69,12 +69,12 @@ class TransactionForm(forms.ModelForm):
             'batch': 'Lote'
         }
         
-        def save(self, commit=True):
-            transaction = super(TransactionForm, self).save(commit=False)
-            if commit:
-                transaction.save()
-                return transaction
+    def save(self, commit=True):
+        transaction = super(TransactionForm, self).save(commit=False)
+        if commit:
+            transaction.save()
             return transaction
+        return transaction
         
 class SaleOrderForm(forms.ModelForm):
     class Meta:
@@ -88,12 +88,12 @@ class SaleOrderForm(forms.ModelForm):
             'payment_terms': 'Plazo de pago',
         }
 
-        def save(self, commit=True):
-            sale_order = super(SaleOrderForm, self).save(commit=False)
-            if commit:
-                sale_order.save()
-                return sale_order
+    def save(self, commit=True):
+        sale_order = super(SaleOrderForm, self).save(commit=False)
+        if commit:
+            sale_order.save()
             return sale_order
+        return sale_order
         
 class SaleOrderDetailForm(forms.ModelForm):
     class Meta:
@@ -104,9 +104,9 @@ class SaleOrderDetailForm(forms.ModelForm):
             'quantity': 'Cantidad'
         }
         
-        def save(self, commit=True):
-            sale_order_detail = super(SaleOrderDetailForm, self).save(commit=False)
-            if commit:
-                sale_order_detail.save()
-                return sale_order_detail
+    def save(self, commit=True):
+        sale_order_detail = super(SaleOrderDetailForm, self).save(commit=False)
+        if commit:
+            sale_order_detail.save()
             return sale_order_detail
+        return sale_order_detail

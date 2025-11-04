@@ -1,0 +1,57 @@
+[
+  { 
+    "model": "Products.Supplier", 
+    "pk": 1, 
+    "fields": { 
+      "bussiness_name": "Sweet Supplies Ltd", 
+      "rut": "12345678-9", 
+      "email": "info@sweetsupplies.com", 
+      "phone": "+56 9 1111 1111", 
+      "trade_terms": "Net 30 días" 
+    } 
+  },
+  { 
+    "model": "Products.Supplier", 
+    "pk": 2, 
+    "fields": { 
+      "bussiness_name": "ChocoWorld Inc", 
+      "rut": "87654321-0", 
+      "email": "sales@chocoworld.com", 
+      "phone": "+56 9 2222 2222", 
+      "trade_terms": "FOB" 
+    } 
+  },
+  { 
+    "model": "Products.Supplier", 
+    "pk": 3, 
+    "fields": { 
+      "bussiness_name": "CandyPro", 
+      "rut": "11223344-5", 
+      "email": "contact@candypro.com", 
+      "phone": "+56 9 3333 3333", 
+      "trade_terms": "CIF" 
+    } 
+  },
+  { 
+    "model": "Products.Supplier", 
+    "pk": 4, 
+    "fields": { 
+      "bussiness_name": "Cookie House", 
+      "rut": "55667788-9", 
+      "email": "hello@cookiehouse.com", 
+      "phone": "+56 9 4444 4444", 
+      "trade_terms": "Net 15 días" 
+    } 
+  },
+  { 
+    "model": "Products.Supplier", 
+    "pk": 5, 
+    "fields": { 
+      "bussiness_name": "Snackers SA", 
+      "rut": "99887766-5", 
+      "email": "orders@snackers.com", 
+      "phone": "+56 9 5555 5555", 
+      "trade_terms": "Ex-works" 
+    } 
+  }
+]

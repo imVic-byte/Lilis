@@ -1,17 +1,18 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Lotes de Materia Prima {% endblock title %}
+{% block title %} Lista de Clientes {% endblock title %}
 {% block content %}
 <div class="row mb-3">
     <div class="col-12 text-center">
-        <h1 class="page-title">Lista de Lotes de Materia Prima</h1>
+        <h1 class="page-title">Lista de Clientes</h1>
     </div>
 </div>
 
 <div class="row mb-3 justify-content-center">
-    <div class="col-md-10">
-        <form method="GET" action="{% url 'raw_batch_list' %}" class="form">
+    <div class="col-md-12">
+        <form method="GET" action="{% url 'client_list_all' %}" class="form">
             <div class="input-group">
+
                 <label class="input-group-text" for="per_page_select">Mostrar:</label>
                 <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
                     <option value="1" {% if per_page == 1 %}selected{% endif %}>1</option>
@@ -26,7 +27,7 @@
                     <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
                 </select>
 
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, código, proveedor...">
+                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por RUT, nombre, razón social, email...">
                 
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
@@ -39,39 +40,39 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'raw_batch_create' %}" class="mt-2 text-end btn btn-weno">
-            Agregar Lote
+        <a href="{% url 'client_create' %}" class="mt-2 text-end btn btn-weno">
+            Agregar Cliente
         </a>
     </div>
 </div>
 
-<div id="raw-batch-cards-view">
+<div id="client-cards-view">
     <div class="row">
         {% for p in page_obj %}
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Lote de: {{ p.raw_material.name }}</h5>
-                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
-                    <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Proveedor:</strong> {{ p.raw_material.supplier.name|default:"N/A" }}</li>
-                        <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
-                        <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
+                    <h4 class="card-title">{{ p.fantasy_name }}</h4>
+                    <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>RUT:</strong> {{ p.rut}}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ p.email}}</li>
+                        <li class="list-group-item"><strong>Telefono:</strong> {{ p.phone }}</li>
+                        <li class="list-group-item"><strong>Limite de credito:</strong> {{ p.credit_limit }}</li>
+                        <li class="list-group-item"><strong>Deuda:</strong> {{ p.debt }}</li>
+                        <li class="list-group-item"><strong>Deuda máxima:</strong> {{ p.max_debt}}</li>
                     </ul>
+                    <a href="{% url 'client_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                        Editar
+                    </a>
+                    <a href="{% url 'client_view' p.id %}" class="mt-2 text-end btn btn-weno">
+                        Ver
+                    </a>
+                    <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
+                        data-bs-target="#confirmDeleteModal{{ p.id }}">
+                        Eliminar
+                    </button>
                     
-                    <div class="mt-3">
-                        <a href="{% url 'raw_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                            Editar
-                        </a>
-                        <a href="{% url 'raw_batch_view' p.id %}" class="mt-2 text-end btn btn-weno">
-                            Ver
-                        </a>
-                        <button type="button" class="mt-2 text-end btn btn-danger" data-bs-toggle="modal"
-                            data-bs-target="#confirmDeleteModal{{ p.id }}">
-                            Eliminar
-                        </button>
-                    </div>
-
                     <div class="modal fade" id="confirmDeleteModal{{ p.id }}" tabindex="-1"
                         aria-labelledby="modalLabel{{ p.id }}" aria-hidden="true">
                         <div class="modal-dialog modal-sm">
@@ -82,12 +83,12 @@
                                         aria-label="Cerrar"></button>
                                 </div>
                                 <div class="modal-body p-2 text-center">
-                                    ¿Eliminar Lote <strong>{{ p.batch_code }}</strong>?
+                                    ¿Eliminar <strong>{{ p.fantasy_name }}</strong>?
                                 </div>
                                 <div class="modal-footer p-2 justify-content-center">
                                     <button type="button" class="btn btn-secondary btn-sm"
                                         data-bs-dismiss="modal">Cancelar</button>
-                                    <a href="{% url 'raw_batch_delete' p.id %}"
+                                    <a href="{% url 'client_delete' p.id %}"
                                         class="btn btn-danger btn-sm">Eliminar</a>
                                 </div>
                             </div>
@@ -97,38 +98,44 @@
             </div>
         </div>
         {% empty %}
-        <p class="text-center">No se encontraron lotes que coincidan con los filtros.</p>
+        <p class="text-center">No se encontraron clientes que coincidan con los filtros.</p>
         {% endfor %}
     </div>
 </div>
 
-<div id="raw-batch-table-view" style="display: none;">
+<div id="client-table-view" style="display: none;">
     <div class="card shadow-sm">
         <div class="card-body">
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Código Lote</th>
-                        <th>Materia Prima</th>
-                        <th>Proveedor</th>
-                        <th>Cant. Actual</th>
-                        <th>Cant. Máxima</th>
-                        <th>Cant. Mínima</th>
+                        <th>RUT</th>
+                        <th>Nombre Fantasía</th>
+                        <th>Razón Social</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in page_obj %}
                     <tr>
-                        <td><strong>{{ p.batch_code }}</strong></td>
-                        <td>{{ p.raw_material.name }}</td>
-                        <td>{{ p.raw_material.supplier.name|default:"N/A" }}</td>
-                        <td>{{ p.current_quantity }}</td>
-                        <td>{{ p.max_quantity }}</td>
-                        <td>{{ p.min_quantity }}</td>
+                        <td>{{ p.rut }}</td>
+                        <td>{{ p.fantasy_name }}</td>
+                        <td>{{ p.bussiness_name }}</td>
+                        <td>{{ p.email|default:"-" }}</td>
+                        <td>{{ p.phone|default:"-" }}</td>
                         <td>
-                            <a href="{% url 'raw_batch_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
-                            <a href="{% url 'raw_batch_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            {% if p.is_active %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'client_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
+                            <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#confirmDeleteModal{{ p.id }}">
                                 Eliminar
@@ -137,7 +144,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No se encontraron lotes que coincidan con los filtros.</td>
+                        <td colspan="7" class="text-center">No se encontraron clientes que coincidan con los filtros.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -202,12 +209,11 @@
     <script> 
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
-        // ¡IDs actualizados!
-        const cardsView = document.getElementById('raw-batch-cards-view');
-        const tableView = document.getElementById('raw-batch-table-view');
+        const cardsView = document.getElementById('client-cards-view');
+        const tableView = document.getElementById('client-table-view');
         
-        // ¡Key de localStorage actualizada!
-        const savedView = localStorage.getItem('rawBatchView') || 'cards'; 
+        // --- 1. Al cargar la página (ej. al paginar) ---
+        const savedView = localStorage.getItem('clientView') || 'cards'; 
 
         if (savedView === 'table') {
             cardsView.style.display = 'none';
@@ -226,13 +232,13 @@
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
-                localStorage.setItem('rawBatchView', 'cards');
+                localStorage.setItem('clientView', 'cards');
             } else {
                 // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';
-                localStorage.setItem('rawBatchView', 'table');
+                localStorage.setItem('clientView', 'table');
             }
         });
     });

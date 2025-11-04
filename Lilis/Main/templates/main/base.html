@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lilis{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="bg-light">
+    {% include 'main/navbar.html' %}
+    <main class="container py-5">
+        {% block content %}
+        {% endblock %}
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    
+    {% block scripts %}
+    {{ block.super }} 
+    <script> 
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-view-btn');
+        const cardsView = document.getElementById('user-cards-view');
+        const tableView = document.getElementById('user-table-view');
+        
+        // ---- 1. LEER LA VISTA GUARDADA (Al cargar la página) ----
+        // Esto lee el estado y muestra la vista correcta al cargar
+        const savedView = localStorage.getItem('userView') || 'cards'; // 'cards' es el default
+
+        if (savedView === 'table') {
+            // Si estaba en "tabla", la mostramos
+            cardsView.style.display = 'none';
+            tableView.style.display = 'block';
+            toggleBtn.textContent = 'Ver Tarjetas';
+        } else {
+            // Por defecto (o si guardó 'cards'), mostramos tarjetas
+            cardsView.style.display = 'block';
+            tableView.style.display = 'none';
+            toggleBtn.textContent = 'Ver Tabla';
+        }
+
+
+        // ---- 2. GUARDAR Y RECARGAR (Al hacer clic) ----
+        toggleBtn.addEventListener('click', function() {
+            // Primero, leemos la preferencia actual
+            const currentView = localStorage.getItem('userView') || 'cards';
+            
+            // Segundo, guardamos la preferencia OPUESTA
+            if (currentView === 'cards') {
+                localStorage.setItem('userView', 'table');
+            } else {
+                localStorage.setItem('userView', 'cards');
+            }
+            
+            // Tercero, forzamos la recarga de la página
+            location.reload();
+        });
+    });
+    </script>
+    {% endblock %}
+
+</body>
+</html>

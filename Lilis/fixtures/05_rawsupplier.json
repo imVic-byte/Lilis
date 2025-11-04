@@ -1,0 +1,21 @@
+[
+  { "model": "Products.RawSupplier", "pk": 1, "fields": { "fk_supplier": 1, "fk_raw_material": 1 } },
+  { "model": "Products.RawSupplier", "pk": 2, "fields": { "fk_supplier": 1, "fk_raw_material": 2 } },
+  { "model": "Products.RawSupplier", "pk": 3, "fields": { "fk_supplier": 1, "fk_raw_material": 3 } },
+
+  { "model": "Products.RawSupplier", "pk": 4, "fields": { "fk_supplier": 2, "fk_raw_material": 4 } },
+  { "model": "Products.RawSupplier", "pk": 5, "fields": { "fk_supplier": 2, "fk_raw_material": 5 } },
+  { "model": "Products.RawSupplier", "pk": 6, "fields": { "fk_supplier": 2, "fk_raw_material": 6 } },
+
+  { "model": "Products.RawSupplier", "pk": 7, "fields": { "fk_supplier": 3, "fk_raw_material": 7 } },
+  { "model": "Products.RawSupplier", "pk": 8, "fields": { "fk_supplier": 3, "fk_raw_material": 8 } },
+  { "model": "Products.RawSupplier", "pk": 9, "fields": { "fk_supplier": 3, "fk_raw_material": 9 } },
+
+  { "model": "Products.RawSupplier", "pk": 10, "fields": { "fk_supplier": 4, "fk_raw_material": 10 } },
+  { "model": "Products.RawSupplier", "pk": 11, "fields": { "fk_supplier": 4, "fk_raw_material": 11 } },
+  { "model": "Products.RawSupplier", "pk": 12, "fields": { "fk_supplier": 4, "fk_raw_material": 12 } },
+
+  { "model": "Products.RawSupplier", "pk": 13, "fields": { "fk_supplier": 5, "fk_raw_material": 13 } },
+  { "model": "Products.RawSupplier", "pk": 14, "fields": { "fk_supplier": 5, "fk_raw_material": 14 } },
+  { "model": "Products.RawSupplier", "pk": 15, "fields": { "fk_supplier": 5, "fk_raw_material": 15 } }
+]
