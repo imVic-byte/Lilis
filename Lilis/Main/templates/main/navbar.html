@@ -12,14 +12,15 @@
 
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
+                {% if perms.Products.view_product or perms.Products.view_category or perms.Products.view_rawmaterial or perms.Products.view_supplier%}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         Gestión
                     </a>
+                {% endif %}    
                     <ul class="dropdown-menu">
-                        {% if perms.Products.d_product %}
+                        {% if perms.Products.view_product %}
                         <li><a class="dropdown-item" href="{% url 'products_list' %}">Productos</a></li>
                         {% endif %}
                         {% if perms.Products.view_category %}
@@ -47,11 +48,13 @@
                 </li>
                 {% endif %}
 
+                {% if perms.Sells.view_client or perms.Sells.view_location or perms.Sells.view_warehouse %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         Ventas
                     </a>
+                {% endif %}
                     <ul class="dropdown-menu">
                         {% if perms.Sells.view_client %}
                         <li><a class="dropdown-item" href="{% url 'client_list_actives' %}">Clientes</a></li>
