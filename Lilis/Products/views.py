@@ -121,7 +121,7 @@ def products_list(request):
 
     # 3. Obtener queryset base
     # ¡Optimizamos con select_related para traer la categoría!
-    qs = product_service.list().select_related("category").order_by('name')
+    qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
 
     # 4. Aplicar filtro de búsqueda
     if q:
@@ -194,10 +194,15 @@ def product_update(request, id):
 @permission_or_redirect('Products.delete_products','dashboard', 'No teni permiso')
 def product_delete(request, id):
         if request.method == 'GET':
-            success = product_service.delete(id)
-            if success:
-                return redirect('products_list')
-        return redirect('products_list') 
+            try:
+                product = product_service.get(id)
+                product.is_active = False
+                product.save()
+            except:
+                pass
+
+            return redirect('products_list')
+        return redirect('products_list')
 
 
 #SUPPLIERRRR
