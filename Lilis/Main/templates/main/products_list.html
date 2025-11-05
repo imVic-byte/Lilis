@@ -50,7 +50,7 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <h5 class="card-title">{{ p.name }}</h5>
-                    <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
+                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <strong>Categoría:</strong> {{ p.category.name }}
