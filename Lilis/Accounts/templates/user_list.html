@@ -20,6 +20,9 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>    
                 </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, username, RUN, rol...">
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
@@ -91,11 +94,36 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Usuario</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=first_name&order={% if current_sort_by == 'first_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre</strong>
+                                {% if current_sort_by == 'first_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=username&order={% if current_sort_by == 'username' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Usuario</strong>
+                                {% if current_sort_by == 'username' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        
                         <th>Email</th>
                         <th>Teléfono</th>
-                        <th>Rol</th>
+
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=profile__role__group__name&order={% if current_sort_by == 'profile__role__group__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Rol</strong>
+                                {% if current_sort_by == 'profile__role__group__name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -132,7 +160,6 @@
         </div>
     </div>
 </div>
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
   <ul class="pagination justify-content-center">

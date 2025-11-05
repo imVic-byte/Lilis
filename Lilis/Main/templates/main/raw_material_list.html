@@ -20,6 +20,8 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
 
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, proveedor, categoría...">
                 
@@ -102,7 +104,6 @@
                             {% endif %}
                         </li>
                     </ul>
-                    
                 </div>
             </div>
         </div>
@@ -118,9 +119,30 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Proveedor</th>
-                        <th>Categoría</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre</strong>
+                                {% if current_sort_by == 'name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=supplier__fantasy_name&order={% if current_sort_by == 'supplier__fantasy_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Proveedor</strong>
+                                {% if current_sort_by == 'supplier__fantasy_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=category__name&order={% if current_sort_by == 'category__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Categoría</strong>
+                                {% if current_sort_by == 'category__name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>Stock</th>
                         <th>Perecible</th>
                         <th>Creado</th>
@@ -150,7 +172,7 @@
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'raw_material_delete' p.id %}"
                                     data-item-name="{{ p.name }}">
-                            Eliminar
+                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -164,8 +186,6 @@
         </div>
     </div>
 </div>
-
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
   <ul class="pagination justify-content-center">
@@ -221,11 +241,9 @@
     <script> 
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
-        // ¡IDs actualizados!
         const cardsView = document.getElementById('raw-material-cards-view');
         const tableView = document.getElementById('raw-material-table-view');
         
-        // ¡Key de localStorage actualizada!
         const savedView = localStorage.getItem('rawMaterialView') || 'cards'; 
 
         if (savedView === 'table') {
@@ -238,16 +256,13 @@
             toggleBtn.textContent = 'Ver Tabla';
         }
 
-        // --- 2. Al hacer clic en el botón ---
         toggleBtn.addEventListener('click', function() {
             if (cardsView.style.display === 'none') {
-                // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
                 localStorage.setItem('rawMaterialView', 'cards');
             } else {
-                // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';

@@ -22,20 +22,43 @@ def client_list_all(request):
     # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
     
-    # 2. Obtener 'por página' (rango 1-10)
-    default_per_page = 10
+    # ===================================
+    #   ¡CAMBIO! Nuevas opciones de paginación
+    # ===================================
+    allowed_per_page = [5, 25, 50, 100]
+    default_per_page = 25  # Nuevo default
+    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    # Validar que el valor esté en la lista permitida
+    if per_page not in allowed_per_page:
         per_page = default_per_page
+    # ===================================
+    
+    # ===================================
+    #   ¡NUEVO! Lógica de Ordenamiento
+    # ===================================
+    # 3. Obtener parámetros de ordenamiento
+    allowed_sort_fields = ['rut', 'fantasy_name', 'bussiness_name', 'email', 'phone']
+    sort_by = request.GET.get('sort_by', 'fantasy_name') # Default: fantasy_name
+    order = request.GET.get('order', 'asc')              # Default: asc
 
-    # 3. Obtener queryset base (solo "todos")
-    qs = client_service.list().order_by('fantasy_name')
+    # Validar que los campos y el orden sean correctos
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'fantasy_name'
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+        
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+    
 
-    # 4. Aplicar filtro de búsqueda
+     
+    qs = client_service.list()
+
+    #filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(fantasy_name__icontains=q) |
@@ -44,11 +67,15 @@ def client_list_all(request):
             Q(email__icontains=q) |
             Q(phone__icontains=q)
         )
+        
+    #ordenamiento
+    qs = qs.order_by(order_by_field)
 
-    # 5. Aplicar paginación
+    #Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
+    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -56,21 +83,36 @@ def client_list_all(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # 6. Preparar querystring para los enlaces de paginación
-    params = request.GET.copy()
-    params.pop("page", None)
-    querystring = params.urlencode()
 
-    # 7. Preparar contexto para el template
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
+
+   
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
+   
+
+    
     context = {
-        "page_obj": page_obj,      # ¡Aquí está la variable correcta!
+        "page_obj": page_obj,  
         "q": q,
         "per_page": per_page,
-        "querystring": querystring,
         "total": qs.count(),
+        
+        
+        "querystring": querystring_pagination, 
+        
+        
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc", 
     }
     return render(request, 'client_list.html', context)
-
 
 # --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
 @login_required
@@ -84,7 +126,7 @@ def client_list_actives(request):
 @permission_or_redirect('.view_client','dashboard', 'No teni permiso')
 def client_list_inactives(request):
     clients = client_service.list_inactives()
-    # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
+    
     return render(request, 'client_list.html', {'clients': clients})
 
 # --- Resto de vistas de Cliente (con redirects actualizados) ---
@@ -178,31 +220,58 @@ def location_list(request):
     # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
     
-    # 2. Obtener 'por página' (rango 1-10)
-    default_per_page = 10
+    # ===================================
+    #   ¡CAMBIO! Nuevas opciones de paginación
+    # ===================================
+    allowed_per_page = [5, 25, 50, 100]
+    default_per_page = 25  # Nuevo default
+    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    # Validar que el valor esté en la lista permitida
+    if per_page not in allowed_per_page:
         per_page = default_per_page
+    # ===================================
 
-    # 3. Obtener queryset base
-    qs = warehouse_service.location_model.objects.all().order_by('name')
+    # ===================================
+    #   ¡NUEVO! Lógica de Ordenamiento
+    # ===================================
+    # 3. Obtener parámetros de ordenamiento
+    allowed_sort_fields = ['name', 'city', 'country']
+    sort_by = request.GET.get('sort_by', 'name') # Default: name
+    order = request.GET.get('order', 'asc')      # Default: asc
 
-    # 4. Aplicar filtro de búsqueda
+    # Validar que los campos y el orden sean correctos
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'name'
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+        
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+    # ===================================
+
+    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
+    qs = warehouse_service.location_model.objects.all()
+
+    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(city__icontains=q) |
             Q(country__icontains=q)
         )
+        
+    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
+    qs = qs.order_by(order_by_field)
 
-    # 5. Aplicar paginación
+    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
+    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -210,18 +279,33 @@ def location_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # 6. Preparar querystring
-    params = request.GET.copy()
-    params.pop("page", None)
-    querystring = params.urlencode()
+    # ===================================
+    #   ¡NUEVO! Querystrings actualizados
+    # ===================================
+    # 9. Querystring para Paginación
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
 
-    # 7. Preparar contexto
+    # 10. Querystring para Ordenamiento
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
+    # ===================================
+
+    # 11. Contexto
     context = {
-        "page_obj": page_obj,      # ¡Cambiamos 'locations' por 'page_obj'!
+        "page_obj": page_obj,  
         "q": q,
         "per_page": per_page,
-        "querystring": querystring,
         "total": qs.count(),
+        "querystring": querystring_pagination, 
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc",
     }
     return render(request, 'location_list.html', context)
 
@@ -307,32 +391,58 @@ def warehouse_list(request):
     # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
     
-    # 2. Obtener 'por página' (rango 1-10)
-    default_per_page = 10
+    # ===================================
+    #   ¡CAMBIO! Nuevas opciones de paginación
+    # ===================================
+    allowed_per_page = [5, 25, 50, 100]
+    default_per_page = 25  # Nuevo default
+    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    # Validar que el valor esté en la lista permitida
+    if per_page not in allowed_per_page:
         per_page = default_per_page
+    # ===================================
 
-    # 3. Obtener queryset base
-    # ¡Optimizamos con select_related para traer la ubicación!
-    qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
+    # ===================================
+    #   ¡NUEVO! Lógica de Ordenamiento
+    # ===================================
+    # 3. Obtener parámetros de ordenamiento
+    allowed_sort_fields = ['name', 'address', 'location__name', 'total_area']
+    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
+    order = request.GET.get('order', 'asc')      # Default: asc
 
-    # 4. Aplicar filtro de búsqueda
+    # Validar que los campos y el orden sean correctos
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'name'
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+        
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+    # ===================================
+
+    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
+    qs = warehouse_service.model.objects.select_related("location").all()
+
+    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(address__icontains=q) |
             Q(location__name__icontains=q) # Búsqueda en la FK
         )
+        
+    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
+    qs = qs.order_by(order_by_field)
 
-    # 5. Aplicar paginación
+    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
+    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -340,18 +450,35 @@ def warehouse_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # 6. Preparar querystring
-    params = request.GET.copy()
-    params.pop("page", None)
-    querystring = params.urlencode()
+    # ===================================
+    #   ¡NUEVO! Querystrings actualizados
+    # ===================================
+    # 9. Querystring para Paginación
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
 
-    # 7. Preparar contexto
+    # 10. Querystring para Ordenamiento
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
+    # ===================================
+
+    # 11. Contexto
     context = {
-        "page_obj": page_obj,      # ¡Cambiamos 'warehouses' por 'page_obj'!
+        "page_obj": page_obj,  
         "q": q,
         "per_page": per_page,
-        "querystring": querystring,
         "total": qs.count(),
+        
+        "querystring": querystring_pagination, 
+        
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc",
     }
     return render(request, 'warehouse_list.html', context)
 
