@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .services import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
@@ -607,10 +607,3 @@ def price_histories_save(request, id):
             return render(request, 'main/product.html', {'p': product, 'form': obj})
     return render(request, 'main/product.html', {'p': product, 'form': form})
 
-
-
-
-
-
-
-        
