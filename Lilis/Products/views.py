@@ -26,7 +26,7 @@ def category_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base
@@ -116,7 +116,7 @@ def products_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base
@@ -215,7 +215,7 @@ def supplier_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base
@@ -311,7 +311,7 @@ def raw_material_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base (mantenemos list_actives())
@@ -411,7 +411,7 @@ def product_batch_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base
@@ -504,7 +504,7 @@ def raw_batch_list(request):
     except ValueError:
         per_page = default_per_page
     
-    if per_page > 10 or per_page <= 0:
+    if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
     # 3. Obtener queryset base
