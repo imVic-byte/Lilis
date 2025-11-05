@@ -15,10 +15,14 @@ load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-unsafe')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
+# Usar solo codear
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = []
 
+# Usar solo presentar
+#DEBUG = False
+#ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
