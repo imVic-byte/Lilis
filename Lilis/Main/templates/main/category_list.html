@@ -49,17 +49,23 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ p.name }}</h5>
-                    <p class="card-text">Descripcion: {{ p.description|default:"Sin descripción" }}</p>
-                    <a href="{% url 'category_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                        Editar
-                    </a>
-                    <button type="button" 
-                            class="mt-2 text-end btn btn-danger btn-delete" 
-                            data-url="{% url 'category_delete' p.id %}"
-                            data-item-name="{{ p.name }}">
-                            Eliminar
-                    </button>
+                    <div class='row'>
+                        <div class="col-7">
+                            <h5 class="card-title">{{ p.name }}</h5>
+                        </div>
+                        <div class="col-5 text-end">
+                            <td>
+                                <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'category_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
+
+                    </div>
+                    <p class="card-text">Descripcion: {{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+                    
                 </div>
             </div>
         </div>

@@ -45,12 +45,29 @@
 
 <div id="user-cards-view">
     <div class="row">
-        
         {% for user_obj in page_obj %}
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
+                    <div class="row">
+                        <div class="col-7">
                     <h5 class="card-title">{{ user_obj.first_name }} {{ user_obj.last_name }}</h5>
+
+                        </div>
+                        <div class="col-5 text-end">
+                            {% if perms.auth.change_user %}
+                    <a href="{% url 'user_view' user_obj.id %}" class="mt text-end btn btn-primary">Editar</a>
+                    {% endif %}
+                    {% if perms.auth.delete_user %}
+                    <button type="button" 
+                            class="mt text-end btn btn-danger btn-delete" 
+                            data-url="{% url 'user_delete' user_obj.id %}"
+                            data-item-name="@{{ user_obj.username }}">
+                        Eliminar
+                    </button>
+                    {% endif %}
+                        </div>
+                    </div>
                     <h6 class="card-subtitle mb-2 text-muted">@{{ user_obj.username }}</h6>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"><strong>Email:</strong> {{ user_obj.email|default:"No especificado" }}
@@ -58,17 +75,6 @@
                         <li class="list-group-item"><strong>Teléfono:</strong> {{ user_obj.profile.phone|default:"No especificado" }}</li>
                         <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
                     </ul>
-                    {% if perms.auth.change_user %}
-                    <a href="{% url 'user_view' user_obj.id %}" class="mt-2 text-end btn btn-primary">Editar</a>
-                    {% endif %}
-                    {% if perms.auth.delete_user %}
-                    <button type="button" 
-                            class="mt-2 text-end btn btn-danger btn-delete" 
-                            data-url="{% url 'user_delete' user_obj.id %}"
-                            data-item-name="@{{ user_obj.username }}">
-                        Eliminar
-                    </button>
-                    {% endif %}
                 </div>
             </div>
         </div>

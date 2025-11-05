@@ -49,9 +49,23 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ p.name }}</h5>
+                    <div class='row'>
+                        <div class="col-7">
+                            <h5 class="card-title">{{ p.name }}</h5>
+                        </div>
+                        <div class="col-5 text-end">
+                            <td>
+                                <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'raw_material_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
+
+                    </div>
                     <h6 class="card-subtitle mb-2 text-muted">Proveedor: {{ p.supplier.fantasy_name }}</h6>
-                    <p class="card-text">{{ p.description|default:"Sin descripción" }}</p>
+                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <strong>Categoría:</strong> {{ p.category.name }}
@@ -84,15 +98,7 @@
                             {% endif %}
                         </li>
                     </ul>
-                    <a href="{% url 'raw_material_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                        Editar
-                    </a>
-                    <button type="button" 
-                                    class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'raw_material_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                            Eliminar
-                            </button>
+                    
                 </div>
             </div>
         </div>

@@ -46,30 +46,34 @@
 <div id="product-batch-cards-view">
     <div class="row">
         {% for p in page_obj %}
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4 w-50">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
                     <h5 class="card-title">Lote de: {{ p.product.name }}</h5>
-                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
-                    <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
-                        <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
-                    </ul>
-                    
-                    <div class="mt-3">
-                        <a href="{% url 'product_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                        </div>
+                        <div class="col-6 text-end">
+                            <a href="{% url 'product_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
                             Editar
                         </a>
                         <a href="{% url 'product_batch_view' p.id %}" class="mt-2 text-end btn btn-weno">
                             Ver
                         </a>
                         <button type="button" 
-                                    class="mt-2 text-end btn btn-danger btn-delete" 
-                                    data-url="{% url 'product_batch_delete' p.id %}"
-                                    data-item-name="@{{ p.batch_code}}">
-                                Eliminar
+                                    class="mt-2 btn-danger btn btn-delete" 
+                                    data-url="{% url 'raw_batch_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                            Eliminar
                             </button>
+                        </div>
                     </div>
+                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
+                    <ul class="list-group list-group-flush mt-3">
+                        <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
+                        <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
+                    </ul>
+                    
                 </div>
             </div>
         </div>

@@ -50,7 +50,20 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h4 class="card-title">{{ p.fantasy_name }}</h4>
+                    <div class='row'>
+                        <div class="col-7">
+                            <h5 class="card-title">{{ p.fantasy_name }}</h5>
+                        </div>
+                        <div class="col-5 text-end">
+                            <td>
+                                <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'client_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
+                    </div>
                     <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"><strong>RUT:</strong> {{ p.rut}}</li>
@@ -60,18 +73,6 @@
                         <li class="list-group-item"><strong>Deuda:</strong> {{ p.debt }}</li>
                         <li class="list-group-item"><strong>Deuda máxima:</strong> {{ p.max_debt}}</li>
                     </ul>
-                    <a href="{% url 'client_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                        Editar
-                    </a>
-                    <a href="{% url 'client_view' p.id %}" class="mt-2 text-end btn btn-weno">
-                        Ver
-                    </a>
-                    <button type="button" 
-                                    class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'client_delete' p.id %}"
-                                    data-item-name="{{ p.fantasy_name }}">
-                            Eliminar
-                            </button>
                 </div>
             </div>
         </div>

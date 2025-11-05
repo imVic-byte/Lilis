@@ -19,10 +19,12 @@
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
                 </select>
 
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, descripción, categoría...">
-                
+                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}"
+                    placeholder="Buscar por nombre, descripción, categoría...">
+
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
         </form>
@@ -34,7 +36,8 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="product-table-view" data-filename="page-title">
+        <button type="button" class="btn btn-success mt-2 export-btn" data-target="product-table-view"
+            data-filename="page-title">
             Exportar CSV
         </button>
         <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-weno">
@@ -49,7 +52,21 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ p.name }}</h5>
+                    <div class='row'>
+                        <div class="col-7">
+                            <h5 class="card-title">{{ p.name }}</h5>
+                        </div>
+                        <div class="col-5 text-end">
+                            <td>
+                                <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'product_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
+
+                    </div>
                     <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
@@ -83,15 +100,6 @@
                             {% endif %}
                         </li>
                     </ul>
-                    <a href="{% url 'product_update' p.id %}" class="mt-2 text-end btn btn-primary">
-                        Editar
-                    </a>
-                    <button type="button" 
-                                    class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'product_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                            Eliminar
-                            </button>
                 </div>
             </div>
         </div>
@@ -123,27 +131,27 @@
                         <td>{{ p.quantity }}</td>
                         <td>
                             {% if p.is_perishable %}
-                                <span class="badge bg-warning text-dark">Sí</span>
+                            <span class="badge bg-warning text-dark">Sí</span>
                             {% else %}
-                                <span class="badge bg-secondary">No</span>
+                            <span class="badge bg-secondary">No</span>
                             {% endif %}
                         </td>
                         <td>{{ p.expiration_date|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>
-                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'product_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                            Eliminar
-                            </button>
-                        </td>
+                                <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'product_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">No se encontraron productos que coincidan con los filtros.</td>
+                        <td colspan="6" class="text-center">No se encontraron productos que coincidan con los filtros.
+                        </td>
                     </tr>
                     {% endfor %}
+
                 </tbody>
             </table>
         </div>
@@ -153,65 +161,69 @@
 
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
-  <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center">
 
-    {% if page_obj.has_previous %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Previous">
-          &laquo; Anterior
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled">
-        <span class="page-link">&laquo; Anterior</span>
-      </li>
-    {% endif %}
-
-    {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
-        </li>
-      {% else %}
+        {% if page_obj.has_previous %}
         <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+            <a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+                aria-label="Previous">
+                &laquo; Anterior
+            </a>
         </li>
-      {% endif %}
-    {% endfor %}
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo; Anterior</span>
+        </li>
+        {% endif %}
 
-    {% if page_obj.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Next">
-          Siguiente &raquo;
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled">
-        <span class="page-link">Siguiente &raquo;</span>
-      </li>
-    {% endif %}
+        {% for i in page_obj.paginator.page_range %}
+        {% if page_obj.number == i %}
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ i }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
 
-  </ul>
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+                aria-label="Next">
+                Siguiente &raquo;
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Siguiente &raquo;</span>
+        </li>
+        {% endif %}
+
+    </ul>
 </nav>
 
 <div class="text-center text-muted mt-2">
-  Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
+    Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
 </div>
 {% endif %}
 {% endblock content %}
 
 
 {% block scripts %}
-    {{ block.super }} 
-    <script> 
+{{ block.super }}
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
         // ¡IDs actualizados!
         const cardsView = document.getElementById('product-cards-view');
         const tableView = document.getElementById('product-table-view');
-        
+
         // ¡Key de localStorage actualizada!
-        const savedView = localStorage.getItem('productView') || 'cards'; 
+        const savedView = localStorage.getItem('productView') || 'cards';
 
         if (savedView === 'table') {
             cardsView.style.display = 'none';
@@ -224,7 +236,7 @@
         }
 
         // --- 2. Al hacer clic en el botón ---
-        toggleBtn.addEventListener('click', function() {
+        toggleBtn.addEventListener('click', function () {
             if (cardsView.style.display === 'none') {
                 // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
@@ -240,5 +252,5 @@
             }
         });
     });
-    </script>
+</script>
 {% endblock %}

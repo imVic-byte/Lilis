@@ -46,10 +46,29 @@
 <div id="location-cards-view">
     <div class="row">
         {% for p in page_obj %}
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4 w-50">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h4 class="card-title">{{ p.name }}</h4>
+                    <div class="row">
+                        <div class="col-7">
+                            <h4 class="card-title">{{ p.name }}</h4>
+                        </div>
+                        <div class="col-5">
+                            
+                        <a href="{% url 'location_update' p.id %}" class="btn btn-primary me-2">
+                            Editar
+                        </a>
+                        <a href="{% url 'location_view' p.id %}" class="btn btn-weno me-2">
+                            Ver
+                        </a>
+                        <button type="button" 
+                                    class="mt btn-danger btn btn-delete" 
+                                    data-url="{% url 'location_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                            Eliminar
+                            </button>
+                        </div>
+                    </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <strong>Ciudad:</strong> {{ p.city }}
@@ -58,20 +77,6 @@
                             <strong>País:</strong> {{ p.country }}
                         </li>
                     </ul>
-                    <div class="mt-3">
-                        <a href="{% url 'location_update' p.id %}" class="btn btn-primary me-2">
-                            Editar
-                        </a>
-                        <a href="{% url 'location_view' p.id %}" class="btn btn-weno me-2">
-                            Ver
-                        </a>
-                        <button type="button" 
-                                    class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'location_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                            Eliminar
-                            </button>
-                    </div>  
                 </div>
             </div>
         </div>
