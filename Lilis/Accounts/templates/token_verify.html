@@ -12,15 +12,14 @@
             </div>
 
             <div class="card-body p-4">
-                <p class="lead text-center">Introduce tu correo para recibir un enlace de recuperación.</p>
+                <p class="lead text-center">Introduce el código que llegó a tu correo electrónico.</p>
 
                 <form id="recovery-form" autocomplete="off" method="POST">
                     {% csrf_token %}
 
-                    <div class="mb-3"> <label for="email" class="form-label">Correo electrónico</label>
-                        <input id="email" name="email" type="email" inputmode="email" placeholder="tú@ejemplo.com"
-                            required class="form-control" aria-describedby="email-help" />
-                        <div id="email-help" class="form-text"> Te enviaremos un enlace para restablecer la contraseña.
+                    <div class="mb-3"> <label for="token" class="form-label">Código</label>
+                        <input id="token" name="token" type="text"
+                            required class="form-control"/>
                         </div>
                     </div>
                     <div>
@@ -30,7 +29,7 @@
                         </div>
                         {% endif %}
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">Enviar Correo</button>
+                        <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
                     </div>
             </div>
             <p class="text-muted small text-center" style="margin-top:12px">Revisa tu carpeta de spam si no ves

@@ -4,7 +4,7 @@ from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOr
 from .forms import ClientForm, LocationForm, WarehouseForm, TransactionForm, SaleOrderForm, SaleOrderDetailForm
 import datetime
 
-class ClientService(CRUD):
+class ClientService(CRUD):  
     def __init__(self):
         self.model = Client
         self.form_class = ClientForm
