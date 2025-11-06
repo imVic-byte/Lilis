@@ -309,7 +309,8 @@ def supplier_list(request):
             Q(bussiness_name__icontains=q) |
             Q(rut__icontains=q) |
             Q(email__icontains=q) |
-            Q(phone__icontains=q)
+            Q(phone__icontains=q) |
+            Q(trade_terms__icontains=q)
         )
 
     # 5. Aplicar paginación
@@ -388,7 +389,8 @@ def export_suppliers_excel(request):
             Q(bussiness_name__icontains=q) |
             Q(rut__icontains=q) |
             Q(email__icontains=q) |
-            Q(phone__icontains=q)
+            Q(phone__icontains=q) |
+            Q(trade_terms__icontains=q)
         )
     qs_limit = request.GET.get("limit")
     if qs_limit:
@@ -398,7 +400,7 @@ def export_suppliers_excel(request):
                 qs = qs[:limit] 
         except ValueError:
             pass
-    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono"]
+    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono", "Términos"]
     data_rows = []
     for s in qs:
         data_rows.append([
@@ -406,7 +408,8 @@ def export_suppliers_excel(request):
             s.bussiness_name,
             s.rut,
             s.email,
-            s.phone
+            s.phone,
+            s.trade_terms
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
 
@@ -794,12 +797,13 @@ def export_raw_batches_excel(request):
                 qs = qs[:limit] 
         except ValueError:
             pass 
-    headers = ["Código de Lote","Materia Prima", "Cantidad Actual",  "Cantidad Máxima", "Cantidad Mínima"]
+    headers = ["Materia Prima","Código de Lote","Proveedor", "Cantidad Actual",  "Cantidad Máxima", "Cantidad Mínima"]
     data_rows = []
     for b in qs:
         data_rows.append([
-            b.batch_code,
             b.raw_material.name,
+            b.batch_code,
+            b.raw_material.supplier.name,            
             b.current_quantity,
             b.max_quantity,
             b.min_quantity,

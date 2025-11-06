@@ -152,16 +152,19 @@ def export_clients_excel(request):
             qs = qs[:limit]
         except ValueError:
             pass
-    headers = ["RUT", "Nombre Fantasía", "Razón Social", "Email", "Teléfono", "Estado"]
+    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono", "Estado", "Limite de Credito", "Deuda", "Deuda Máxima"]
     data_rows = []
     for client in qs:
         data_rows.append([
-            client.rut,
             client.fantasy_name,
             client.bussiness_name,
+            client.rut,
             client.email,
             client.phone,
             "Inactivo" if client.is_suspended else "Activo",
+            client.credit_limit,
+            client.debt,
+            client.max_debt
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Clientes")
 

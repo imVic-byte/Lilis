@@ -19,7 +19,6 @@
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
                 </select>
 
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}"
