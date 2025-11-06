@@ -53,7 +53,7 @@ class Product(models.Model):
         return last_price.unit_price
 
 class PriceHistories(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="price_histories")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="price_histories")
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField()
     iva = models.DecimalField(max_digits=10, decimal_places=2, default=1.19)

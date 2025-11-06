@@ -78,7 +78,7 @@
             <ul class="navbar-nav mb-2 mb-lg-0">
                 {% if user.is_authenticated %}
                 <li class="nav-item me-2">
-                    <a class="nav-link text-warning" href="#">{{ request.user.username }}</a>
+                    <a class="nav-link text-warning" href="{% url 'user_view' user.id %}">{{ request.user.username }}</a>
                 </li>
                 <li class="nav-item">
                     <form method="POST" action="{% url 'logout' %}">
