@@ -108,7 +108,11 @@ class RegistroForm(forms.ModelForm):
         return None
 
     def clean_run(self):
-        return validate_rut_format(self.cleaned_data.get("run"))
+        run = self.cleaned_data.get("run")
+        if (self.user_instance and self.user_instance.profile.run != run) or not self.user_instance:
+            if Profile.objects.filter(run=run).exists():
+                raise forms.ValidationError("El RUT ya está en uso.")
+        return run    
 
     def clean_phone(self):
         return validate_phone_format(self.cleaned_data.get("phone"))
@@ -116,7 +120,6 @@ class RegistroForm(forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get("email")
         validate_email(email)
-        
         if (self.user_instance and self.user_instance.email != email) or not self.user_instance:
             if User.objects.filter(email=email).exists():
                 raise forms.ValidationError("El correo electrónico ya está en uso.")
@@ -223,6 +226,8 @@ class UpdateFieldForm(forms.Form):
                     raise forms.ValidationError("El correo electrónico ya está en uso.")
             elif field == 'run':
                 cleaned_data["new_data"] = validate_rut_format(value)
+                if Profile.objects.filter(run=value).exists():
+                    raise forms.ValidationError("El RUT ya está en uso.")
             elif field == 'phone':
                 cleaned_data["new_data"] = validate_phone_format(value)
             elif field == 'first_name':
@@ -233,8 +238,9 @@ class UpdateFieldForm(forms.Form):
                 cleaned_data["new_data"] = validate_text_length(value, field_name="El nombre de usuario")
                 if User.objects.filter(username=value).exists():
                     raise forms.ValidationError("El nombre de usuario ya está en uso.")
+
             else:
-                raise forms.ValidationError(f"El campo '{field}' no es editable.")
+                raise forms.ValidationError(f"Este cambio no es válido.")
         except forms.ValidationError as e:
             self.add_error('new_data', e)
 

@@ -32,7 +32,7 @@ def validate_rut_format(rut_numero):
         except ValueError:
             raise forms.ValidationError('El formato del RUT es incorrecto.')
     
-    return rut_numero
+    return f"{rut_aux}-{dv}"
 
 
 def validate_phone_format(value):
