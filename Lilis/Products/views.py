@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from django.http import HttpResponse
+from Main.utils import generate_excel_response
 
 category_service = CategoryService()
 product_service = ProductService()
@@ -203,6 +205,47 @@ def product_delete(request, id):
 
             return redirect('products_list')
         return redirect('products_list')
+
+@login_required
+@permission_or_redirect('Products.delete_products','dashboard', 'No teni permiso')
+def export_products_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q) |
+            Q(category__name__icontains=q)
+        )
+    
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass 
+
+    # --- 2. PREPARAR LOS DATOS PARA EL EXCEL ---
+    headers = ["Nombre", "Categoría", "Stock", "Perecible", "Vencimiento"]
+    data_rows = []
+    
+    for p in qs:
+        is_perishable_str = "Sí" if p.is_perishable else "No"
+        expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
+        
+        data_rows.append([
+            p.name,
+            p.category.name,
+            p.quantity,
+            is_perishable_str,
+            expiration_date_str
+        ])
+
+    # --- 3. LLAMAR A LA FUNCIÓN UTILITARIA ---
+    return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
 
 #SUPPLIERRRR

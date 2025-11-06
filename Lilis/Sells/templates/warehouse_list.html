@@ -39,9 +39,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="warehouse-table-view" data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_products_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_products_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista ({{ per_page }})
+        </a>
         <a href="{% url 'warehouse_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Bodega
         </a>

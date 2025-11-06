@@ -62,37 +62,6 @@
     </script>
 
     <script>
-        //Botón de eliminar con SweetAlert2
-        document.addEventListener('DOMContentLoaded', function () {
-            const deleteButtons = document.querySelectorAll('.btn-delete');
-
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-
-                    const url = event.currentTarget.dataset.url;
-                    const itemName = event.currentTarget.dataset.itemName || 'este elemento';
-
-                    Swal.fire({
-                        title: `¿Eliminar ${itemName}?`,
-                        text: "Esta acción no se puede deshacer.",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: "Sí, eliminar",
-                        cancelButtonText: "Cancelar"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = url;
-                        }
-                    });
-                });
-            });
-        });
-    </script>
-
-    <script>
     // Botón para alternar vista de tarjetas/tabla y guardar preferencia en localStorage 
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
