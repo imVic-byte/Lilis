@@ -1,6 +1,7 @@
 from django import forms
-import datetime
 from Products.models import Product, Category, Supplier, RawMaterial, PriceHistories, Batch
+from Main.validators import *
+
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
@@ -19,7 +20,7 @@ class ProductForm(forms.ModelForm):
         widgets = {
             'expiration_date': forms.DateInput(
                 format='%Y-%m-%d',
-                attrs={'type': 'date', 'required': True}
+                attrs={'type': 'date', 'required': False}
             ),
             'created_at': forms.DateInput(
                 format='%Y-%m-%d',
@@ -28,20 +29,28 @@ class ProductForm(forms.ModelForm):
         }
         
     def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if not name:
-            raise forms.ValidationError('Se requiere un nombre.')
-        if len(name) < 2:
-            raise forms.ValidationError('El nombre debe tener mas de 2 letras.')
-        return name
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
     def clean_sku(self):
-        sku = self.cleaned_data.get('sku')
-        if not sku:
-            raise forms.ValidationError('Se requiere un SKU.')
-        if len(sku) < 3:
-            raise forms.ValidationError('El SKU debe tener mas de 3 caracteres.')
-        return sku
+        return validate_alphanumeric(self.cleaned_data.get('sku'), field_name="El SKU", min_length=3)
+    
+    def clean_quantity(self):
+        return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")
+    
+    def clean_expiration_date(self):
+        is_perishable = self.cleaned_data.get('is_perishable')
+        exp_date = self.cleaned_data.get('expiration_date')
+        if is_perishable and not exp_date:
+            raise forms.ValidationError('Productos perecibles deben tener fecha de vencimiento.')
+        if exp_date:
+            return validate_future_date(exp_date, field_name="La fecha de vencimiento", allow_today=True)
+        return exp_date
+    
+    def clean_created_at(self):
+        created_at = self.cleaned_data.get('created_at')
+        if created_at:
+            return validate_past_or_today_date(created_at, field_name="La fecha de creación")
+        return created_at
 
     def save(self, commit=True):
         product = super().save(commit=False)
@@ -58,18 +67,10 @@ class CategoryForm(forms.ModelForm):
             'description': 'Descripción'
         }
     def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if not name:
-            raise forms.ValidationError('Se requiere un nombre.')
-        if len(name) < 2:
-            raise forms.ValidationError('El nombre debe tener mas de 2 letras.')
-        return name
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
     
     def clean_description(self):
-        description = self.cleaned_data.get('description')
-        if description and len(description) < 5:
-            raise forms.ValidationError('La descripcion debe tener mas de 5 letras.')
-        return description
+        return validate_text_length(self.cleaned_data.get('description'), field_name="La descripcion")
 
     def save(self, commit=True):
         category = super().save(commit=False)
@@ -88,13 +89,18 @@ class ProductBatchForm(forms.ModelForm):
             'current_quantity': 'Cantidad actual',
             'max_quantity' : 'Cantidad Maxima',
         }
+
     def clean_batch_code(self):
-        batch_code = self.cleaned_data.get('batch_code')
-        if not batch_code:
-            raise forms.ValidationError('Se requiere un codigo de lote.')
-        if len(batch_code) < 3:
-            raise forms.ValidationError('El codigo de lote debe tener mas de 3 caracteres.')
-        return batch_code
+        return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
+    
+    def clean_min_quantity(self):
+        return validate_is_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima", allow_zero=True)
+
+    def clean_current_quantity(self):
+        return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
+
+    def clean_max_quantity(self):
+        return validate_is_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
 
     def save(self, commit=True):
         batch = super().save(commit=False)
@@ -113,13 +119,18 @@ class RawBatchForm(forms.ModelForm):
             'current_quantity': 'Cantidad actual',
             'max_quantity' : 'Cantidad Maxima'
         }
+
     def clean_batch_code(self):
-        batch_code = self.cleaned_data.get('batch_code')
-        if not batch_code:
-            raise forms.ValidationError('Se requiere un codigo de lote.')
-        if len(batch_code) < 3:
-            raise forms.ValidationError('El codigo de lote debe tener mas de 3 caracteres.')
-        return batch_code
+        return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
+
+    def clean_min_quantity(self):
+        return validate_is_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima", allow_zero=True)
+
+    def clean_current_quantity(self):
+        return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
+
+    def clean_max_quantity(self):
+        return validate_is_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
 
     
     def save(self, commit=True):
@@ -140,40 +151,26 @@ class SupplierForm(forms.ModelForm):
                 'phone': 'Telefono',
                 'trade_terms': 'Términos de comercio' 
                 }
+        
     def clean_bussiness_name(self):
-        bussiness_name = self.cleaned_data.get('bussiness_name')
-        if not bussiness_name:
-            raise forms.ValidationError('Se requiere un nombre de empresa.')
-        if len(bussiness_name) < 2:
-            raise forms.ValidationError('El nombre de la empresa debe tener mas de 2 letras.')
-        return bussiness_name
+        return validate_text_length(self.cleaned_data.get('bussiness_name'), field_name="El nombre de empresa")
 
     def clean_fantasy_name(self):
-        fantasy_name = self.cleaned_data.get('fantasy_name')
-        if not fantasy_name:
-            raise forms.ValidationError('Se requiere un nombre de fantasia.')
-        if len(fantasy_name) < 2:
-            raise forms.ValidationError('El nombre de fantasia debe tener mas de 2 letras.')
-        return fantasy_name
+        return validate_text_length(self.cleaned_data.get('fantasy_name'), field_name="El nombre de fantasía")
     
     def clean_rut(self):
-        rut = self.cleaned_data.get('rut')
-        if not rut:
-            raise forms.ValidationError('Se requiere un RUT.')
-        if len(rut) < 8:
-            raise forms.ValidationError('El RUT debe tener mas de 8 caracteres.')
-        return rut
+        return validate_rut_format(self.cleaned_data.get('rut'))
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and not forms.EmailField().clean(email):
-            raise forms.ValidationError('Ingrese un correo electronico valido.')
+        if email:
+            return validate_email(email)
         return email
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')
-        if phone and len(phone) < 8:
-            raise forms.ValidationError('El telefono debe tener mas de 8 caracteres.')
+        if phone:
+            return validate_phone_format(phone)
         return phone
 
     def save(self, commit=True):
@@ -209,18 +206,28 @@ class RawMaterialForm(forms.ModelForm):
         }
 
     def clean_name(self):
-        name = self.cleaned_data.get('name')
-        if not name:
-            raise forms.ValidationError('Se requiere un nombre.')
-        if len(name) < 2:
-            raise forms.ValidationError('El nombre debe tener mas de 2 letras.')
-        return name
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
     def clean_description(self):
-        description = self.cleaned_data.get('description')
-        if description and len(description) < 5:
-            raise forms.ValidationError('La descripcion debe tener mas de 5 letras.')
-        return description
+        return validate_text_length(self.cleaned_data.get('description'), min_length=5, field_name="La descripción", allow_empty=True)
+
+    def clean_quantity(self):
+        return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")
+
+    def clean_expiration_date(self):
+        is_perishable = self.cleaned_data.get('is_perishable')
+        exp_date = self.cleaned_data.get('expiration_date')
+        if is_perishable and not exp_date:
+            raise forms.ValidationError('Productos perecibles deben tener fecha de vencimiento.')
+        if exp_date:
+            return validate_future_date(exp_date, field_name="La fecha de vencimiento", allow_today=True)
+        return exp_date
+
+    def clean_created_at(self):
+        created_at = self.cleaned_data.get('created_at')
+        if created_at:
+            return validate_past_or_today_date(created_at, field_name="La fecha de creación")
+        return created_at
     
     def save(self, commit=True):
         raw_material = super().save(commit=False)
@@ -239,22 +246,13 @@ class PriceHistoriesForm(forms.ModelForm):
         }
 
     def clean_unit_price(self):
-        price = self.cleaned_data.get('unit_price')
-        if price is None or price < 0:
-            raise forms.ValidationError('El precio debe ser un numero positivo.')
-        return price
+        return validate_is_number(self.cleaned_data.get('unit_price'), field_name="El precio unitario")
 
     def clean_date(self):
-        date = self.cleaned_data.get('date')
-        if not date:
-            raise forms.ValidationError('Se requiere una fecha.')
-        return date
+        return validate_past_or_today_date(self.cleaned_data.get('date'), field_name="La fecha")
     
     def clean_iva(self):
-        iva = self.cleaned_data.get('iva')
-        if iva is None or iva < 0:
-            raise forms.ValidationError('El IVA debe ser un numero positivo.')
-        return iva
+        return validate_is_number(self.cleaned_data.get('iva'), field_name="El IVA", allow_zero=True)
     
     def save(self, commit=True):
         price_history = super().save(commit=False)

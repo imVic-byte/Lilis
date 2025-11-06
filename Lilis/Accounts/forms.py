@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Profile, Role
-from Main.validators import validate_rut_format, validate_phone_format, validate_password, validate_email
+from Main.validators import *
 
 class RegistroForm(forms.ModelForm):
 
@@ -107,19 +107,31 @@ class RegistroForm(forms.ModelForm):
         # Por defecto, devolver None
         return None
 
-    def clean_rut(self):
-        rut = self.cleaned_data.get("run")
-        if validate_rut_format(rut):
-            return rut
-        else:
-            raise forms.ValidationError("El formato del RUT es incorrecto.")
-
+    def clean_run(self):
+        run = self.cleaned_data.get("run")
+        if (self.user_instance and self.user_instance.profile.run != run) or not self.user_instance:
+            if Profile.objects.filter(run=run).exists():
+                raise forms.ValidationError("El RUT ya está en uso.")
+        return run    
 
     def clean_phone(self):
-        phone = self.cleaned_data.get("phone")
-        return validate_phone_format(phone)
+        return validate_phone_format(self.cleaned_data.get("phone"))
     
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        validate_email(email)
+        if (self.user_instance and self.user_instance.email != email) or not self.user_instance:
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError("El correo electrónico ya está en uso.")
+        return email
     
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if (self.user_instance and self.user_instance.username != username) or not self.user_instance:
+            if User.objects.filter(username=username).exists():
+                raise forms.ValidationError("El nombre de usuario ya está en uso.")
+        return username
+
     def save(self, commit=True):
         if self.user_instance:
             user = self.user_instance
@@ -207,39 +219,29 @@ class UpdateFieldForm(forms.Form):
         if value is None or value == "":
             raise forms.ValidationError("El nuevo valor no puede estar vacío.")
 
-        clean_method = getattr(self, f"clean_{field}", None)
-        if callable(clean_method):
-            cleaned_data["new_data"] = clean_method(value)
-        else:
-            raise forms.ValidationError(f"El campo '{field}' no es editable.")
+        try:
+            if field == 'email':
+                cleaned_data["new_data"] = validate_email(value)
+                if User.objects.filter(email=value).exists():
+                    raise forms.ValidationError("El correo electrónico ya está en uso.")
+            elif field == 'run':
+                cleaned_data["new_data"] = validate_rut_format(value)
+                if Profile.objects.filter(run=value).exists():
+                    raise forms.ValidationError("El RUT ya está en uso.")
+            elif field == 'phone':
+                cleaned_data["new_data"] = validate_phone_format(value)
+            elif field == 'first_name':
+                cleaned_data["new_data"] = validate_text_length(value, field_name="El nombre")
+            elif field == 'last_name':
+                cleaned_data["new_data"] = validate_text_length(value, field_name="El apellido")
+            elif field == 'username':
+                cleaned_data["new_data"] = validate_text_length(value, field_name="El nombre de usuario")
+                if User.objects.filter(username=value).exists():
+                    raise forms.ValidationError("El nombre de usuario ya está en uso.")
+
+            else:
+                raise forms.ValidationError(f"Este cambio no es válido.")
+        except forms.ValidationError as e:
+            self.add_error('new_data', e)
+
         return cleaned_data
-
-    def clean_email(self, email):
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("El correo electrónico ya está en uso.")
-        if validate_email(email):
-            return email
-        raise forms.ValidationError("El correo electrónico no es válido.")
-
-    def clean_run(self, rut):
-        if validate_rut_format(rut):
-            return rut
-        raise forms.ValidationError("El formato del RUT es incorrecto.")
-
-    def clean_phone(self, phone):
-        return validate_phone_format(phone)
-
-    def clean_first_name(self, first_name):
-        if not first_name.strip():
-            raise forms.ValidationError("El nombre no puede estar vacío.")
-        return first_name
-
-    def clean_last_name(self, last_name):
-        if not last_name.strip():
-            raise forms.ValidationError("El apellido no puede estar vacío.")
-        return last_name
-
-    def clean_username(self, username):
-        if User.objects.filter(username=username).exists():
-            raise forms.ValidationError("El nombre de usuario ya está en uso por otro usuario.")
-        return username
