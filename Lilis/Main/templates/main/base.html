@@ -27,6 +27,41 @@
 
     {{ block.super }}
     <script>
+        //Botón de guardar con SweetAlert2
+        const saveConfirmButtons = document.querySelectorAll('.btn-guardar-confirmar');
+
+        saveConfirmButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                
+                const form = event.currentTarget.closest('form');
+                if (!form) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const title = event.currentTarget.dataset.title || '¿Guardar los cambios?';
+                const text = event.currentTarget.dataset.text || 'Esta acción enviará el formulario.';
+
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: "Sí, guardar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
         //Botón de eliminar con SweetAlert2
         document.addEventListener('DOMContentLoaded', function () {
             const deleteButtons = document.querySelectorAll('.btn-delete');
