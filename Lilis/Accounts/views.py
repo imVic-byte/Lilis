@@ -15,7 +15,31 @@ def user_list(request):
     return render(request, "user_list.html", {"users": users})
 
 def password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if user_service.send_email(email):
+            return redirect('token_verify')
+        else:
+            return render(request, 'password_reset.html', {'error': 'No se encontró una cuenta con ese correo electrónico.'})
     return render(request, 'password_reset.html')
+
+def password_change(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        user = request.user
+        if not user.check_password(current_password):
+            return render(request, 'password_change.html', {'error': 'La contraseña actual es incorrecta.'})
+        if new_password != confirm_password:
+            return render(request, 'password_change.html', {'error': 'Las nuevas contraseñas no coinciden.'})
+        if not user_service.validar_password(new_password):
+            return render(request, 'password_change.html', {'error': 'La nueva contraseña no cumple con los requisitos de seguridad.'})            
+        user.set_password(new_password)
+        user.save()
+        return redirect('dashboard')
+    return render(request, 'password_change.html')
+
 
 @login_required
 @permission_or_redirect('Accounts.add_user','dashboard', 'No teni permiso')
@@ -133,6 +157,35 @@ def user_list(request):
     }
     return render(request, "user_list.html", context)
 
+def token_verify(request):
+    if request.method == 'POST':
+        token = request.POST.get('token')
+        success, user = user_service.verify_token(token)
+        if success:
+            request.session['password_reset_user_id'] = user.id
+            return redirect('password_recover')
+        else:
+            return render(request, 'token_verify.html', {'error': 'Token inválido o ya usado.'})
+    return render(request, 'token_verify.html')
 
-
-    
+def password_recover(request):
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        user_id = request.session.get('password_reset_user_id')
+        if new_password != confirm_password:
+            return render(request, 'password_recover.html', {'error': 'Las contraseñas no coinciden.'})
+        if not user_service.validar_password(new_password):
+            return render(request, 'password_recover.html', {'error': 'La nueva contraseña no cumple con los requisitos de seguridad.'})    
+        if not user_id:
+            return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})    
+        if user_id:
+            success = user_service.password_change(user_id, new_password)
+            if success:
+                request.session.pop('password_reset_user_id', None)
+                return redirect('login')
+            else:
+                return render(request, 'password_recover.html', {'error': 'Ha ocurrido un error. Inténtalo de nuevo.'})
+        else:
+            return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
+    return render(request, 'password_recover.html')

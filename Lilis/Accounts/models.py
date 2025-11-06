@@ -44,4 +44,12 @@ class Profile(models.Model):
     def get_staff(self):
         return f'{self.user.is_staff}'
     
+class password_reset_token(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Token for {self.user.username} - Used: {self.is_used}"
 

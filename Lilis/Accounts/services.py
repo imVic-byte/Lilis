@@ -1,11 +1,17 @@
 from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm
 from django.contrib.auth.models import User
-from .models import Profile
+from .models import Profile, password_reset_token
 from Main.CRUD import CRUD
+import re
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+import random
 
 class UserService(CRUD ):
     def __init__(self):
         self.model = User
+        self.tokens = password_reset_token
         self.profile_model = Profile
         self.form_class = RegistroForm
         self.user_form_class = UserForm
@@ -92,3 +98,53 @@ class UserService(CRUD ):
                 return True
         except self.model.DoesNotExist: 
             return False, None
+        
+    def validar_password(self, password):
+        if len(password) < 8:
+            return False
+        if not re.search(r"[A-Z]", password):
+            return False
+        if not re.search(r"[a-z]", password):
+            return False
+        if not re.search(r"[0-9]", password):
+            return False
+        if not re.search(r"[^A-Za-z0-9]", password):
+            return False
+        return True
+    
+    def send_email(self, email):
+        try:
+            user = self.model.objects.get(email=email)
+            if not user:
+                return False
+            token = ''.join(random.choices('1234567890', k=6))
+            self.tokens.objects.create(user=user, token=token)
+            asunto = 'Restablecimiento de contraseña'
+            mensaje = f'Hola {user.username},\n\nPara restablecer tu contraseña, copia el siguiente codigo en la pagina de restablecimiento:\n\n{token}\n\nSi no solicitaste este cambio, puedes ignorar este correo.'
+            send_mail(
+                asunto,
+                mensaje,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            return True
+        except self.model.DoesNotExist:
+            return False
+    
+    def verify_token(self, token):
+        try:
+            token_entry = self.tokens.objects.get(token=token, is_used=False)
+            return True, token_entry.user
+        except self.tokens.DoesNotExist:
+            return False, None
+        
+    def password_change(self, user_id, new_password):
+        try:
+            user = self.get(user_id)
+            user.set_password(new_password)
+            user.save()
+            self.tokens.objects.filter(user=user, is_used=False).update(is_used=True)
+            return True
+        except:
+            return False
