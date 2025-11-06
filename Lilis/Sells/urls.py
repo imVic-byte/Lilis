@@ -14,6 +14,7 @@ clients = [
     path('client_update/<int:id>/', views.client_update, name='client_update'),
     path('client_delete/<int:id>/', views.client_delete, name='client_delete'),
     path('client_view/<int:id>/', views.client_view, name='client_view'),
+    path('export_clients_excel/', views.export_clients_excel, name='export_clients_excel'),
 ]
 
 locations = [
@@ -22,6 +23,7 @@ locations = [
     path('location_update/<int:id>/', views.location_update, name='location_update'),
     path('location_delete/<int:id>/', views.location_delete, name='location_delete'),
     path('location_view/<int:id>/', views.location_view, name='location_view'),
+    path('export_locations_excel/', views.export_locations_excel, name='export_locations_excel'),
 ]
 
 warehouses = [
@@ -30,6 +32,7 @@ warehouses = [
     path('warehouse_update/<int:id>/', views.warehouse_update, name='warehouse_update'),
     path('warehouse_delete/<int:id>/', views.warehouse_delete, name='warehouse_delete'),
     path('warehouse_view/<int:id>/', views.warehouse_view, name='warehouse_view'),
+    path('export_warehouse_excel/', views.export_warehouse_excel, name='export_warehouse_excel'),
 ]
 
 urlpatterns = [

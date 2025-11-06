@@ -34,9 +34,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="raw-material-table-view" data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_raw_materials_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_raw_materials_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
         <a href="{% url 'raw_material_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Materia prima
         </a>
@@ -119,6 +123,7 @@
                         <th>Categoría</th>
                         <th>Stock</th>
                         <th>Perecible</th>
+                        <th>Creado</th>
                         <th>Vencimiento</th>
                         <th>Acciones</th>
                     </tr>
@@ -137,6 +142,7 @@
                                 <span class="badge bg-secondary">No</span>
                             {% endif %}
                         </td>
+                        <td>{{ p.created_at|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>{{ p.expiration_date|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>
                             <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>

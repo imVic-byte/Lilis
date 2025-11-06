@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
-
-# ¡Importante! Asegúrate de que estas importaciones están
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-
 from .services import ClientService, WarehouseService, SaleOrderService, TransactionService
 from Main.decorator import permission_or_redirect
+from Main.utils import generate_excel_response
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -134,6 +132,39 @@ def client_delete(request, id):
             return redirect('client_list_all') # ¡Redirect actualizado!
     return redirect('client_list_all') # ¡Redirect actualizado!
 
+@login_required
+@permission_or_redirect('export_client','dashboard', 'No teni permiso')
+def export_clients_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    limit = request.GET.get("limit")
+    qs = client_service.list().order_by('fantasy_name')
+    if q:
+        qs = qs.filter(
+            Q(fantasy_name__icontains=q) |
+            Q(bussiness_name__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+    if limit:
+        try:
+            limit = int(limit)
+            qs = qs[:limit]
+        except ValueError:
+            pass
+    headers = ["RUT", "Nombre Fantasía", "Razón Social", "Email", "Teléfono", "Estado"]
+    data_rows = []
+    for client in qs:
+        data_rows.append([
+            client.rut,
+            client.fantasy_name,
+            client.bussiness_name,
+            client.email,
+            client.phone,
+            "Inactivo" if client.is_suspended else "Activo",
+        ])
+    return generate_excel_response(headers, data_rows, "Lilis_Clientes")
+
 # ===================================
 # VISTAS DE LOCATIONS (Indentación Corregida)
 # ===================================
@@ -234,6 +265,34 @@ def location_delete(request, id):
         if success:
             return redirect('location_list')
     return redirect('location_list')
+
+@login_required
+@permission_or_redirect('export_location','dashboard', 'No teni permiso')
+def export_locations_excel(request):
+    q= (request.GET.get("q") or "").strip()
+    qs = warehouse_service.location_model.objects.all().order_by('name')
+    limit = request.GET.get("limit")
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(city__icontains=q) |
+            Q(country__icontains=q)
+        )
+    if limit:
+        try:
+            limit = int(limit)
+            qs = qs[:limit]
+        except ValueError:
+            pass
+    headers = ["Nombre", "Ciudad", "País"]
+    data_rows = []
+    for location in qs:
+        data_rows.append([
+            location.name,
+            location.city,
+            location.country,
+        ])
+    return generate_excel_response(headers, data_rows, "Lilis_Ubicaciones")
 
 # ===================================
 # VISTAS DE WAREHOUSES (Indentación Corregida)
@@ -336,3 +395,32 @@ def warehouse_delete(request, id):
         if success:
             return redirect('warehouse_list')
     return redirect('warehouse_list')
+
+@login_required
+@permission_or_redirect('export_warehouse','dashboard', 'No teni permiso')
+def export_warehouse_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
+    limit = request.GET.get("limit")
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(address__icontains=q) |
+            Q(location__name__icontains=q) # Búsqueda en la FK
+        )
+    if limit:
+        try:
+            limit = int(limit)
+            qs = qs[:limit]
+        except ValueError:
+            pass
+    headers = ["Nombre", "Dirección", "Ubicación", "Área Total"]
+    data_rows = []
+    for warehouse in qs:
+        data_rows.append([
+            warehouse.name,
+            warehouse.address,
+            warehouse.location.name if warehouse.location else "N/A",
+            warehouse.total_area,
+        ])
+    return generate_excel_response(headers, data_rows, "Lilis_Bodegas")

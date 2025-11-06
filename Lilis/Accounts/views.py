@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from Main.utils import generate_excel_response
 
 user_service = UserService()
 
@@ -157,6 +158,50 @@ def user_list(request):
     }
     return render(request, "user_list.html", context)
 
+@login_required
+@permission_or_redirect('Accounts.export_user','dashboard', 'No teni permiso')
+def export_users_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    limit = request.GET.get("limit")
+    qs = user_service.list().select_related("profile", "profile__role").order_by("username")
+    if q:
+        qs = qs.filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(username__icontains=q) |
+            Q(profile__run__icontains=q) | 
+            Q(profile__role__group__name__icontains=q)
+        )
+    if limit:
+        try:
+            limit = int(limit)
+            qs = qs[:limit]
+        except ValueError:
+            pass
+    headers = [
+        "Nombre de Usuario",
+        "Nombre",
+        "Apellido",
+        "Email",
+        "Run",
+        "Rol",
+        "¿Activo?",
+        "Fecha de Creación",
+    ]
+    data_rows = []
+    for user in qs:
+        data_rows.append([
+            user.username,
+            user.first_name,
+            user.last_name,
+            user.email,
+            user.profile.run if hasattr(user, 'profile') else '',
+            user.profile.role.group.name if hasattr(user, 'profile') and user.profile.role else '',
+            "Si" if user.is_active else "No",
+            user.date_joined.strftime("%Y-%m-%d"),
+        ])
+
+    return generate_excel_response(headers, data_rows, "Lilis_Usuarios")
 def token_verify(request):
     if request.method == 'POST':
         token = request.POST.get('token')

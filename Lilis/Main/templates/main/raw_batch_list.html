@@ -35,9 +35,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="raw-batch-table-view data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_raw_batches_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_raw_batches_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
         <a href="{% url 'raw_batch_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Lote
         </a>
@@ -53,9 +57,14 @@
                     <div class="row">
                         <div class="col-6">
                     <h5 class="card-title">Lote de: {{ p.raw_material.name }}</h5>
-                        </div>
-                        <div class="col-6 text-end">
-                            <a href="{% url 'raw_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
+                    <ul class="list-group list-group-flush mt-3">
+                        <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
+                        <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
+                    </ul>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'raw_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
                             Editar
                         </a>
                         <a href="{% url 'raw_batch_view' p.id %}" class="mt-2 text-end btn btn-weno">
@@ -92,7 +101,6 @@
                     <tr>
                         <th>Código Lote</th>
                         <th>Materia Prima</th>
-                        <th>Proveedor</th>
                         <th>Cant. Actual</th>
                         <th>Cant. Máxima</th>
                         <th>Cant. Mínima</th>
@@ -104,7 +112,10 @@
                     <tr>
                         <td><strong>{{ p.batch_code }}</strong></td>
                         <td>{{ p.raw_material.name }}</td>
+<<<<<<< HEAD
+=======
                         <td>{{ p.raw_material.supplier.fantasy_name|default:"N/A" }}</td>
+>>>>>>> 54ceae568c5856d90b3bbf1c0bd808c80541fb70
                         <td>{{ p.current_quantity }}</td>
                         <td>{{ p.max_quantity }}</td>
                         <td>{{ p.min_quantity }}</td>
