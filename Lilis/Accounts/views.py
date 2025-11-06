@@ -48,10 +48,9 @@ def registro(request):
     if request.method == 'POST':
         form = user_service.form_class(request.POST)
         if form.is_valid():
-            success, usuario = user_service.save_user(request.POST)
+            success = user_service.save_user(request.POST)
             if success:
-                login(request, usuario)
-                return redirect('dashboard')
+                return redirect('user_list')
         else:
             return render(request, 'registro.html', {'form': form})
     else:
