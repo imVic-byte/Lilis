@@ -39,12 +39,12 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'export_products_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+        <a href="{% url 'export_raw_batches_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
             Exportar Todo
         </a>
-        <a href="{% url 'export_products_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+        <a href="{% url 'export_raw_batches_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
             class="btn btn-info mt-2">
-            Exportar Vista ({{ per_page }})
+            Exportar Vista
         </a>
         <a href="{% url 'raw_batch_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Lote
@@ -61,7 +61,6 @@
                     <h5 class="card-title">Lote de: {{ p.raw_material.name }}</h5>
                     <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
                     <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Proveedor:</strong> {{ p.raw_material.supplier.name|default:"N/A" }}</li>
                         <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
                         <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
                     </ul>
@@ -97,7 +96,6 @@
                     <tr>
                         <th>Código Lote</th>
                         <th>Materia Prima</th>
-                        <th>Proveedor</th>
                         <th>Cant. Actual</th>
                         <th>Cant. Máxima</th>
                         <th>Cant. Mínima</th>
@@ -109,7 +107,6 @@
                     <tr>
                         <td><strong>{{ p.batch_code }}</strong></td>
                         <td>{{ p.raw_material.name }}</td>
-                        <td>{{ p.raw_material.supplier.name|default:"N/A" }}</td>
                         <td>{{ p.current_quantity }}</td>
                         <td>{{ p.max_quantity }}</td>
                         <td>{{ p.min_quantity }}</td>

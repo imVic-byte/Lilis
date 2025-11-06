@@ -11,4 +11,5 @@ urlpatterns = [
     path('user_delete/<int:id>', views.user_delete, name='user_delete'),
     path('user_view/<int:id>', views.user_view, name='user_view'),
     path('edit_field/', views.edit_field, name='edit_field'),
+    path('export_users_excel/', views.export_users_excel, name='export_users_excel'),
 ]

@@ -103,6 +103,39 @@ def category_delete(request, id):
             return redirect('category_list')
     return redirect('category_list') 
 
+@login_required
+@permission_or_redirect('Products.export_products','dashboard', 'No teni permiso')
+def export_categories_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = category_service.list().order_by('name')
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q)
+        )
+
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass
+
+    headers = ["Nombre", "Descripción"]
+    data_rows = []
+
+    for c in qs:
+        data_rows.append([
+            c.name,
+            c.description
+        ])
+
+    return generate_excel_response(headers, data_rows, "Lilis_Categorias")
+
+
 #PRODUCTOSSSSSSSSSs
 @login_required
 @permission_or_redirect('Products.view_products','dashboard', 'No teni permiso')
@@ -207,7 +240,7 @@ def product_delete(request, id):
         return redirect('products_list')
 
 @login_required
-@permission_or_redirect('Products.delete_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.export_products','dashboard', 'No teni permiso')
 def export_products_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
@@ -228,12 +261,12 @@ def export_products_excel(request):
         except ValueError:
             pass 
 
-    # --- 2. PREPARAR LOS DATOS PARA EL EXCEL ---
-    headers = ["Nombre", "Categoría", "Stock", "Perecible", "Vencimiento"]
+    headers = ["Nombre", "Categoría", "Stock", "Perecible", "Creación", "Vencimiento"]
     data_rows = []
     
     for p in qs:
         is_perishable_str = "Sí" if p.is_perishable else "No"
+        creation_date_str = p.created_at.strftime("%d-%m-%Y") if p.created_at else "N/A"
         expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
         
         data_rows.append([
@@ -241,10 +274,10 @@ def export_products_excel(request):
             p.category.name,
             p.quantity,
             is_perishable_str,
+            creation_date_str,
             expiration_date_str
         ])
 
-    # --- 3. LLAMAR A LA FUNCIÓN UTILITARIA ---
     return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
 
@@ -342,7 +375,40 @@ def supplier_delete(request, id):
         success = supplier_service.delete(id)
         if success:
             return redirect('supplier_list')
-    return redirect('supplier_list') 
+    return redirect('supplier_list')
+
+@login_required
+@permission_or_redirect('Products.export_suppliers','dashboard', 'No teni permiso')
+def export_suppliers_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = supplier_service.list().order_by('fantasy_name')
+    if q:
+        qs = qs.filter(
+            Q(fantasy_name__icontains=q) |
+            Q(bussiness_name__icontains=q) |
+            Q(rut__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass
+    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono"]
+    data_rows = []
+    for s in qs:
+        data_rows.append([
+            s.fantasy_name,
+            s.bussiness_name,
+            s.rut,
+            s.email,
+            s.phone
+        ])
+    return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
 
 #RAWMATERIAAAAAAAAAL
 @login_required
@@ -443,6 +509,46 @@ def raw_material_delete(request, id):
             return redirect('raw_material_list')
     return redirect('raw_material_list') 
 
+@login_required
+@permission_or_redirect('Products.export_rawmaterial','dashboard', 'No teni permiso')
+def export_raw_materials_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = raw_material_service.list_actives().select_related(
+        "supplier", 
+        "category"
+    ).order_by('name')
+
+    if q:
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(supplier__fantasy_name__icontains=q) |
+            Q(category__name__icontains=q)
+        )
+    
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass 
+
+    headers = ["Nombre", "Proveedor", "Categoría",  "Cantidad", "Perecible", "Creación", "Vencimiento"]
+    data_rows = []
+    
+    for rm in qs:
+        data_rows.append([
+            rm.name,
+            rm.supplier.fantasy_name,
+            rm.category.name,
+            rm.quantity,
+            "Sí" if rm.is_perishable else "No",
+            rm.created_at.strftime("%d-%m-%Y") if rm.created_at else "N/A",
+            rm.expiration_date.strftime("%d-%m-%Y") if rm.expiration_date else "N/A",
+        ])
+
+    return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
 
 #BATCHESSS
 @login_required
@@ -536,7 +642,38 @@ def product_batch_delete(request, id):
         success = batch_service.delete_product_batch(id)
         if success:
             return redirect('product_batch_list')
-    return redirect('product_batch_list') 
+    return redirect('product_batch_list')
+
+@login_required
+@permission_or_redirect('Products.export_product_batches','dashboard', 'No teni permiso')
+def export_product_batches_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = batch_service.list_products().select_related("product").order_by('batch_code')
+    if q:
+        qs = qs.filter(
+            Q(product__name__icontains=q) | 
+            Q(batch_code__icontains=q)      
+        )
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass 
+    headers = ["Código Lote", "Producto", "Cantidad Actual", "Cantidad Máxima", "Cantidad Mínima"]
+    data_rows = []
+    for b in qs:
+        data_rows.append([
+            b.batch_code,
+            b.product.name,
+            b.current_quantity,
+            b.max_quantity,
+            b.min_quantity,
+        ])
+
+    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Productos") 
 
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
@@ -633,7 +770,42 @@ def raw_batch_delete(request, id):
         success = batch_service.delete_raw_batch(id)
         if success:
             return redirect('raw_batch_list')
-    return redirect('raw_batch_list') 
+    return redirect('raw_batch_list')
+
+@login_required
+@permission_or_redirect('Products.export_raw_batches','dashboard', 'No teni permiso')
+def export_raw_batches_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = batch_service.list_raw_materials().select_related(
+        "raw_material", 
+        "raw_material__supplier"
+    ).order_by('batch_code')
+    if q:
+        qs = qs.filter(
+            Q(raw_material__name__icontains=q) | 
+            Q(batch_code__icontains=q) |         
+            Q(raw_material__supplier__name__icontains=q) 
+        )
+    qs_limit = request.GET.get("limit")
+    if qs_limit:
+        try:
+            limit = int(qs_limit)
+            if limit > 0:
+                qs = qs[:limit] 
+        except ValueError:
+            pass 
+    headers = ["Código de Lote","Materia Prima", "Cantidad Actual",  "Cantidad Máxima", "Cantidad Mínima"]
+    data_rows = []
+    for b in qs:
+        data_rows.append([
+            b.batch_code,
+            b.raw_material.name,
+            b.current_quantity,
+            b.max_quantity,
+            b.min_quantity,
+        ])
+
+    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Materias_Primas") 
 
 #PRICEHISTORIESSSSSSS
 @login_required
