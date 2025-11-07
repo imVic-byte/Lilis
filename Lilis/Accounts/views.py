@@ -105,7 +105,8 @@ def user_list(request):
 
     
     
-    default_per_page = 25  
+    default_per_page = 25 
+    allowed_per_page = [5, 25, 50, 100] 
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))

@@ -42,7 +42,7 @@ def client_list_all(request):
     #   ¡NUEVO! Lógica de Ordenamiento
     # ===================================
     # 3. Obtener parámetros de ordenamiento
-    allowed_sort_fields = ['rut', 'fantasy_name', 'bussiness_name', 'email', 'phone']
+    allowed_sort_fields = ['rut', 'fantasy_name', 'bussiness_name', 'email', 'phone', 'credit_limit', 'debt', 'max_debt']
     sort_by = request.GET.get('sort_by', 'fantasy_name') # Default: fantasy_name
     order = request.GET.get('order', 'asc')              # Default: asc
 
@@ -65,7 +65,10 @@ def client_list_all(request):
             Q(bussiness_name__icontains=q) |
             Q(rut__icontains=q) |
             Q(email__icontains=q) |
-            Q(phone__icontains=q)
+            Q(phone__icontains=q) | 
+            Q(credit_limit__icontains=q) |
+            Q(debt__icontains=q) |
+            Q(max_debt__icontains=q)
         )
         
     #ordenamiento
@@ -217,46 +220,39 @@ def export_clients_excel(request):
 @permission_or_redirect('.view_location','dashboard', 'No teni permiso')
 def location_list(request):
     
-    # 1. Obtener filtros de la URL
+    
     q = (request.GET.get("q") or "").strip()
     
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
+ 
     allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25  
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
     
-    # Validar que el valor esté en la lista permitida
+    
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    # ===================================
-
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
+  
     allowed_sort_fields = ['name', 'city', 'country']
-    sort_by = request.GET.get('sort_by', 'name') # Default: name
-    order = request.GET.get('order', 'asc')      # Default: asc
+    sort_by = request.GET.get('sort_by', 'name') 
+    order = request.GET.get('order', 'asc')      
 
-    # Validar que los campos y el orden sean correctos
+
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
+
+
     qs = warehouse_service.location_model.objects.all()
 
-    # 5. Aplicar filtro de búsqueda
+
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
@@ -264,14 +260,14 @@ def location_list(request):
             Q(country__icontains=q)
         )
         
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
+
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
+   
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
+  
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -279,23 +275,20 @@ def location_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
+    #Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
+   
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
+   
 
-    # 11. Contexto
+    # Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -381,68 +374,61 @@ def export_locations_excel(request):
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Ubicaciones")
 
-# ===================================
-# VISTAS DE WAREHOUSES (Indentación Corregida)
-# ===================================
+
 @login_required
 @permission_or_redirect('.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_list(request):
     
-    # 1. Obtener filtros de la URL
+    
     q = (request.GET.get("q") or "").strip()
     
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
+    
     allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25  # default
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
     
-    # Validar que el valor esté en la lista permitida
+    
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    # ===================================
+    
 
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
+    
     allowed_sort_fields = ['name', 'address', 'location__name', 'total_area']
-    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
-    order = request.GET.get('order', 'asc')      # Default: asc
+    sort_by = request.GET.get('sort_by', 'name') 
+    order = request.GET.get('order', 'asc')     
 
-    # Validar que los campos y el orden sean correctos
+    
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
+    
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
+    
     qs = warehouse_service.model.objects.select_related("location").all()
 
-    # 5. Aplicar filtro de búsqueda
+   
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(address__icontains=q) |
-            Q(location__name__icontains=q) # Búsqueda en la FK
+            Q(location__name__icontains=q)
         )
         
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
+   
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
+    
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
+    
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
