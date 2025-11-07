@@ -30,3 +30,16 @@
         </div>    
     </div>
 {% endblock content %}
+{% block scripts %}
+   <script>
+document.querySelector('form').addEventListener('submit', function(e) {
+    const input = document.querySelector('#fieldInput'); // tu input
+    const newValue = document.querySelector('input[name="new_value"]').value.trim();
+
+    if (!newValue) {
+        e.preventDefault(); // evita el submit
+        alert("El campo no puede estar vacío.");
+    }
+});
+</script>
+{% endblock scripts %}
