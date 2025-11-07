@@ -1,11 +1,10 @@
-from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm
+from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm, RoleForm
 from django.contrib.auth.models import User
-from .models import Profile, password_reset_token
+from .models import Profile, password_reset_token,Role
 from Main.CRUD import CRUD
 import re
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
 import random
 
 class UserService(CRUD ):
@@ -15,8 +14,11 @@ class UserService(CRUD ):
         self.profile_model = Profile
         self.form_class = RegistroForm
         self.user_form_class = UserForm
-        self.profile_form_class = ProfileForm
+        self.picture_form_class = ProfileForm
         self.update_field_form_class = UpdateFieldForm
+        self.role_form_class = RoleForm
+        self.roles = Role
+
     def save_user(self, data):
         form = self.form_class(data)
         if form.is_valid():
@@ -145,6 +147,22 @@ class UserService(CRUD ):
             user.set_password(new_password)
             user.save()
             self.tokens.objects.filter(user=user, is_used=False).update(is_used=True)
+            return True
+        except:
+            return False
+        
+    def obtain_user_picture(self, id):
+        user = self.model.objects.select_related('profile').get(id=id)
+        if user.profile.profile_picture:
+            return user.profile.profile_picture.url
+        else:
+            return None
+        
+    def change_user_picture(self, id, photo):
+        try:
+            user = self.model.objects.select_related('profile').get(id=id)
+            user.profile.profile_picture = photo
+            user.profile.save()
             return True
         except:
             return False

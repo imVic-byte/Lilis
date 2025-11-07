@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from Main.CRUD import CRUD
-from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail
-from .forms import ClientForm, LocationForm, WarehouseForm, TransactionForm, SaleOrderForm, SaleOrderDetailForm
+from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail, TransactionDetail
+from .forms import ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
 import datetime
 
 class ClientService(CRUD):  
@@ -172,19 +172,7 @@ class SaleOrderService(CRUD):
 class TransactionService(CRUD):
     def __init__(self):
         self.model = Transaction
-        self.form_class = TransactionForm
-
-    def register_entry(self, data):
-        transaction = self.model.objects.create(data)
-        if transaction:
-            return True, transaction
-        return False, None
-    
-    def register_exit(self, data):
-        transaction = self.model.objects.create(data)
-        if transaction:
-            return True, transaction
-        return False, None
+        self.details = TransactionDetail
     
     def get_by_warehouse(self, warehouse_id):
         return self.model.objects.filter(warehouse=warehouse_id)

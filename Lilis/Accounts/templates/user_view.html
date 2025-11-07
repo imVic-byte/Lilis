@@ -1,7 +1,7 @@
 {% extends 'main/base.html' %}
 {% load crispy_forms_tags %}
 {% block title %} Usuario {{ request.user.username }} {% endblock title %}
-
+{% load static %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
@@ -9,80 +9,122 @@
             <div class="card-header bg-primary text-white text-center">
                 <h4 class="mb-0">Detalle del Usuario</h4>
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Nombre de usuario:</strong> {{ user.username }}
-                        </div>
-                        <a href="{% url 'edit_field' %}?field_name=username&previous_data={{ user.username|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>RUT:</strong> {{ user.profile.run }}
-                        </div>
-                        <a href="{% url 'edit_field' %}?field_name=run&previous_data={{ user.profile.run|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
+            <div class="row">
+                <div class="col-6">
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Nombre de usuario:</strong> {{ user.username }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=username&previous_data={{ user.username|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>RUT:</strong> {{ user.profile.run }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=run&previous_data={{ user.profile.run|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
 
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Nombre:</strong> {{ user.first_name }}
-                        </div>
-                        <a href="{% url 'edit_field' %}?field_name=first_name&previous_data={{ user.first_name|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Nombre:</strong> {{ user.first_name }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=first_name&previous_data={{ user.first_name|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
 
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Apellido:</strong> {{ user.last_name }}
-                        </div>
-                        <a href="{% url 'edit_field' %}?field_name=last_name&previous_data={{ user.last_name|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Apellido:</strong> {{ user.last_name }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=last_name&previous_data={{ user.last_name|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
 
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Rol:</strong> {{ user.profile.role.description }}
-                        </div>
-                    </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Rol:</strong> {{ user.profile.role.description }}
+                                </div>
+                                {% if request.user.is_staff %}
+                                <a href="{% url 'role_changer' %}?field_name=role&previous_data={{ user.profile.role|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </li>
 
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Email:</strong> {{ user.email|default:"No registrado" }}
-                        </div>
-                        <a href="{% url 'edit_field' %}?field_name=email&previous_data={{ user.email|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Email:</strong> {{ user.email|default:"No registrado" }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=email&previous_data={{ user.email|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
 
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Teléfono:</strong> {{ user.profile.phone|default:"No registrado" }}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Teléfono:</strong> {{ user.profile.phone|default:"No registrado" }}
+                                </div>
+                                <a href="{% url 'edit_field' %}?field_name=phone&previous_data={{ user.profile.phone|urlencode }}&user_id={{ user.id }}"
+                                    class="text-decoration-none text-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Es Staff:</strong>
+                                    {% if user.is_staff %}
+                                    Sí
+                                    {% else %}
+                                    No
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% if user.id == request.user.id %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'password_change' %}" class="btn btn-warning w-100">Cambiar
+                                    Contraseña</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card-body d-flex flex-column h-100">
+                        <h5 class="card-title text-center">Foto de perfil</h5>
+                        <div class="card-body flex-grow-1 d-flex align-items-center justify-content-center">
+                            {% if user.profile.profile_picture %}
+                            <img src="{{ user.profile.profile_picture.url }}" class="img-fluid rounded-circle w-75" style="aspect-ratio: 1 / 1; object-fit: cover;"  alt="Imagen de usuario">
+                            {% else %}
+                            <img src="{% static 'img/user.png' %}" class="img-fluid rounded-circle w-75" style="aspect-ratio: 1 / 1; object-fit: cover;" alt="Imagen de usuario">
+                            {% endif %}
                         </div>
-                        <a href="{% url 'edit_field' %}?field_name=phone&previous_data={{ user.profile.phone|urlencode }}&user_id={{ user.id }}" 
-                           class="text-decoration-none text-primary">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </li>
-                    {% if user.id == request.user.id %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="{% url 'password_reset' %}" class="btn btn-warning w-100">Cambiar Contraseña</a>
-                    </li>
-                    {% endif %}
-                </ul>
+                        {% if user.id == request.user.id %}
+
+                        <div class="mt-auto mb-2">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                                <a href="{% url 'user_picture' user.id %}" class="btn btn-warning w-100">
+                                    Cambiar Foto de perfil
+                                </a>
+                            </li>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-{% endblock content %}
+        {% endblock content %}

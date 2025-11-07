@@ -192,15 +192,8 @@ class UserForm(forms.ModelForm):
         }
 
 
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = Profile
-        fields = ["run", "phone", "role"]
-        labels = {
-            "run": "RUT",
-            "phone": "Teléfono",
-            "role": "Rol",
-        }
+class ProfileForm(forms.Form):
+    photo = forms.ImageField(required=True)
 
 class UpdateFieldForm(forms.Form):
     field_name = forms.CharField(widget=forms.HiddenInput())
@@ -245,3 +238,54 @@ class UpdateFieldForm(forms.Form):
             self.add_error('new_data', e)
 
         return cleaned_data
+
+    def clean_email(self, email):
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("El correo electrónico ya está en uso.")
+        if validate_email(email):
+            return email
+        raise forms.ValidationError("El correo electrónico no es válido.")
+
+    def clean_run(self, rut):
+        if validate_rut_format(rut):
+            return rut
+        raise forms.ValidationError("El formato del RUT es incorrecto.")
+
+    def clean_phone(self, phone):
+        return validate_phone_format(phone)
+
+    def clean_first_name(self, first_name):
+        if not first_name.strip():
+            raise forms.ValidationError("El nombre no puede estar vacío.")
+        return first_name
+
+    def clean_last_name(self, last_name):
+        if not last_name.strip():
+            raise forms.ValidationError("El apellido no puede estar vacío.")
+        return last_name
+
+    def clean_username(self, username):
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("El nombre de usuario ya está en uso por otro usuario.")
+        return username
+
+class RoleForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['role']
+        labels = {
+            'role': '',
+        }
+        widgets = {
+            'role': forms.Select(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Seleccione Rol'
+            }),
+        }
+    
+    def clean_role(self):
+        role = self.cleaned_data.get("role")
+        if not role:
+            raise forms.ValidationError("Debe seleccionar un rol válido.")
+        return role
+
