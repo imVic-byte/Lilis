@@ -1,0 +1,64 @@
+{% extends 'main/base.html' %}
+{% block title %}Cambiar Foto de Perfil{% endblock title %}
+{% load static %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Cambiar Foto de Perfil</h4>
+            </div>
+            <div class="card-body text-center">
+                <h5>Foto actual</h5>
+                <div class="mb-3">
+                    {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" class="img-fluid" alt="Imagen de usuario">
+                    {% else %}
+                    <img src="{% static 'img/user.png' %}" class="img-fluid" alt="Imagen de usuario">
+                    {% endif %}
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="mt-4">
+                    {% csrf_token %}
+                    <div class="mb-3 text-start">
+                        <label for="id_photo" class="form-label"><strong>Nueva imagen:</strong></label>
+                        <input type="file" name="photo" id="id_photo" class="form-control"
+                            accept="image/png, image/jpeg, image/gif" required>
+                        <small id="fileHelp" class="form-text text-muted">Formatos permitidos: PNG, JPG, GIF. Máx 2
+                            MB.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Actualizar Foto</button>
+                </form>
+            </div>
+            <div class="card-footer bg-white text-center">
+                {% if error %}
+                <p class="text-danger">{{ error }}</p>
+                {% endif %}
+
+                <a href="{% url 'user_view' user.id %}" class="btn btn-secondary w-100 mt-3">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+<script>
+document.getElementById('id_photo').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const maxSize = 2 * 1024 * 1024; // 2 MB
+
+    if (!validTypes.includes(file.type)) {
+        alert('Formato no válido. Solo JPG, PNG o GIF.');
+        this.value = '';
+    } else if (file.size > maxSize) {
+        alert('Archivo demasiado grande. Máximo 2 MB.');
+        this.value = '';
+    }
+});
+</script>
+{% endblock scripts %}

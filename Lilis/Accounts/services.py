@@ -14,7 +14,7 @@ class UserService(CRUD ):
         self.profile_model = Profile
         self.form_class = RegistroForm
         self.user_form_class = UserForm
-        self.profile_form_class = ProfileForm
+        self.picture_form_class = ProfileForm
         self.update_field_form_class = UpdateFieldForm
         self.role_form_class = RoleForm
         self.roles = Role
@@ -147,6 +147,22 @@ class UserService(CRUD ):
             user.set_password(new_password)
             user.save()
             self.tokens.objects.filter(user=user, is_used=False).update(is_used=True)
+            return True
+        except:
+            return False
+        
+    def obtain_user_picture(self, id):
+        user = self.model.objects.select_related('profile').get(id=id)
+        if user.profile.profile_picture:
+            return user.profile.profile_picture.url
+        else:
+            return None
+        
+    def change_user_picture(self, id, photo):
+        try:
+            user = self.model.objects.select_related('profile').get(id=id)
+            user.profile.profile_picture = photo
+            user.profile.save()
             return True
         except:
             return False

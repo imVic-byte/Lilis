@@ -180,15 +180,8 @@ class UserForm(forms.ModelForm):
         }
 
 
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = Profile
-        fields = ["run", "phone", "role"]
-        labels = {
-            "run": "RUT",
-            "phone": "Teléfono",
-            "role": "Rol",
-        }
+class ProfileForm(forms.Form):
+    photo = forms.ImageField(required=True)
 
 class UpdateFieldForm(forms.Form):
     field_name = forms.CharField(widget=forms.HiddenInput())

@@ -72,10 +72,6 @@ def user_view(request, id):
     user = user_service.model.objects.select_related('profile').get(id=id)
     return render(request, "user_view.html", {"user": user})
 
-
-
-
-
 @login_required
 @permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_list(request):
@@ -205,3 +201,16 @@ def edit_field(request):
         "edit_field.html", 
         {"field_name": field_name, "previous_data": previous_data, 'form': form}
     )
+
+def user_picture(request, id):
+    if request.method == "POST":
+        photo = request.FILES.get("photo")
+        if photo:
+            print(request.FILES)
+            user_service.change_user_picture(id, photo)
+            return redirect('user_view', id=id)
+        else:
+            return render(request, "user_picture.html", {"error": "No se pudo cargar la foto."})
+    else:
+        photo = user_service.obtain_user_picture(id)
+    return render(request, "user_picture.html", {"photo": photo, "id": id})
