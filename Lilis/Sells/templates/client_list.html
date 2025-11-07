@@ -72,6 +72,13 @@
                         <li class="list-group-item"><strong>Limite de credito:</strong> {{ p.credit_limit }}</li>
                         <li class="list-group-item"><strong>Deuda:</strong> {{ p.debt }}</li>
                         <li class="list-group-item"><strong>Deuda máxima:</strong> {{ p.max_debt}}</li>
+                        <li class="list-group-item">
+                            <strong>Estado:</strong>
+                            {% if not p.is_suspended %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
                     </ul>
                 </div>
             </div>
@@ -106,7 +113,7 @@
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
                         <td>
-                            {% if p.is_active %}
+                            {% if not p.is_suspended %}
                                 <span class="badge bg-success">Activo</span>
                             {% else %}
                                 <span class="badge bg-secondary">Inactivo</span>

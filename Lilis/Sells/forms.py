@@ -6,7 +6,7 @@ from Main.validators import validate_rut_format, validate_phone_format, validate
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt']
+        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt' ,'is_suspended']
         labels = {
             'bussiness_name': 'Razon social de la empresa',
             'fantasy_name': 'Nombre fantasia de la empresa',
@@ -15,7 +15,8 @@ class ClientForm(forms.ModelForm):
             'phone': 'Telefono',
             'credit_limit': 'Limite de credito',
             'debt': 'Deuda',
-            'max_debt': 'Maximo de deuda'
+            'max_debt': 'Maximo de deuda',
+            'is_suspended': 'Esta suspendido'
         }
     
     def clean_rut(self):

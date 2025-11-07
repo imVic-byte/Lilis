@@ -177,7 +177,7 @@ def role_changer(request):
         role = user_service.roles.objects.get(id=request.POST.get("role"))
         success = user_service.edit_field(user_id, field_name, role)
         if success:
-            return redirect('user_list')
+            return redirect('user_view', id=user_id)
         else:
             render(request, "role_changer.html", {'form':form, "error": "No se pudo cambiar el rol."})
     else:
@@ -195,7 +195,7 @@ def edit_field(request):
         if form.is_valid():
             success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
             if success:
-                return redirect('user_list')
+                return redirect('user_view', id=user_id)
     else:
         form = user_service.update_field_form_class(
             initial={'field_name': field_name, 'new_data': previous_data}
