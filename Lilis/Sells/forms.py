@@ -39,13 +39,13 @@ class ClientForm(forms.ModelForm):
         return phone
 
     def clean_credit_limit(self):
-        return validate_is_number(self.cleaned_data.get('credit_limit'), field_name="El límite de crédito", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('credit_limit'), field_name="El límite de crédito", allow_zero=True)
 
     def clean_debt(self):
-        return validate_is_number(self.cleaned_data.get('debt'), field_name="La deuda", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('debt'), field_name="La deuda", allow_zero=True)
 
     def clean_max_debt(self):
-        return validate_is_number(self.cleaned_data.get('max_debt'), field_name="La deuda máxima", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('max_debt'), field_name="La deuda máxima", allow_zero=True)
         
     def save(self, commit=True):
         client = super(ClientForm, self).save(commit=False)
@@ -98,7 +98,7 @@ class WarehouseForm(forms.ModelForm):
         return validate_text_length(self.cleaned_data.get('address'), min_length=5, field_name="La dirección")
 
     def clean_total_area(self):
-        return validate_is_number(self.cleaned_data.get('total_area'), field_name="El área total")
+        return validate_positive_number(self.cleaned_data.get('total_area'), field_name="El área total")
         
     def save(self, commit=True):
         warehouse = super(WarehouseForm, self).save(commit=False)   
@@ -157,9 +157,6 @@ class SaleOrderDetailForm(forms.ModelForm):
             'product': 'Producto',
             'quantity': 'Cantidad'
         }
-
-    def clean_quantity(self):
-        return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")    
         
     def save(self, commit=True):
         sale_order_detail = super(SaleOrderDetailForm, self).save(commit=False)
