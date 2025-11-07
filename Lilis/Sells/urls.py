@@ -39,4 +39,5 @@ urlpatterns = [
     *clients,
     *locations,
     *warehouses,
+    path('transaction', views.transaction, name='transaction'),
 ]

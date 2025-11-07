@@ -108,22 +108,7 @@ class WarehouseForm(forms.ModelForm):
             return warehouse
         return warehouse
         
-class TransactionForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = ['warehouse', 'type', 'batch']
-        labels = {
-            'warehouse': 'Bodega',
-            'type': 'Tipo',
-            'batch': 'Lote'
-        }
-        
-    def save(self, commit=True):
-        transaction = super(TransactionForm, self).save(commit=False)
-        if commit:
-            transaction.save()
-            return transaction
-        return transaction
+
         
 class SaleOrderForm(forms.ModelForm):
     class Meta:
