@@ -24,7 +24,7 @@ def category_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:
@@ -190,7 +190,7 @@ def products_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:
@@ -206,7 +206,7 @@ def products_list(request):
     #   ¡NUEVO! Lógica de Ordenamiento
     # ===================================
     # 3. Obtener parámetros de ordenamiento
-    allowed_sort_fields = ['name', 'category__name', 'quantity', 'expiration_date']
+    allowed_sort_fields = ['name', 'category__name', 'quantity','created_at', 'expiration_date']
     sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
     order = request.GET.get('order', 'asc')      # Default: asc
 
@@ -380,7 +380,7 @@ def supplier_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:
@@ -554,7 +554,7 @@ def raw_material_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:
@@ -736,7 +736,7 @@ def product_batch_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:
@@ -903,7 +903,7 @@ def raw_batch_list(request):
     # ===================================
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  # Nuevo default
     
     try:

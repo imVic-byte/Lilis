@@ -104,7 +104,7 @@ def user_list(request):
     q = (request.GET.get("q") or "").strip()
 
     
-    allowed_per_page = [5, 25, 50, 100]
+    
     default_per_page = 25  
     
     try:
