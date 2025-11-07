@@ -67,7 +67,6 @@ def user_delete(request, id):
     return redirect("user_list")
 
 @login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_view(request, id):
     user = user_service.model.objects.select_related('profile').get(id=id)
     return render(request, "user_view.html", {"user": user})
