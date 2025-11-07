@@ -21,6 +21,8 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
 
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por RUT, nombre, razón social, email...">
                 
@@ -35,9 +37,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="client-table-view" data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_clients_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_clients_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
         <a href="{% url 'client_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Cliente
         </a>
@@ -95,21 +101,68 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>RUT</th>
+<<<<<<< HEAD
                         <th>Nombre Fantasía</th>
                         <th>Razón Social</th>
+                        <th>RUT</th>
                         <th>Email</th>
                         <th>Teléfono</th>
+=======
+                        
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=fantasy_name&order={% if current_sort_by == 'fantasy_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre Fantasía</strong>
+                                {% if current_sort_by == 'fantasy_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=bussiness_name&order={% if current_sort_by == 'bussiness_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Razón Social</strong>
+                                {% if current_sort_by == 'bussiness_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=rut&order={% if current_sort_by == 'rut' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>RUT</strong>
+                                {% if current_sort_by == 'rut' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=email&order={% if current_sort_by == 'email' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Email</strong>
+                                {% if current_sort_by == 'email' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=phone&order={% if current_sort_by == 'phone' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Teléfono</strong>
+                                {% if current_sort_by == 'phone' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+>>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
                         <th>Estado</th>
+                        <th>Limite de Credito</th>
+                        <th>Deuda</th>
+                        <th>Deuda Máxima</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for p in page_obj %}
                     <tr>
-                        <td>{{ p.rut }}</td>
                         <td>{{ p.fantasy_name }}</td>
                         <td>{{ p.bussiness_name }}</td>
+                        <td>{{ p.rut }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
                         <td>
@@ -119,6 +172,9 @@
                                 <span class="badge bg-secondary">Inactivo</span>
                             {% endif %}
                         </td>
+                        <td>{{ p.credit_limit }}</td>
+                        <td>{{ p.debt }}</td>
+                        <td>{{ p.max_debt }}</td>
                         <td>
                             <a href="{% url 'client_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
                             <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
@@ -126,7 +182,7 @@
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'client_delete' p.id %}"
                                     data-item-name="{{ p.fantasy_name }}">
-                            Eliminar
+                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -140,8 +196,6 @@
         </div>
     </div>
 </div>
-
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
   <ul class="pagination justify-content-center">

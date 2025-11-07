@@ -20,6 +20,12 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
+<<<<<<< HEAD
+=======
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+
+>>>>>>> a28ce319b65f1d19dc547027e57ae39817c5a140
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}"
                     placeholder="Buscar por nombre, descripción, categoría...">
                 <button class="btn btn-primary" type="submit">Buscar</button>
@@ -33,10 +39,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="product-table-view"
-            data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_products_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>   
+        <a href="{% url 'export_products_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
         <a href="{% url 'product_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Producto
         </a>
@@ -112,11 +121,47 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Stock</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre</strong>
+                                {% if current_sort_by == 'name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=category__name&order={% if current_sort_by == 'category__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Categoría</strong>
+                                {% if current_sort_by == 'category__name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=quantity&order={% if current_sort_by == 'quantity' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Stock</strong>
+                                {% if current_sort_by == 'quantity' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>Perecible</th>
-                        <th>Vencimiento</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=created_at&order={% if current_sort_by == 'created_at' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Creación</strong>
+                                {% if current_sort_by == 'created_at' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=expiration_date&order={% if current_sort_by == 'expiration_date' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Vencimiento</strong>
+                                {% if current_sort_by == 'expiration_date' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -133,14 +178,17 @@
                             <span class="badge bg-secondary">No</span>
                             {% endif %}
                         </td>
+                        <td>{{ p.created_at|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>{{ p.expiration_date|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>
-                                <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                    data-url="{% url 'product_delete' p.id %}" data-item-name="{{ p.name }}">
-                                    Eliminar
-                                </button>
-                            </td>
+                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm btn-delete" 
+                                    data-url="{% url 'product_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                                Eliminar
+                            </button>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -154,8 +202,6 @@
         </div>
     </div>
 </div>
-
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
     <ul class="pagination justify-content-center">
@@ -215,7 +261,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
-        // ¡IDs actualizados!
         const cardsView = document.getElementById('product-cards-view');
         const tableView = document.getElementById('product-table-view');
 
@@ -232,16 +277,13 @@
             toggleBtn.textContent = 'Ver Tabla';
         }
 
-        // --- 2. Al hacer clic en el botón ---
-        toggleBtn.addEventListener('click', function () {
+        toggleBtn.addEventListener('click', function() {
             if (cardsView.style.display === 'none') {
-                // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
                 localStorage.setItem('productView', 'cards');
             } else {
-                // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';

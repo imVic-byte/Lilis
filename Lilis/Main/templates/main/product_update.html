@@ -8,11 +8,6 @@
                 <h4>Actualizar Producto</h4>
             </div>
             <div class="card-body">
-                {% if form.errors %}
-                <div class="alert alert-danger">
-                    {{ form.errors }}
-                </div>
-                {% endif %}
 
                 <!-- Form funcional con csrf_token -->
                 <form method="POST">

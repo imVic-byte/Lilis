@@ -9,17 +9,12 @@
                 <h4>Agregar Usuario</h4>
             </div>
             <div class="card-body">
-                {% if form.errors %}
-                <div class="alert alert-danger">
-                    {{ form.errors }}
-                </div>
-                {% endif %}
 
                 <form method="POST">
                     {% csrf_token %}
                     {{ form|crispy }}
                     <div class="d-grid mt-3">
-                        <button type="submit" class="btn btn-weno btn-lg btn-guardar-confirmar" data-title="¿Crear nueva categoría?">
+                        <button type="submit" class="btn btn-weno btn-lg btn-guardar-confirmar" data-title="¿Crear nuevo usuario?">
                             Guardar
                         </button>
                     </div>

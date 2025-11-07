@@ -20,6 +20,8 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
 
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, descripción...">
                 
@@ -34,9 +36,13 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <button type="button" class="btn btn-success mt-2 export-btn" data-target="category-table-view" data-filename="page-title">
-            Exportar CSV
-        </button>
+        <a href="{% url 'export_categories_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_categories_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
         <a href="{% url 'category_create' %}" class="mt-2 text-end btn btn-weno">
             Agregar Categoria
         </a>
@@ -81,8 +87,22 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre</strong>
+                                {% if current_sort_by == 'name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=description&order={% if current_sort_by == 'description' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Descripción</strong>
+                                {% if current_sort_by == 'description' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -97,7 +117,7 @@
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'category_delete' p.id %}"
                                     data-item-name="{{ p.name }}">
-                            Eliminar
+                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -111,8 +131,6 @@
         </div>
     </div>
 </div>
-
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
   <ul class="pagination justify-content-center">
@@ -168,11 +186,9 @@
     <script> 
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
-        // ¡IDs actualizados!
         const cardsView = document.getElementById('category-cards-view');
         const tableView = document.getElementById('category-table-view');
         
-        // ¡Key de localStorage actualizada!
         const savedView = localStorage.getItem('categoryView') || 'cards'; 
 
         if (savedView === 'table') {
@@ -185,16 +201,13 @@
             toggleBtn.textContent = 'Ver Tabla';
         }
 
-        // --- 2. Al hacer clic en el botón ---
         toggleBtn.addEventListener('click', function() {
             if (cardsView.style.display === 'none') {
-                // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
                 localStorage.setItem('categoryView', 'cards');
             } else {
-                // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';
