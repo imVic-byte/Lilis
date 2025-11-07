@@ -65,6 +65,13 @@
                         <li class="list-group-item"><strong>Limite de credito:</strong> {{ p.credit_limit }}</li>
                         <li class="list-group-item"><strong>Deuda:</strong> {{ p.debt }}</li>
                         <li class="list-group-item"><strong>Deuda máxima:</strong> {{ p.max_debt}}</li>
+                        <li class="list-group-item">
+                            <strong>Estado:</strong>
+                            {% if not p.is_suspended %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
                     </ul>
                     <div class="mt-3">
                         <a href="{% url 'client_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
@@ -91,6 +98,15 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
+<<<<<<< HEAD
+=======
+                        <th>Nombre Fantasía</th>
+                        <th>Razón Social</th>
+                        <th>RUT</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        
+>>>>>>> 39651ff1e789c26fb6c6afa7620e83a83f0ce487
                         <th>
                             <a href="?{{ querystring_sorting }}&sort_by=fantasy_name&order={% if current_sort_by == 'fantasy_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
                                 <strong>Nombre Fantasía</strong>
@@ -168,7 +184,7 @@
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
                         <td>
-                            {% if p.is_active %}
+                            {% if not p.is_suspended %}
                                 <span class="badge bg-success">Activo</span>
                             {% else %}
                                 <span class="badge bg-secondary">Inactivo</span>

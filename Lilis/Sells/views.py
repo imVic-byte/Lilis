@@ -540,3 +540,9 @@ def export_warehouse_excel(request):
             warehouse.total_area,
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
+
+
+def transaction(request):
+    transactions = transaction_service.list()
+
+    return render(request, 'transaction.html', {'transactions': transactions})

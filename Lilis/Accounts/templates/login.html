@@ -13,8 +13,11 @@
                 <form method="post">
                     {% csrf_token %}
                     {{ form|crispy }}
+                    <div class=" align-content-lg-start">
                     <button type="submit" class="btn btn-danger text-white btn-lg">Ingresar</button>
-                    <a href="{% url 'password_reset' %}">Recuperar contraseña</a>
+                    <a href="{% url 'password_reset' %}" class="btn btn-danger text-white btn-lg">Recuperar contraseña</a>
+
+                    </div>
                 </form>
             </div>
         </div>

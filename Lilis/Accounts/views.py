@@ -67,35 +67,9 @@ def user_delete(request, id):
     return redirect("user_list")
 
 @login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
 def user_view(request, id):
     user = user_service.model.objects.select_related('profile').get(id=id)
     return render(request, "user_view.html", {"user": user})
-
-
-
-@login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
-def edit_field(request):
-    user_id = request.GET.get("user_id")
-    field_name = request.GET.get("field_name")
-    previous_data = request.GET.get("previous_data")
-    if request.method == "POST":
-        print("POST data:", request.POST)
-        form = user_service.update_field_form_class(request.POST)
-        if form.is_valid():
-            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
-            if success:
-                return redirect('user_list')
-    else:
-        form = user_service.update_field_form_class(
-            initial={'field_name': field_name, 'new_data': previous_data}
-        )
-    return render(
-        request, 
-        "edit_field.html", 
-        {"field_name": field_name, "previous_data": previous_data, 'form': form}
-    )
 
 @login_required
 @permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
@@ -105,9 +79,14 @@ def user_list(request):
 
     
     
+<<<<<<< HEAD
     default_per_page = 25 
     allowed_per_page = [5, 25, 50, 100] 
     
+=======
+    default_per_page = 25  
+    allowed_per_page = [5,25,50,100]
+>>>>>>> 39651ff1e789c26fb6c6afa7620e83a83f0ce487
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
@@ -261,3 +240,53 @@ def password_recover(request):
         else:
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
+
+def role_changer(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        role = user_service.roles.objects.get(id=request.POST.get("role"))
+        success = user_service.edit_field(user_id, field_name, role)
+        if success:
+            return redirect('user_view', id=user_id)
+        else:
+            render(request, "role_changer.html", {'form':form, "error": "No se pudo cambiar el rol."})
+    else:
+        form = user_service.role_form_class(initial={'role': previous_data})
+    return render(request, "role_changer.html", {"form": form, "field_name": field_name, "previous_data": previous_data})
+
+@login_required
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
+def edit_field(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        form = user_service.update_field_form_class(request.POST)
+        if form.is_valid():
+            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
+            if success:
+                return redirect('user_view', id=user_id)
+    else:
+        form = user_service.update_field_form_class(
+            initial={'field_name': field_name, 'new_data': previous_data}
+        )
+    return render(
+        request, 
+        "edit_field.html", 
+        {"field_name": field_name, "previous_data": previous_data, 'form': form}
+    )
+
+def user_picture(request, id):
+    if request.method == "POST":
+        photo = request.FILES.get("photo")
+        if photo:
+            print(request.FILES)
+            user_service.change_user_picture(id, photo)
+            return redirect('user_view', id=id)
+        else:
+            return render(request, "user_picture.html", {"error": "No se pudo cargar la foto."})
+    else:
+        photo = user_service.obtain_user_picture(id)
+    return render(request, "user_picture.html", {"photo": photo, "id": id})

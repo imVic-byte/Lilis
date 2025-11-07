@@ -37,6 +37,7 @@ class Profile(models.Model):
     run = models.CharField(max_length=12, unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     role = models.ForeignKey("Role", on_delete=models.PROTECT, related_name="profiles")
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.run}"
