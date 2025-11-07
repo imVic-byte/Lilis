@@ -1,0 +1,14 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Error Interno del Servidor {% endblock title %}
+
+{% block content %}
+<div class="row text-center mt-5">
+    <div class="col">
+        <h1 class="page-title">Error 500</h1>
+        <p class="lead">Ups... algo ha salido mal en nuestros servidores.</p>
+        <p>Nuestro equipo técnico ha sido notificado del problema.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-weno mt-3">Volver al inicio</a>
+    </div>
+</div>
+{% endblock content %}
