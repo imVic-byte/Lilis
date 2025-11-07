@@ -20,6 +20,8 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
 
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre de producto, código de lote...">
                 
@@ -93,8 +95,22 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>Código Lote</th>
-                        <th>Producto</th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=batch_code&order={% if current_sort_by == 'batch_code' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Código Lote</strong>
+                                {% if current_sort_by == 'batch_code' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=product__name&order={% if current_sort_by == 'product__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Producto</strong>
+                                {% if current_sort_by == 'product__name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
                         <th>Cant. Actual</th>
                         <th>Cant. Máxima</th>
                         <th>Cant. Mínima</th>
@@ -116,7 +132,7 @@
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'product_batch_delete' p.id %}"
                                     data-item-name="{{ p.batch_code }}">
-                            Eliminar
+                                Eliminar
                             </button>
                         </td>
                     </tr>
@@ -130,8 +146,6 @@
         </div>
     </div>
 </div>
-
-
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
   <ul class="pagination justify-content-center">
@@ -187,11 +201,9 @@
     <script> 
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
-        // ¡IDs actualizados!
         const cardsView = document.getElementById('product-batch-cards-view');
         const tableView = document.getElementById('product-batch-table-view');
         
-        // ¡Key de localStorage actualizada!
         const savedView = localStorage.getItem('productBatchView') || 'cards'; 
 
         if (savedView === 'table') {
@@ -204,16 +216,13 @@
             toggleBtn.textContent = 'Ver Tabla';
         }
 
-        // --- 2. Al hacer clic en el botón ---
         toggleBtn.addEventListener('click', function() {
             if (cardsView.style.display === 'none') {
-                // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
                 localStorage.setItem('productBatchView', 'cards');
             } else {
-                // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';
