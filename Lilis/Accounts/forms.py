@@ -243,3 +243,23 @@ class UpdateFieldForm(forms.Form):
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("El nombre de usuario ya está en uso por otro usuario.")
         return username
+
+class RoleForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['role']
+        labels = {
+            'role': '',
+        }
+        widgets = {
+            'role': forms.Select(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Seleccione Rol'
+            }),
+        }
+    
+    def clean_role(self):
+        role = self.cleaned_data.get("role")
+        if not role:
+            raise forms.ValidationError("Debe seleccionar un rol válido.")
+        return role

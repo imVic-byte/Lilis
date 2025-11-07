@@ -1,6 +1,6 @@
-from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm
+from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm, RoleForm
 from django.contrib.auth.models import User
-from .models import Profile, password_reset_token
+from .models import Profile, password_reset_token,Role
 from Main.CRUD import CRUD
 import re
 from django.core.mail import send_mail
@@ -16,6 +16,9 @@ class UserService(CRUD ):
         self.user_form_class = UserForm
         self.profile_form_class = ProfileForm
         self.update_field_form_class = UpdateFieldForm
+        self.role_form_class = RoleForm
+        self.roles = Role
+
     def save_user(self, data):
         form = self.form_class(data)
         if form.is_valid():

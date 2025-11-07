@@ -1,0 +1,32 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Modificar Campo {% endblock title %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm w-100">
+                <div class="card-header text-center bg-primary text-white">
+                    <h4>Modificar Campo</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="fieldInput" class="form-label"><strong>Valor anterior:</strong></label>
+                                <input type="text" class="form-control" id="fieldInput" value="{{ previous_data }}" disabled>
+                            </div>
+                            <div class="col-6">
+                                <label for="fieldInput" class="form-label"><strong>Valor nuevo:</strong></label>
+                                {{ form|crispy }}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-weno btn-lg btn-guardar-confirmar" data-title="¿Seguro desea modificar?">
+                            Guardar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>    
+    </div>
+{% endblock content %}

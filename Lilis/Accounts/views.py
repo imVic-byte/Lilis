@@ -74,28 +74,7 @@ def user_view(request, id):
 
 
 
-@login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
-def edit_field(request):
-    user_id = request.GET.get("user_id")
-    field_name = request.GET.get("field_name")
-    previous_data = request.GET.get("previous_data")
-    if request.method == "POST":
-        print("POST data:", request.POST)
-        form = user_service.update_field_form_class(request.POST)
-        if form.is_valid():
-            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
-            if success:
-                return redirect('user_list')
-    else:
-        form = user_service.update_field_form_class(
-            initial={'field_name': field_name, 'new_data': previous_data}
-        )
-    return render(
-        request, 
-        "edit_field.html", 
-        {"field_name": field_name, "previous_data": previous_data, 'form': form}
-    )
+
 
 @login_required
 @permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
@@ -189,3 +168,40 @@ def password_recover(request):
         else:
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
+
+def role_changer(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        role = user_service.roles.objects.get(id=request.POST.get("role"))
+        success = user_service.edit_field(user_id, field_name, role)
+        if success:
+            return redirect('user_list')
+        else:
+            render(request, "role_changer.html", {'form':form, "error": "No se pudo cambiar el rol."})
+    else:
+        form = user_service.role_form_class(initial={'role': previous_data})
+    return render(request, "role_changer.html", {"form": form, "field_name": field_name, "previous_data": previous_data})
+
+@login_required
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
+def edit_field(request):
+    user_id = request.GET.get("user_id")
+    field_name = request.GET.get("field_name")
+    previous_data = request.GET.get("previous_data")
+    if request.method == "POST":
+        form = user_service.update_field_form_class(request.POST)
+        if form.is_valid():
+            success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
+            if success:
+                return redirect('user_list')
+    else:
+        form = user_service.update_field_form_class(
+            initial={'field_name': field_name, 'new_data': previous_data}
+        )
+    return render(
+        request, 
+        "edit_field.html", 
+        {"field_name": field_name, "previous_data": previous_data, 'form': form}
+    )
