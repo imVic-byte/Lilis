@@ -120,3 +120,15 @@ def validate_is_number(value, field_name="El valor"):
     except (ValueError, TypeError):
         raise forms.ValidationError(f'{field_name} debe ser un número válido.')
     return value
+
+def validate_positive_number(value, field_name="El valor", allow_zero=True):
+    try:
+        val = float(value)
+    except (ValueError, TypeError):
+        raise forms.ValidationError(f'{field_name} debe ser un número válido.')
+    
+    if allow_zero:
+        if val < 0:
+            raise forms.ValidationError(f'{field_name} no puede ser negativo.')
+    
+    return value

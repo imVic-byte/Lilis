@@ -94,13 +94,13 @@ class ProductBatchForm(forms.ModelForm):
         return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
     
     def clean_min_quantity(self):
-        return validate_is_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima")
 
     def clean_current_quantity(self):
         return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
 
     def clean_max_quantity(self):
-        return validate_is_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
+        return validate_positive_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
 
     def save(self, commit=True):
         batch = super().save(commit=False)
@@ -124,13 +124,13 @@ class RawBatchForm(forms.ModelForm):
         return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
 
     def clean_min_quantity(self):
-        return validate_is_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima")
 
     def clean_current_quantity(self):
         return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
 
     def clean_max_quantity(self):
-        return validate_is_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
+        return validate_positive_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
 
     
     def save(self, commit=True):
@@ -246,13 +246,13 @@ class PriceHistoriesForm(forms.ModelForm):
         }
 
     def clean_unit_price(self):
-        return validate_is_number(self.cleaned_data.get('unit_price'), field_name="El precio unitario")
+        return validate_positive_number(self.cleaned_data.get('unit_price'), field_name="El precio unitario")
 
     def clean_date(self):
         return validate_past_or_today_date(self.cleaned_data.get('date'), field_name="La fecha")
     
     def clean_iva(self):
-        return validate_is_number(self.cleaned_data.get('iva'), field_name="El IVA", allow_zero=True)
+        return validate_positive_number(self.cleaned_data.get('iva'), field_name="El IVA")
     
     def save(self, commit=True):
         price_history = super().save(commit=False)

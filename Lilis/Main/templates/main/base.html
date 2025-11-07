@@ -29,6 +29,7 @@
     <script>
         //Botón de guardar con SweetAlert2
         const saveConfirmButtons = document.querySelectorAll('.btn-guardar-confirmar');
+        const ADMIN_OVERRIDE_CODE = "Admin123";
 
         saveConfirmButtons.forEach(button => {
             button.addEventListener('click', function (event) {
@@ -43,20 +44,74 @@
                 const title = event.currentTarget.dataset.title || '¿Guardar los cambios?';
                 const text = event.currentTarget.dataset.text || 'Esta acción enviará el formulario.';
 
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: "Sí, guardar",
-                    cancelButtonText: "Cancelar"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
+                const stockInput = form.querySelector('[name="quantity"], [name="current_quantity"]');
+                let stockValue = null;
+
+                if (stockInput) {
+                    let rawValue = stockInput.value;
+                    
+                    if (rawValue) { 
+                        stockValue = parseFloat(rawValue.replace(',', '.'));
+                    } else {
+                        stockValue = 0;
                     }
+                }
+
+                if (stockValue !== null && !isNaN(stockValue) && stockValue < 0) {
+                    Swal.fire({
+                        title: 'Stock Negativo Detectado',
+                        text: 'Estás a punto de registrar un stock negativo (' + stockValue + '). Por favor, ingresa el código de administrador para autorizar esta acción.',
+                        icon: 'warning',
+                        input: 'password',
+                        inputPlaceholder: 'Ingresa el código de administrador',
+                        inputAttributes: {
+                            autocapitalize: 'off',
+                            autocorrect: 'off'
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'Autorizar y Guardar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        showLoaderOnConfirm: true,
+                        preConfirm: (code) => {
+                            if (code === ADMIN_OVERRIDE_CODE) {
+                                return true;
+                            } else {
+                                Swal.showValidationMessage('Código incorrecto');
+                                return false;
+                            }
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Autorizado',
+                                text: 'Stock negativo guardado.',
+                                icon: 'success',
+                                showConfirmButton: false
+                            });
+                            setTimeout(() => form.submit(), 2000);
+                        }
+                    });
+
+                } else {
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: "Sí, guardar",
+                        cancelButtonText: "Cancelar"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
                 });
+                }
             });
         });
     </script>
