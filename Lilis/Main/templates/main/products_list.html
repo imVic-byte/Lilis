@@ -20,12 +20,9 @@
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
-<<<<<<< HEAD
-=======
+
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
-
->>>>>>> a28ce319b65f1d19dc547027e57ae39817c5a140
                 <input type="text" class="form-control" name="q" value="{{ q|default:'' }}"
                     placeholder="Buscar por nombre, descripción, categoría...">
                 <button class="btn btn-primary" type="submit">Buscar</button>

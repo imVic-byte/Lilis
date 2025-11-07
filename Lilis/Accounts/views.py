@@ -80,7 +80,7 @@ def user_list(request):
     
     
     default_per_page = 25  
-    
+    allowed_per_page = [5,25,50,100]
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
@@ -234,7 +234,6 @@ def password_recover(request):
         else:
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
-<<<<<<< HEAD
 
 def role_changer(request):
     user_id = request.GET.get("user_id")
@@ -285,5 +284,3 @@ def user_picture(request, id):
     else:
         photo = user_service.obtain_user_picture(id)
     return render(request, "user_picture.html", {"photo": photo, "id": id})
-=======
->>>>>>> a28ce319b65f1d19dc547027e57ae39817c5a140

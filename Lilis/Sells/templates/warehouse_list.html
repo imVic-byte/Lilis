@@ -15,14 +15,10 @@
                 <label class="input-group-text" for="per_page_select">Mostrar:</label>
                 <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
                     <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
-<<<<<<< HEAD
-                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
-=======
+
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
->>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
+
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
@@ -83,7 +79,7 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <strong>Dirección:</strong> {{ w.address }}
+                            <strong >Dirección:</strong> {{ w.address }}
                         </li>
                         <li class="list-group-item">
                             <strong>Superficie total:</strong> {{ w.total_area }} m²
@@ -92,8 +88,7 @@
                             <strong>Ubicación:</strong> {{ w.location.name }}
                         </li>
                     </ul>
-<<<<<<< HEAD
-=======
+
 
                     <div class="mt-3 text-center">
                         <a href="{% url 'warehouse_update' w.id %}" class="btn btn-primary me-2">
@@ -109,7 +104,7 @@
                             Eliminar
                         </button>
                     </div>
->>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
+
                 </div>
             </div>
         </div>
@@ -174,11 +169,8 @@
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'warehouse_delete' w.id %}"
                                     data-item-name="{{ w.name }}">
-<<<<<<< HEAD
-                            Eliminar
-=======
                                 Eliminar
->>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
+
                             </button>
                         </td>
                     </tr>

@@ -22,7 +22,7 @@
 =======
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
->>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
+
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
@@ -88,8 +88,7 @@
                             <strong>País:</strong> {{ p.country }}
                         </li>
                     </ul>
-<<<<<<< HEAD
-=======
+
                     <div class="mt-3">
                         <a href="{% url 'location_update' p.id %}" class="btn btn-primary me-2">
                             Editar
@@ -104,7 +103,7 @@
                             Eliminar
                         </button>
                     </div>  
->>>>>>> fa1e3c6 (Implementaciond de paginador asc y desc, y variables de 5-100 para paginador)
+
                 </div>
             </div>
         </div>

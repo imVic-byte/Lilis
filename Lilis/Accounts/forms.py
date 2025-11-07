@@ -238,7 +238,6 @@ class UpdateFieldForm(forms.Form):
             self.add_error('new_data', e)
 
         return cleaned_data
-<<<<<<< HEAD
 
     def clean_email(self, email):
         if User.objects.filter(email=email).exists():
@@ -289,5 +288,4 @@ class RoleForm(forms.ModelForm):
         if not role:
             raise forms.ValidationError("Debe seleccionar un rol válido.")
         return role
-=======
->>>>>>> a28ce319b65f1d19dc547027e57ae39817c5a140
+
