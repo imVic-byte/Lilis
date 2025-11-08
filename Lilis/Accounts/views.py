@@ -72,26 +72,17 @@ def user_view(request, id):
     return render(request, "user_view.html", {"user": user})
 
 @login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.view_profile','dashboard', 'No tienes permiso')
 def user_list(request):
-    
     q = (request.GET.get("q") or "").strip()
-
-    
-    
     default_per_page = 25  
     allowed_per_page = [5,25,50,100]
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
-    
-    # Validar que el valor esté en la lista permitida
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    # ===================================
-
-    # 3. Lógica de Ordenamiento
     allowed_sort_fields = ['username', 'first_name', 'profile__run', 'profile__role__group__name']
     sort_by = request.GET.get('sort_by', 'username') 
     order = request.GET.get('order', 'asc')
@@ -103,10 +94,8 @@ def user_list(request):
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
 
-    # 4. Queryset
     qs = user_service.list().select_related("profile", "profile__role")
 
-    # 5. Filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(first_name__icontains=q) |
@@ -116,14 +105,11 @@ def user_list(request):
             Q(profile__role__group__name__icontains=q)
         )
         
-    # 6. Ordenamiento
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page) 
     page_number = request.GET.get("page")
 
-    # 8. Obtener página (¡Con la corrección de 'page_number'!)
     try:
         page_obj = paginator.get_page(page_number) 
     except PageNotAnInteger:
@@ -131,23 +117,20 @@ def user_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
 
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
-        "per_page": per_page, # ¡Pasamos el 'per_page' para el select!
+        "per_page": per_page,
         "total": qs.count(),
         "querystring": querystring_pagination, 
         "querystring_sorting": querystring_sorting,
@@ -235,6 +218,8 @@ def password_recover(request):
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
 
+@login_required
+@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
 def role_changer(request):
     user_id = request.GET.get("user_id")
     field_name = request.GET.get("field_name")
@@ -250,8 +235,6 @@ def role_changer(request):
         form = user_service.role_form_class(initial={'role': previous_data})
     return render(request, "role_changer.html", {"form": form, "field_name": field_name, "previous_data": previous_data})
 
-@login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
 def edit_field(request):
     user_id = request.GET.get("user_id")
     field_name = request.GET.get("field_name")

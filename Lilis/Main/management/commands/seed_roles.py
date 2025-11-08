@@ -1,7 +1,5 @@
-# Accounts/management/commands/seed_roles.py
-
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from Accounts.models import Role, Module, RoleModulePermission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
@@ -22,50 +20,21 @@ MODULES = [
 ]
 
 MATRIX = {
-    'Acceso Completo': {
-        'products' : 'all',
-        'sells' : 'all',
-        'accounts' : 'all'
-    },
-    'Acceso limitado a Compras': {
-        'products' : 'all'
-    },
-    'Acceso limitado a Ventas': {
-        'sells' : 'all'
-    },
-    'Acceso limitado a Inventario': {
-        'products' : 'all',
-        'sells' : 'all'
-    },
-    'Acceso limitado a Produccion': {
-        'products' : ('view','change',),
-        'sells' : ('view','change', 'add'),
-    },
-    'Acceso limitado a Finanzas': {
-        'products' : ('view',),
-        'sells' : ('view',)
-    },  
+    'Acceso Completo': {'products': 'all', 'sells': 'all', 'accounts': 'all'},
+    'Acceso limitado a Compras': {'products': 'all'},
+    'Acceso limitado a Ventas': {'sells': 'all'},
+    'Acceso limitado a Inventario': {'products': 'all', 'sells': 'all'},
+    'Acceso limitado a Produccion': {'products': ('view','change',), 'sells': ('view','change', 'add')},
+    'Acceso limitado a Finanzas': {'products': ('view',), 'sells': ('view',)}
 }
 
 SYNC_NATIVE_DJANGO_PERMS = True
 
 APP_MODEL_MAP = {
-    "sells": {
-        "app_label": "sells",
-        "models": ['client', 'location', 'warehouse', 'wareclient', 'transaction', 'saleorder', 'saleorderdetail'],
-    },
-    "products": {
-        "app_label": "products",
-        "models": ['supplier', 'rawmaterial', 'category', 'product', 'pricehistories', 'batch'],
-    },
-    "accounts": {
-        "app_label": "accounts",
-        "models": ['profile', 'role'],
-    },
-    "auth": {
-        "app_label":"auth",
-        "models": ['user'],
-    } 
+    "sells": {"app_label": "sells", "models": ['client', 'location', 'warehouse', 'wareclient', 'transaction', 'saleorder', 'saleorderdetail']},
+    "products": {"app_label": "products", "models": ['supplier', 'rawmaterial', 'category', 'product', 'pricehistories', 'batch']},
+    "accounts": {"app_label": "Accounts", "models": ['profile', 'role']},
+    "auth": {"app_label": "auth", "models": ['user']}
 }
 
 def _as_tuple(actions):
@@ -75,8 +44,10 @@ def _as_tuple(actions):
 
 def _model_perms(app_label, model, actions=("view", "add", "change", "delete")):
     try:
-        ct = ContentType.objects.get(app_label=app_label, model=model)
+        ct = ContentType.objects.filter(app_label__iexact=app_label, model__iexact=model).first()
     except ContentType.DoesNotExist:
+        return Permission.objects.none()
+    if not ct:
         return Permission.objects.none()
     codenames = [f"{act}_{model}" for act in actions]
     return Permission.objects.filter(content_type=ct, codename__in=codenames)
@@ -87,77 +58,67 @@ def _sync_native_perms_for_role(group: Group, module_code: str, actions):
     acts = _as_tuple(actions)
     app_label = APP_MODEL_MAP[module_code]["app_label"]
     models = APP_MODEL_MAP[module_code]["models"]
-
     perms = Permission.objects.none()
     for m in models:
         perms |= _model_perms(app_label, m, actions=acts)
-
     if perms.exists():
         group.permissions.add(*perms)
 
 class Command(BaseCommand):
-    help = "Siembra roles/módulos/matriz para Lilis y sincroniza permisos nativos para Admin."
+    help = "Siembra roles/módulos/matriz para Lilis y sincroniza permisos nativos para Admin y usuarios."
 
     @transaction.atomic
     def handle(self, *args, **options):
-        # 1) Módulos
         modules = {}
         for code, name in MODULES:
-            m, _ = Module.objects.update_or_create(
-                code=code,
-                defaults={"name": name}
-            )
+            m, _ = Module.objects.update_or_create(code=code, defaults={"name": name})
             modules[code] = m
 
-        # 2) Roles (Group + Role 1:1)
         groups_roles = {}
         for r in ROLES:
             if r['description'] is None:
                 continue
-            else:
-                g, _ = Group.objects.update_or_create(name=r['description'])
-                role, _ = Role.objects.update_or_create(
-                    group=g,       
-                    defaults={
-                        "description": r["description"]}
-                )
-                groups_roles[r['description']] = (g, role)
+            g, _ = Group.objects.update_or_create(name=r['description'])
+            role, _ = Role.objects.update_or_create(group=g, defaults={"description": r["description"]})
+            groups_roles[r['description']] = (g, role)
 
-        # 3) Aplicar matriz + sincronizar permisos nativos (Admin)
         for rname, modmap in MATRIX.items():
             if rname not in groups_roles:
                 continue
             group, role = groups_roles[rname]
-
-            # Limpiar permisos nativos si vamos a resincronizar
             if SYNC_NATIVE_DJANGO_PERMS:
                 group.permissions.clear()
-
             for mcode, actions in modmap.items():
                 if mcode not in modules:
                     continue
-
                 acts = _as_tuple(actions)
                 RoleModulePermission.objects.update_or_create(
                     role=role, module=modules[mcode],
                     defaults={
-                        "can_view":   "view" in acts,
-                        "can_add":    "add" in acts,
+                        "can_view": "view" in acts,
+                        "can_add": "add" in acts,
                         "can_edit": "change" in acts,
                         "can_delete": "delete" in acts,
                     }
                 )
-                # Permisos nativos para Admin
                 if SYNC_NATIVE_DJANGO_PERMS:
                     _sync_native_perms_for_role(group, mcode, actions)
+            if SYNC_NATIVE_DJANGO_PERMS:
+                if rname == 'Acceso Completo':
+                    _sync_native_perms_for_role(group, 'auth', 'all')
+                else:
+                    _sync_native_perms_for_role(group, 'auth', ('view',))
 
-            if rname == 'Acceso Completo':
-                _sync_native_perms_for_role(group,'auth','all')
-            else:
-                _sync_native_perms_for_role(group,'auth',('view',))
+        for user in User.objects.all():
+            profile = getattr(user, 'profile', None)
+            if profile and profile.role:
+                grupo = Group.objects.filter(name=profile.role.description).first()
+                if grupo:
+                    user.groups.clear()
+                    user.groups.add(grupo)
 
         self.stdout.write(self.style.SUCCESS("Lilis: roles, módulos y matriz listos"))
         if SYNC_NATIVE_DJANGO_PERMS:
-            self.stdout.write(self.style.SUCCESS("Permisos nativos sincronizados para el Admin"))
+            self.stdout.write(self.style.SUCCESS("Permisos nativos sincronizados para los grupos y usuarios"))
         else:
-            self.stdout.write(self.style.WARNING("¡ SYNC_NATIVE_DJANGO_PERMS = False (no se asignaron permisos nativos)"))
+            self.stdout.write(self.style.WARNING("SYNC_NATIVE_DJANGO_PERMS = False (no se asignaron permisos nativos)"))

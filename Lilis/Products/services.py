@@ -140,7 +140,7 @@ class BatchService(CRUD):
     def search_by_raw_material(self, raw_material_id):
         return self.model.objects.filter(raw_material__id=raw_material_id)
     
-    def list_products(self):
+    def list_product(self):
         return self.model.objects.filter(product__isnull=False)
     
     def list_raw_materials(self):

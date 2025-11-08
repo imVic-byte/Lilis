@@ -15,7 +15,7 @@ products = [
     path('product_create/' , views.product_create ,name='product_create'),
     path('product_delete/<int:id>/' , views.product_delete ,name='product_delete'),
     path('product_update/<int:id>/' , views.product_update ,name='product_update'),
-    path('export_products_excel/', views.export_products_excel, name='export_products_excel'),
+    path('export_product_excel/', views.export_product_excel, name='export_product_excel'),
 ]
 
 suppliers = [

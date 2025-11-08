@@ -36,10 +36,10 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'export_products_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+        <a href="{% url 'export_product_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
             Exportar Todo
         </a>   
-        <a href="{% url 'export_products_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+        <a href="{% url 'export_product_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
             class="btn btn-info mt-2">
             Exportar Vista
         </a>

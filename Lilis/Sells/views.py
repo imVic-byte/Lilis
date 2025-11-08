@@ -16,7 +16,7 @@ transaction_service = TransactionService()
 # ===================================
 
 @login_required
-@permission_or_redirect('.view_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_list_all(request):
     
     # 1. Obtener filtros de la URL
@@ -116,14 +116,14 @@ def client_list_all(request):
 
 # --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
 @login_required
-@permission_or_redirect('.view_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_list_actives(request):
     clients = client_service.list_actives()
     # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
     return render(request, 'client_list.html', {'clients': clients}) 
 
 @login_required
-@permission_or_redirect('.view_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_list_inactives(request):
     clients = client_service.list_inactives()
     
@@ -131,7 +131,7 @@ def client_list_inactives(request):
 
 # --- Resto de vistas de Cliente (con redirects actualizados) ---
 @login_required
-@permission_or_redirect('.view_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_view(request, id):
     if request.method == 'GET':
         client = client_service.get(id)
@@ -140,7 +140,7 @@ def client_view(request, id):
         return redirect('client_list_all') # ¡Redirect actualizado!
 
 @login_required
-@permission_or_redirect('.add_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.add_client','dashboard', 'No teni permiso')
 def client_create(request):
     form = client_service.form_class()
     if request.method == 'POST':
@@ -152,7 +152,7 @@ def client_create(request):
     return render(request, 'client_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('.change_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.change_client','dashboard', 'No teni permiso')
 def client_update(request, id):
     if request.method == 'POST':
         success, obj = client_service.update(id, request.POST)
@@ -166,7 +166,7 @@ def client_update(request, id):
     return render(request, 'client_update.html', {'form': form})
     
 @login_required
-@permission_or_redirect('.delete_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.delete_client','dashboard', 'No teni permiso')
 def client_delete(request, id):
     if request.method == 'GET':
         success = client_service.delete(id)
@@ -175,7 +175,7 @@ def client_delete(request, id):
     return redirect('client_list_all') # ¡Redirect actualizado!
 
 @login_required
-@permission_or_redirect('export_client','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def export_clients_excel(request):
     q = (request.GET.get("q") or "").strip()
     limit = request.GET.get("limit")
@@ -214,7 +214,7 @@ def export_clients_excel(request):
 # VISTAS DE LOCATIONS (Indentación Corregida)
 # ===================================
 @login_required
-@permission_or_redirect('.view_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
 def location_list(request):
     
     # 1. Obtener filtros de la URL
@@ -310,7 +310,7 @@ def location_list(request):
     return render(request, 'location_list.html', context)
 
 @login_required
-@permission_or_redirect('.view_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
 def location_view(request, id):
     if request.method == 'GET':
         location = warehouse_service.location_model.objects.get(id=id)
@@ -319,7 +319,7 @@ def location_view(request, id):
         return redirect('location_list')
 
 @login_required
-@permission_or_redirect('.add_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.add_location','dashboard', 'No teni permiso')
 def location_create(request):
     form = warehouse_service.location_form_class()
     if request.method == 'POST':
@@ -331,7 +331,7 @@ def location_create(request):
     return render(request, 'location_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('.change_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.change_location','dashboard', 'No teni permiso')
 def location_update(request, id):
     if request.method == 'POST':
         success, obj = warehouse_service.update_location(id, request.POST)
@@ -345,7 +345,7 @@ def location_update(request, id):
     return render(request, 'location_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('.delete_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.delete_location','dashboard', 'No teni permiso')
 def location_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete_location(id)
@@ -385,7 +385,7 @@ def export_locations_excel(request):
 # VISTAS DE WAREHOUSES (Indentación Corregida)
 # ===================================
 @login_required
-@permission_or_redirect('.view_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_list(request):
     
     # 1. Obtener filtros de la URL
@@ -483,7 +483,7 @@ def warehouse_list(request):
     return render(request, 'warehouse_list.html', context)
 
 @login_required
-@permission_or_redirect('.view_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_view(request, id):
     if request.method == 'GET':
         warehouse = warehouse_service.model.objects.get(id=id)
@@ -492,7 +492,7 @@ def warehouse_view(request, id):
         return redirect('warehouse_list')
 
 @login_required
-@permission_or_redirect('.add_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.add_warehouse','dashboard', 'No teni permiso')
 def warehouse_create(request):
     form = warehouse_service.form_class()
     if request.method == 'POST':
@@ -504,7 +504,7 @@ def warehouse_create(request):
     return render(request, 'warehouse_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('.change_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.change_warehouse','dashboard', 'No teni permiso')
 def warehouse_update(request, id):
     if request.method == 'POST':
         success, obj = warehouse_service.update(id, request.POST)
@@ -518,7 +518,7 @@ def warehouse_update(request, id):
     return render(request, 'warehouse_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('.delete_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.delete_warehouse','dashboard', 'No teni permiso')
 def warehouse_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete(id)

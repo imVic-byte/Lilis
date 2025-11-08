@@ -147,7 +147,7 @@ def category_delete(request, id):
     return redirect('category_list') 
 
 @login_required
-@permission_or_redirect('Products.export_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.export_product','dashboard', 'No teni permiso')
 def export_categories_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = category_service.list().order_by('name')
@@ -181,7 +181,7 @@ def export_categories_excel(request):
 
 #PRODUCTOSSSSSSSSSs
 @login_required
-@permission_or_redirect('Products.view_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def products_list(request):
     
     # 1. Obtener filtros de la URL
@@ -279,13 +279,13 @@ def products_list(request):
     return render(request, 'main/products_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.view_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def product_view(request, id):
     product = product_service.get(id)
     return render(request, 'main/product.html', {'p': product})
 
 @login_required
-@permission_or_redirect('Products.add_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_product','dashboard', 'No teni permiso')
 def product_create(request):
     form = product_service.form_class()
     if request.method == 'POST':
@@ -298,7 +298,7 @@ def product_create(request):
 
 
 @login_required
-@permission_or_redirect('Products.change_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_product','dashboard', 'No teni permiso')
 def product_update(request, id):
     if request.method == 'POST':
         success, obj = product_service.update(id, request.POST)
@@ -312,7 +312,7 @@ def product_update(request, id):
     return render(request, 'main/product_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_products','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_product','dashboard', 'No teni permiso')
 def product_delete(request, id):
         if request.method == 'GET':
             try:
@@ -326,8 +326,8 @@ def product_delete(request, id):
         return redirect('products_list')
 
 @login_required
-@permission_or_redirect('Products.export_products','dashboard', 'No teni permiso')
-def export_products_excel(request):
+@permission_or_redirect('Products.export_product','dashboard', 'No teni permiso')
+def export_product_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
 
@@ -767,7 +767,7 @@ def product_batch_list(request):
 
     # 4. Queryset base (¡quitamos el .order_by() de aquí!)
     # ¡Optimizamos con select_related para traer el producto!
-    qs = batch_service.list_products().select_related("product")
+    qs = batch_service.list_product().select_related("product")
 
     # 5. Aplicar filtro de búsqueda
     if q:
@@ -866,7 +866,7 @@ def product_batch_delete(request, id):
 @permission_or_redirect('Products.export_product_batches','dashboard', 'No teni permiso')
 def export_product_batches_excel(request):
     q = (request.GET.get("q") or "").strip()
-    qs = batch_service.list_products().select_related("product").order_by('batch_code')
+    qs = batch_service.list_product().select_related("product").order_by('batch_code')
     if q:
         qs = qs.filter(
             Q(product__name__icontains=q) | 
