@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+
 categorys = [
     path('category_list/', views.category_list, name='category_list'),
     path('category_create/', views.category_create, name='category_create'),
@@ -16,6 +17,7 @@ products = [
     path('product_delete/<int:id>/' , views.product_delete ,name='product_delete'),
     path('product_update/<int:id>/' , views.product_update ,name='product_update'),
     path('export_product_excel/', views.export_product_excel, name='export_product_excel'),
+    path('product_search/', views.product_search, name='product_search'),
 ]
 
 suppliers = [

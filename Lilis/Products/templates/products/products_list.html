@@ -255,16 +255,27 @@
 
 {% block scripts %}
 {{ block.super }}
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggleBtn = document.getElementById('toggle-view-btn');
-        const cardsView = document.getElementById('product-cards-view');
-        const tableView = document.getElementById('product-table-view');
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('toggle-view-btn');
+    const cardsView = document.getElementById('product-cards-view');
+    const tableView = document.getElementById('product-table-view');
+    const searchInput = document.querySelector('input[name="q"]');
 
-        // ¡Key de localStorage actualizada!
-        const savedView = localStorage.getItem('productView') || 'cards';
+    // --- CONTROL DE VISTA ---
+    const savedView = localStorage.getItem('productView') || 'cards';
+    updateView(savedView);
 
-        if (savedView === 'table') {
+    toggleBtn.addEventListener('click', function() {
+        const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
+        const newView = currentView === 'cards' ? 'table' : 'cards';
+        localStorage.setItem('productView', newView);
+        updateView(newView);
+    });
+
+    function updateView(view) {
+        if (view === 'table') {
             cardsView.style.display = 'none';
             tableView.style.display = 'block';
             toggleBtn.textContent = 'Ver Tarjetas';
@@ -273,20 +284,89 @@
             tableView.style.display = 'none';
             toggleBtn.textContent = 'Ver Tabla';
         }
+    }
 
-        toggleBtn.addEventListener('click', function() {
-            if (cardsView.style.display === 'none') {
-                cardsView.style.display = 'block';
-                tableView.style.display = 'none';
-                toggleBtn.textContent = 'Ver Tabla';
-                localStorage.setItem('productView', 'cards');
-            } else {
-                cardsView.style.display = 'none';
-                tableView.style.display = 'block';
-                toggleBtn.textContent = 'Ver Tarjetas';
-                localStorage.setItem('productView', 'table');
-            }
-        });
+    // --- BUSCADOR AJAX ---
+    let timeout = null;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            const query = this.value.trim();
+
+            fetch(`/products/product_search/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    updateCards(data);
+                    updateTable(data);
+                })
+                .catch(err => console.error('Error:', err));
+        }, 300);
     });
+
+    // --- ACTUALIZA TARJETAS ---
+    function updateCards(data) {
+        const row = cardsView.querySelector('.row');
+        if (!data.length) {
+            row.innerHTML = `<p class="text-center">No se encontraron productos.</p>`;
+            return;
+        }
+        row.innerHTML = data.map(p => `
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class='row'>
+                            <div class="col-7">
+                                <h5 class="card-title">${p.name}</h5>
+                            </div>
+                            <div class="col-5 text-end">
+                                <a href="/products/update/${p.id}/" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete" data-url="/products/delete/${p.id}/" data-item-name="${p.name}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                        <p class="card-text">${p.description || 'Sin descripción'}</p>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Categoría:</strong> ${p.category__name}</li>
+                            <li class="list-group-item"><strong>Stock Actual:</strong> ${p.quantity}</li>
+                            <li class="list-group-item"><strong>Perecible:</strong> ${p.is_perishable ? 'Sí' : 'No'}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // --- ACTUALIZA TABLA ---
+    function updateTable(data) {
+        const tbody = tableView.querySelector('tbody');
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center">No se encontraron productos.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.category__name}</td>
+                <td>${p.quantity}</td>
+                <td>
+                    ${p.is_perishable
+                        ? '<span class="badge bg-warning text-dark">Sí</span>'
+                        : '<span class="badge bg-secondary">No</span>'}
+                </td>
+                <td>${p.created_at || 'N/A'}</td>
+                <td>${p.expiration_date || 'N/A'}</td>
+                <td>
+                    <a href="/products/update/${p.id}/" class="btn btn-primary btn-sm">Editar</a>
+                    <button type="button" class="btn btn-danger btn-sm btn-delete" data-url="/products/delete/${p.id}/" data-item-name="${p.name}">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+});
 </script>
+
 {% endblock %}

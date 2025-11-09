@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from Main.utils import generate_excel_response
 
 category_service = CategoryService()
@@ -13,6 +13,20 @@ supplier_service = SupplierService()
 raw_material_service = RawMaterialService()
 batch_service = BatchService()
 price_histories_service = PriceHistoriesService()
+
+@login_required
+@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+def product_search(request):
+    q = request.GET.get('q', '')
+    products = product_service.model.objects.filter(
+        Q(name__icontains=q) |
+        Q(description__icontains=q) |
+        Q(category__name__icontains=q)
+    ).values('name', 'description', 'category__name')
+
+    return JsonResponse(list(products), safe=False)
+
+
 
 @login_required
 @permission_or_redirect('Products.view_category','dashboard', 'No teni permiso')
