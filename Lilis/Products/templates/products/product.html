@@ -1,0 +1,87 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Producto {% endblock title %}
+{% block content %}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">Detalle del Producto</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-center mb-3">
+                            {{ p.name }}
+                        </h5>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Descripción:</strong> {{ p.description|default:"Sin descripción" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Categoría:</strong> {{ p.category.name }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Stock Actual:</strong> {{ p.quantity }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Es perecible:</strong> {{ p.is_perishable|yesno:"Sí,No" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fecha de creación:</strong> {{ p.created_at|date:"d/m/Y"|default:"No aplica" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fecha de vencimiento:</strong> {{ p.expiration_date|date:"d/m/Y"|default:"No aplica" }}
+                            </li>
+                        </ul>
+
+                        <div class="mt-4 text-center">
+                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary me-2">
+                                Editar
+                            </a>
+                            <a href="{% url 'products_list' %}" class="btn btn-secondary me-2">
+                                Volver a la lista
+                            </a>
+                            <button type="button" class="btn btn-danger btn-delete" 
+                                    data-url="{% url 'product_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            const itemName = this.getAttribute('data-item-name');
+            
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Quieres eliminar el producto "${itemName}"? Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

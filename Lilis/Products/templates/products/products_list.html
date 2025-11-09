@@ -23,8 +23,14 @@
 
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}"
-                    placeholder="Buscar por nombre, descripción, categoría...">
+                
+                <!-- Nuevo buscador con autocompletado -->
+                <div class="position-relative flex-grow-1">
+                    <input type="text" class="form-control" id="search-input" name="q" value="{{ q|default:'' }}"
+                        placeholder="Buscar por nombre, descripción, categoría..." autocomplete="off">
+                    <div id="search-results" class="position-absolute w-100 bg-white shadow-sm rounded mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                </div>
+                
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
         </form>
@@ -257,116 +263,123 @@
 {{ block.super }}
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const toggleBtn = document.getElementById('toggle-view-btn');
-    const cardsView = document.getElementById('product-cards-view');
-    const tableView = document.getElementById('product-table-view');
-    const searchInput = document.querySelector('input[name="q"]');
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-view-btn');
+        const cardsView = document.getElementById('product-cards-view');
+        const tableView = document.getElementById('product-table-view');
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
 
-    // --- CONTROL DE VISTA ---
-    const savedView = localStorage.getItem('productView') || 'cards';
-    updateView(savedView);
+        const savedView = localStorage.getItem('productView') || 'cards';
+        updateView(savedView);
 
-    toggleBtn.addEventListener('click', function() {
-        const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
-        const newView = currentView === 'cards' ? 'table' : 'cards';
-        localStorage.setItem('productView', newView);
-        updateView(newView);
-    });
+        toggleBtn.addEventListener('click', function() {
+            const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
+            const newView = currentView === 'cards' ? 'table' : 'cards';
+            localStorage.setItem('productView', newView);
+            updateView(newView);
+        });
 
-    function updateView(view) {
-        if (view === 'table') {
-            cardsView.style.display = 'none';
-            tableView.style.display = 'block';
-            toggleBtn.textContent = 'Ver Tarjetas';
-        } else {
-            cardsView.style.display = 'block';
-            tableView.style.display = 'none';
-            toggleBtn.textContent = 'Ver Tabla';
+        function updateView(view) {
+            if (view === 'table') {
+                cardsView.style.display = 'none';
+                tableView.style.display = 'block';
+                toggleBtn.textContent = 'Ver Tarjetas';
+            } else {
+                cardsView.style.display = 'block';
+                tableView.style.display = 'none';
+                toggleBtn.textContent = 'Ver Tabla';
+            }
         }
-    }
 
-    // --- BUSCADOR AJAX ---
-    let timeout = null;
+        let timeout = null;
 
-    searchInput.addEventListener('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            const query = this.value.trim();
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    hideResults();
+                    return;
+                }
+                
+                fetch(`/products/product_search/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Datos recibidos:', data); // Debug
+                        displayResults(data);
+                    })
+                    .catch(err => {
+                        console.error('Error:', err);
+                        hideResults();
+                    });
+            }, 300);
+        });
 
-            fetch(`/products/product_search/?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    updateCards(data);
-                    updateTable(data);
-                })
-                .catch(err => console.error('Error:', err));
-        }, 300);
-    });
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                hideResults();
+            }
+        });
 
-    // --- ACTUALIZA TARJETAS ---
-    function updateCards(data) {
-        const row = cardsView.querySelector('.row');
-        if (!data.length) {
-            row.innerHTML = `<p class="text-center">No se encontraron productos.</p>`;
-            return;
-        }
-        row.innerHTML = data.map(p => `
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <div class='row'>
-                            <div class="col-7">
-                                <h5 class="card-title">${p.name}</h5>
-                            </div>
-                            <div class="col-5 text-end">
-                                <a href="/products/update/${p.id}/" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete" data-url="/products/delete/${p.id}/" data-item-name="${p.name}">
-                                    Eliminar
-                                </button>
-                            </div>
+        function displayResults(products) {
+            if (!products || products.length === 0) {
+                searchResults.innerHTML = '<div class="p-3 text-muted text-center">No se encontraron productos</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            const resultsHTML = products.map(product => {
+                if (!product.id) {
+                    console.warn('Producto sin ID:', product);
+                    return '';
+                }
+                
+                return `
+                    <a href="/products/product_view/${product.id}/" class="dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <div class="fw-bold">${product.name || 'Sin nombre'}</div>
+                            <small class="text-muted">${product.category__name || 'Sin categoría'} • Stock: ${product.quantity || 0}</small>
                         </div>
-                        <p class="card-text">${p.description || 'Sin descripción'}</p>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item"><strong>Categoría:</strong> ${p.category__name}</li>
-                            <li class="list-group-item"><strong>Stock Actual:</strong> ${p.quantity}</li>
-                            <li class="list-group-item"><strong>Perecible:</strong> ${p.is_perishable ? 'Sí' : 'No'}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // --- ACTUALIZA TABLA ---
-    function updateTable(data) {
-        const tbody = tableView.querySelector('tbody');
-        if (!data.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center">No se encontraron productos.</td></tr>`;
-            return;
+                        <div>
+                            ${product.is_perishable ? 
+                                '<span class="badge bg-warning text-dark">Perecible</span>' : 
+                                '<span class="badge bg-secondary">No perecible</span>'}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+            
+            searchResults.innerHTML = resultsHTML;
+            searchResults.style.display = 'block';
         }
-        tbody.innerHTML = data.map(p => `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.category__name}</td>
-                <td>${p.quantity}</td>
-                <td>
-                    ${p.is_perishable
-                        ? '<span class="badge bg-warning text-dark">Sí</span>'
-                        : '<span class="badge bg-secondary">No</span>'}
-                </td>
-                <td>${p.created_at || 'N/A'}</td>
-                <td>${p.expiration_date || 'N/A'}</td>
-                <td>
-                    <a href="/products/update/${p.id}/" class="btn btn-primary btn-sm">Editar</a>
-                    <button type="button" class="btn btn-danger btn-sm btn-delete" data-url="/products/delete/${p.id}/" data-item-name="${p.name}">
-                        Eliminar
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-});
+
+        function hideResults() {
+            searchResults.style.display = 'none';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
+                e.preventDefault();
+            }
+        });
+    });
 </script>
+<style>
+    #search-results {
+        border: 1px solid #dee2e6;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    #search-results .dropdown-item {
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    #search-results .dropdown-item:hover {
+        background-color: #f8f9fa;
+        text-decoration: none;
+    }
+</style>
 
 {% endblock %}

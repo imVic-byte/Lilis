@@ -1,0 +1,180 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Materias Primas {% endblock title %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <h1 class="page-title">Lista de Materias Primas</h1>
+    </div>
+</div>
+
+<div class="row mb-3 justify-content-center">
+    <div class="col-md-10">
+        <form method="GET" action="{% url 'raw_material_list' %}" class="form" id="search-form">
+            <div class="input-group">
+                {% csrf_token %}
+                <label class="input-group-text" for="per_page_select">Mostrar:</label>
+                <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+                <input type="text" class="form-control" name="q" id="search-input" value="{{ q|default:'' }}"
+                    placeholder="Buscar materia prima...">
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col text-end">
+        <a href="{% url 'raw_material_create' %}" class="mt-2 text-end btn btn-weno">Agregar Materia Prima</a>
+    </div>
+</div>
+
+<div id="rawmaterial-table-view">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Unidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="table-container">
+                    {% include 'products/_rawmaterial_rows.html' with rawmaterials=page_obj %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">&laquo; Anterior</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Anterior</span></li>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+            </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Siguiente &raquo;</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Siguiente &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<div class="text-center text-muted mt-2">
+    Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
+</div>
+{% endif %}
+{% endblock content %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('search-input');
+
+    let timeout = null;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            const query = this.value.trim();
+            fetch("{% url 'rawmaterial_search' %}?q=" + encodeURIComponent(query))
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('table-container').innerHTML = data.table_html;
+                    initDeleteButtons();
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'No se pudo cargar o eliminar la materia prima.', 'error');
+                    console.error('Fetch error:', err);
+                });
+        }, 300);
+    });
+
+    function initDeleteButtons() {
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.onclick = () => {
+                const url = btn.dataset.url;
+                const name = btn.dataset.itemName;
+
+                Swal.fire({
+                    title: `¿Eliminar ${name}?`,
+                    text: "¡Esta acción no se puede deshacer!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(url, { 
+                            method: 'POST', 
+                            headers: { 'X-CSRFToken': getCookie('csrftoken') } 
+                        })
+                        .then(res => {
+                            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                            return res.json();
+                        })
+                        .then(data => {
+                            if(data.success) {
+                                Swal.fire('Eliminado!', `${name} ha sido eliminado.`, 'success');
+                                searchInput.dispatchEvent(new Event('input'));
+                            } else {
+                                Swal.fire('Error', data.error || 'No se pudo eliminar la materia prima.', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Error', 'No se pudo eliminar la materia prima.', 'error');
+                            console.error('Fetch error:', err);
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(cookie => {
+                const c = cookie.trim();
+                if(c.startsWith(name + '=')) cookieValue = decodeURIComponent(c.slice(name.length + 1));
+            });
+        }
+        return cookieValue;
+    }
+
+    initDeleteButtons();
+});
+</script>
+{% endblock %}

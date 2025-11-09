@@ -18,28 +18,20 @@ price_histories_service = PriceHistoriesService()
 @permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def product_search(request):
     q = request.GET.get('q', '')
-    products = product_service.model.objects.filter(
+    products = product_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
         Q(description__icontains=q) |
         Q(category__name__icontains=q)
-    ).values('name', 'description', 'category__name')
-
+    ).values('id', 'name', 'description', 'category__name', 'quantity', 'is_perishable')    
     return JsonResponse(list(products), safe=False)
-
-
 
 @login_required
 @permission_or_redirect('Products.view_category','dashboard', 'No teni permiso')
 def category_list(request):
     
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
     
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -48,43 +40,27 @@ def category_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
-
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['name', 'description']
-    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
-    order = request.GET.get('order', 'asc')      # Default: asc
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
 
-    # Validar que los campos y el orden sean correctos
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
-
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
     qs = category_service.list()
 
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(description__icontains=q)
         )
-        
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    # 8. Obtener página
+    page_number = request.GET.get
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -92,23 +68,15 @@ def category_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
-
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
