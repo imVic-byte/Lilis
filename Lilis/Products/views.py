@@ -108,7 +108,7 @@ def category_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/category_list.html', context)
+    return render(request, 'products/category_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.add_category','dashboard', 'No teni permiso')
@@ -119,8 +119,8 @@ def category_create(request):
         if success:
             return redirect('category_list')
         else:
-            return render(request, 'main/category_create.html', {'form': obj})
-    return render(request, 'main/category_create.html', {'form': form})
+            return render(request, 'products/category_create.html', {'form': obj})
+    return render(request, 'products/category_create.html', {'form': form})
 
 
 @login_required
@@ -131,11 +131,11 @@ def category_update(request, id):
         if success:
             return redirect('category_list')
         else:
-            return render(request, 'main/category_update.html', {'form': obj})
+            return render(request, 'products/category_update.html', {'form': obj})
     else:
         category = category_service.get(id)
         form = category_service.form_class(instance=category)
-    return render(request, 'main/category_update.html', {'form': form})
+    return render(request, 'products/category_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_category','dashboard', 'No teni permiso')
@@ -276,13 +276,13 @@ def products_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/products_list.html', context)
+    return render(request, 'products/products_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def product_view(request, id):
     product = product_service.get(id)
-    return render(request, 'main/product.html', {'p': product})
+    return render(request, 'products/product.html', {'p': product})
 
 @login_required
 @permission_or_redirect('Products.add_product','dashboard', 'No teni permiso')
@@ -293,8 +293,8 @@ def product_create(request):
         if success:
             return redirect('products_list')
         else:
-            return render(request, 'main/product_create.html', {'form': obj})
-    return render(request, 'main/product_create.html', {'form': form})
+            return render(request, 'products/product_create.html', {'form': obj})
+    return render(request, 'products/product_create.html', {'form': form})
 
 
 @login_required
@@ -305,11 +305,11 @@ def product_update(request, id):
         if success:
             return redirect('products_list')
         else:
-            return render(request, 'main/product_update.html', {'form': obj})
+            return render(request, 'products/product_update.html', {'form': obj})
     else:
         product = product_service.get(id)
         form = product_service.form_class(instance=product)
-    return render(request, 'main/product_update.html', {'form': form})
+    return render(request, 'products/product_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_product','dashboard', 'No teni permiso')
@@ -468,12 +468,12 @@ def supplier_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/supplier_list.html', context)
+    return render(request, 'suppliers/supplier_list.html', context)
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_view(request, id):
     supplier = supplier_service.get(id)
-    return render(request, 'main/supplier.html', {'s': supplier})
+    return render(request, 'suppliers/supplier.html', {'s': supplier})
 
 @login_required
 @permission_or_redirect('Products.add_supplier','dashboard', 'No teni permiso')
@@ -484,8 +484,8 @@ def supplier_create(request):
         if success:
             return redirect('supplier_list')
         else:
-            return render(request, 'main/supplier_create.html', {'form': obj})
-    return render(request, 'main/supplier_create.html', {'form': form})
+            return render(request, 'suppliers/supplier_create.html', {'form': obj})
+    return render(request, 'suppliers/supplier_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.change_supplier','dashboard', 'No teni permiso')
@@ -497,7 +497,7 @@ def supplier_update(request, id):
     else:
         supplier = supplier_service.get(id)
         form = supplier_service.form_class(instance=supplier)
-    return render(request, 'main/supplier_update.html', {'form': form})
+    return render(request, 'suppliers/supplier_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_supplier','dashboard', 'No teni permiso')
@@ -642,14 +642,14 @@ def raw_material_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/raw_material_list.html', context)
+    return render(request, 'products/raw_material_list.html', context)
 
 
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_view(request, id):
     raw_material = raw_material_service.get(id)
-    return render(request, 'main/raw_material.html', {'rm': raw_material})
+    return render(request, 'products/raw_material.html', {'rm': raw_material})
 
 @login_required
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
@@ -660,8 +660,8 @@ def raw_material_create(request):
         if success:
             return redirect('raw_material_list')
         else:
-            return render(request, 'main/raw_material_create.html', {'form': obj})
-    return render(request, 'main/raw_material_create.html', {'form': form})
+            return render(request, 'products/raw_material_create.html', {'form': obj})
+    return render(request, 'products/raw_material_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')
@@ -673,7 +673,7 @@ def raw_material_update(request, id):
     else:
         raw_material = raw_material_service.get(id)
         form = raw_material_service.form_class(instance=raw_material)
-    return render(request, 'main/raw_material_update.html', {'form': form})
+    return render(request, 'products/raw_material_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
@@ -821,13 +821,13 @@ def product_batch_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/product_batch_list.html', context)
+    return render(request, 'batches/product_batch_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def product_batch_view(request, id):
     batch = batch_service.get(id)
-    return render(request, 'main/product_batch.html', {'b': batch})
+    return render(request, 'batches/product_batch.html', {'b': batch})
 
 @login_required
 @permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
@@ -838,8 +838,8 @@ def product_batch_create(request):
         if success:
             return redirect('product_batch_list')
         else:
-            return render(request, 'main/product_batch_create.html', {'form': obj})
-    return render(request, 'main/product_batch_create.html', {'form': form})
+            return render(request, 'batches/product_batch_create.html', {'form': obj})
+    return render(request, 'batches/product_batch_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
@@ -851,7 +851,7 @@ def product_batch_update(request, id):
     else:
         batch = batch_service.get(id)
         form = batch_service.product_form_class(instance=batch)
-    return render(request, 'main/product_batch_update.html', {'form': form})
+    return render(request, 'batches/product_batch_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
@@ -991,13 +991,13 @@ def raw_batch_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'main/raw_batch_list.html', context)
+    return render(request, 'batches/raw_batch_list.html', context)
 
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def raw_batch_view(request, id):
     batch = batch_service.get(id)
-    return render(request, 'main/raw_batch.html', {'b': batch})
+    return render(request, 'batches/raw_batch.html', {'b': batch})
 
 @login_required
 @permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
@@ -1008,8 +1008,8 @@ def raw_batch_create(request):
         if success:
             return redirect('raw_batch_list')
         else:
-            return render(request, 'main/raw_batch_create.html', {'form': obj})
-    return render(request, 'main/raw_batch_create.html', {'form': form})
+            return render(request, 'batches/raw_batch_create.html', {'form': obj})
+    return render(request, 'batches/raw_batch_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
@@ -1021,7 +1021,7 @@ def raw_batch_update(request, id):
     else:
         batch = batch_service.get(id)
         form = batch_service.raw_form_class(instance=batch)
-    return render(request, 'main/raw_batch_update.html', {'form': form})
+    return render(request, 'batches/raw_batch_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
@@ -1085,6 +1085,6 @@ def price_histories_save(request, id):
         if success:
             return redirect('product_view', id)
         else:
-            return render(request, 'main/product.html', {'p': product, 'form': obj})
-    return render(request, 'main/product.html', {'p': product, 'form': form})
+            return render(request, 'products/product.html', {'p': product, 'form': obj})
+    return render(request, 'products/product.html', {'p': product, 'form': form})
 

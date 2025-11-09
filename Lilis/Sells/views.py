@@ -112,7 +112,7 @@ def client_list_all(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc", 
     }
-    return render(request, 'client_list.html', context)
+    return render(request, 'clients/client_list.html', context)
 
 # --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
 @login_required
@@ -120,14 +120,14 @@ def client_list_all(request):
 def client_list_actives(request):
     clients = client_service.list_actives()
     # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
-    return render(request, 'client_list.html', {'clients': clients}) 
+    return render(request, 'clients/client_list.html', {'clients': clients}) 
 
 @login_required
 @permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_list_inactives(request):
     clients = client_service.list_inactives()
     
-    return render(request, 'client_list.html', {'clients': clients})
+    return render(request, 'clients/client_list.html', {'clients': clients})
 
 # --- Resto de vistas de Cliente (con redirects actualizados) ---
 @login_required
@@ -135,7 +135,7 @@ def client_list_inactives(request):
 def client_view(request, id):
     if request.method == 'GET':
         client = client_service.get(id)
-        return render(request, 'client_view.html', {'b': client})
+        return render(request, 'clients/client_view.html', {'b': client})
     else:
         return redirect('client_list_all') # ¡Redirect actualizado!
 
@@ -148,8 +148,8 @@ def client_create(request):
         if success:
             return redirect('client_list_all') # ¡Redirect actualizado!
         else:
-            return render(request, 'client_create.html', {'form': obj})
-    return render(request, 'client_create.html', {'form': form})
+            return render(request, 'clients/client_create.html', {'form': obj})
+    return render(request, 'clients/client_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.change_client','dashboard', 'No teni permiso')
@@ -159,11 +159,11 @@ def client_update(request, id):
         if success:
             return redirect('client_list_all') # ¡Redirect actualizado!
         else:
-            return render(request, 'client_update.html', {'form': obj})
+            return render(request, 'clients/client_update.html', {'form': obj})
     else:
         client = client_service.get(id)
         form = client_service.form_class(instance=client)
-    return render(request, 'client_update.html', {'form': form})
+    return render(request, 'clients/client_update.html', {'form': form})
     
 @login_required
 @permission_or_redirect('Sells.delete_client','dashboard', 'No teni permiso')
@@ -304,14 +304,14 @@ def location_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'location_list.html', context)
+    return render(request, 'locations/location_list.html', context)
 
 @login_required
 @permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
 def location_view(request, id):
     if request.method == 'GET':
         location = warehouse_service.location_model.objects.get(id=id)
-        return render(request, 'location_view.html', {'location': location})
+        return render(request, 'locations/location_view.html', {'location': location})
     else:
         return redirect('location_list')
 
@@ -324,8 +324,8 @@ def location_create(request):
         if success:
             return redirect('location_list')
         else:
-            return render(request, 'location_create.html', {'form': obj})
-    return render(request, 'location_create.html', {'form': form})
+            return render(request, 'locations/location_create.html', {'form': obj})
+    return render(request, 'locations/location_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.change_location','dashboard', 'No teni permiso')
@@ -339,7 +339,7 @@ def location_update(request, id):
     else:
         location = warehouse_service.location_model.objects.get(id=id)
         form = warehouse_service.location_form_class(instance=location)
-    return render(request, 'location_update.html', {'form': form})
+    return render(request, 'locations/location_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.delete_location','dashboard', 'No teni permiso')
@@ -477,14 +477,14 @@ def warehouse_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'warehouse_list.html', context)
+    return render(request, 'warehouses/warehouse_list.html', context)
 
 @login_required
 @permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_view(request, id):
     if request.method == 'GET':
         warehouse = warehouse_service.model.objects.get(id=id)
-        return render(request, 'warehouse_view.html', {'w': warehouse})
+        return render(request, 'warehouses/warehouse_view.html', {'w': warehouse})
     else:
         return redirect('warehouse_list')
 
@@ -497,8 +497,8 @@ def warehouse_create(request):
         if success:
             return redirect('warehouse_list')
         else:
-            return render(request, 'warehouse_create.html', {'form': obj})
-    return render(request, 'warehouse_create.html', {'form': form})
+            return render(request, 'warehouses/warehouse_create.html', {'form': obj})
+    return render(request, 'warehouses/warehouse_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.change_warehouse','dashboard', 'No teni permiso')
@@ -508,11 +508,11 @@ def warehouse_update(request, id):
         if success:
             return redirect('warehouse_list')
         else:
-            return render(request, 'warehouse_update.html', {'form': obj})
+            return render(request, 'warehouses/warehouse_update.html', {'form': obj})
     else:
         warehouse = warehouse_service.model.objects.get(id=id)
         form = warehouse_service.form_class(instance=warehouse)
-    return render(request, 'warehouse_update.html', {'form': form})
+    return render(request, 'warehouses/warehouse_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.delete_warehouse','dashboard', 'No teni permiso')
@@ -554,6 +554,4 @@ def export_warehouse_excel(request):
 
 
 def transaction(request):
-    transactions = transaction_service.list()
-
-    return render(request, 'transaction.html', {'transactions': transactions})
+    pass
