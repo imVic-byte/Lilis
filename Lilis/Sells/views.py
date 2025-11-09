@@ -210,9 +210,6 @@ def export_clients_excel(request):
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Clientes")
 
-# ===================================
-# VISTAS DE LOCATIONS (Indentación Corregida)
-# ===================================
 @login_required
 @permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
 def location_list(request):
@@ -354,7 +351,7 @@ def location_delete(request, id):
     return redirect('location_list')
 
 @login_required
-@permission_or_redirect('export_location','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
 def export_locations_excel(request):
     q= (request.GET.get("q") or "").strip()
     qs = warehouse_service.location_model.objects.all().order_by('name')
@@ -527,7 +524,7 @@ def warehouse_delete(request, id):
     return redirect('warehouse_list')
 
 @login_required
-@permission_or_redirect('export_warehouse','dashboard', 'No teni permiso')
+@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
 def export_warehouse_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = warehouse_service.model.objects.select_related("location").all().order_by('name')

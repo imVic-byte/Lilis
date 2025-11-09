@@ -44,6 +44,12 @@ class SupplierService(CRUD):
     def search_by_trade_terms(self, trade_terms):
         return self.model.objects.filter(trade_terms__icontains=trade_terms)
     
+    def count_actives(self):
+        return self.model.objects.filter(is_active=True).count()
+    
+    def count_inactives(self):
+        return self.model.objects.filter(is_active=False).count()
+
 class RawMaterialService(CRUD):
     def __init__(self):
         self.model = RawMaterial

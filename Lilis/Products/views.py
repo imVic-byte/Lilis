@@ -147,7 +147,7 @@ def category_delete(request, id):
     return redirect('category_list') 
 
 @login_required
-@permission_or_redirect('Products.export_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def export_categories_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = category_service.list().order_by('name')
@@ -326,7 +326,7 @@ def product_delete(request, id):
         return redirect('products_list')
 
 @login_required
-@permission_or_redirect('Products.export_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def export_product_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
@@ -509,7 +509,7 @@ def supplier_delete(request, id):
     return redirect('supplier_list')
 
 @login_required
-@permission_or_redirect('Products.export_suppliers','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def export_suppliers_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = supplier_service.list().order_by('fantasy_name')
@@ -685,7 +685,7 @@ def raw_material_delete(request, id):
     return redirect('raw_material_list') 
 
 @login_required
-@permission_or_redirect('Products.export_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
 def export_raw_materials_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = raw_material_service.list_actives().select_related(
@@ -863,7 +863,7 @@ def product_batch_delete(request, id):
     return redirect('product_batch_list')
 
 @login_required
-@permission_or_redirect('Products.export_product_batches','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product_batch','dashboard', 'No teni permiso')
 def export_product_batches_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = batch_service.list_product().select_related("product").order_by('batch_code')
@@ -1033,7 +1033,7 @@ def raw_batch_delete(request, id):
     return redirect('raw_batch_list')
 
 @login_required
-@permission_or_redirect('Products.export_raw_batches','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_raw_batch','dashboard', 'No teni permiso')
 def export_raw_batches_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = batch_service.list_raw_materials().select_related(

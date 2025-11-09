@@ -37,6 +37,11 @@ class ClientService(CRUD):
             return True, client
         return False, client
     
+    def count_actives(self):
+        return self.model.objects.filter(is_suspended=False).count()
+    
+    def count_suspended(self):
+        return self.model.objects.filter(is_suspended=True).count()
 
 class WarehouseService(CRUD):
     def __init__(self):

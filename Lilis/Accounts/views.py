@@ -141,7 +141,7 @@ def user_list(request):
     return render(request, "user_list.html", context)
 
 @login_required
-@permission_or_redirect('Accounts.export_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.view_profile','dashboard', 'No teni permiso')
 def export_users_excel(request):
     q = (request.GET.get("q") or "").strip()
     limit = request.GET.get("limit")
