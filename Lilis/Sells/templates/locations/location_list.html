@@ -1,0 +1,261 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Lista de Direcciones {% endblock title %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <h1 class="page-title">Lista de Direcciones</h1>
+    </div>
+</div>
+
+<div class="row mb-3 justify-content-center">
+    <div class="col-md-10">
+        <form method="GET" action="{% url 'location_list' %}" class="form">
+            <div class="input-group">
+                <label class="input-group-text" for="per_page_select">Mostrar:</label>
+                <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+<<<<<<< HEAD
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
+=======
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+
+                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, ciudad, país...">
+                
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col text-end">
+        <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
+            Ver Tabla
+        </button>
+        <a href="{% url 'export_locations_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_locations_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
+        <a href="{% url 'location_create' %}" class="mt-2 text-end btn btn-weno">
+            Agregar Dirección
+        </a>
+    </div>
+</div>
+
+<div id="location-cards-view">
+    <div class="row">
+        {% for p in page_obj %}
+        <div class="col-md-4 mb-4 w-50">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-7">
+                            <h4 class="card-title">{{ p.name }}</h4>
+                        </div>
+                        <div class="col-5">
+                            
+                        <a href="{% url 'location_update' p.id %}" class="btn btn-primary me-2">
+                            Editar
+                        </a>
+                        <a href="{% url 'location_view' p.id %}" class="btn btn-weno me-2">
+                            Ver
+                        </a>
+                        <button type="button" 
+                                    class="mt btn-danger btn btn-delete" 
+                                    data-url="{% url 'location_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                            Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Ciudad:</strong> {{ p.city }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>País:</strong> {{ p.country }}
+                        </li>
+                    </ul>
+
+                    <div class="mt-3">
+                        <a href="{% url 'location_update' p.id %}" class="btn btn-primary me-2">
+                            Editar
+                        </a>
+                        <a href="{% url 'location_view' p.id %}" class="btn btn-weno me-2">
+                            Ver
+                        </a>
+                        <button type="button" 
+                                class="mt-2 btn-danger btn btn-delete" 
+                                data-url="{% url 'location_delete' p.id %}"
+                                data-item-name="{{ p.name }}">
+                            Eliminar
+                        </button>
+                    </div>  
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No se encontraron direcciones que coincidan con los filtros.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="location-table-view" style="display: none;">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre</strong>
+                                {% if current_sort_by == 'name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=city&order={% if current_sort_by == 'city' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Ciudad</strong>
+                                {% if current_sort_by == 'city' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=country&order={% if current_sort_by == 'country' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>País</strong>
+                                {% if current_sort_by == 'country' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in page_obj %}
+                    <tr>
+                        <td>{{ p.name }}</td>
+                        <td>{{ p.city }}</td>
+                        <td>{{ p.country }}</td>
+                        <td>
+                            <a href="{% url 'location_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
+                            <a href="{% url 'location_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm btn-delete" 
+                                    data-url="{% url 'location_delete' p.id %}"
+                                    data-item-name="{{ p.name }}">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center">No se encontraron direcciones que coincidan con los filtros.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Previous">
+          &laquo; Anterior
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&laquo; Anterior</span>
+      </li>
+    {% endif %}
+
+    {% for i in page_obj.paginator.page_range %}
+      {% if page_obj.number == i %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ i }}</span>
+        </li>
+      {% else %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Next">
+          Siguiente &raquo;
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Siguiente &raquo;</span>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+
+<div class="text-center text-muted mt-2">
+  Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
+</div>
+{% endif %}
+{% endblock content %}
+
+
+{% block scripts %}
+    {{ block.super }} 
+    <script> 
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-view-btn');
+        const cardsView = document.getElementById('location-cards-view');
+        const tableView = document.getElementById('location-table-view');
+        
+        const savedView = localStorage.getItem('locationView') || 'cards'; 
+
+        if (savedView === 'table') {
+            cardsView.style.display = 'none';
+            tableView.style.display = 'block';
+            toggleBtn.textContent = 'Ver Tarjetas';
+        } else {
+            cardsView.style.display = 'block';
+            tableView.style.display = 'none';
+            toggleBtn.textContent = 'Ver Tabla';
+        }
+
+        toggleBtn.addEventListener('click', function() {
+            if (cardsView.style.display === 'none') {
+                cardsView.style.display = 'block';
+                tableView.style.display = 'none';
+                toggleBtn.textContent = 'Ver Tabla';
+                localStorage.setItem('locationView', 'cards');
+            } else {
+                cardsView.style.display = 'none';
+                tableView.style.display = 'block';
+                toggleBtn.textContent = 'Ver Tarjetas';
+                localStorage.setItem('locationView', 'table');
+            }
+        });
+    });
+    </script>
+{% endblock %}

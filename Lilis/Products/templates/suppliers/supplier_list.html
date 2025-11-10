@@ -1,0 +1,350 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Proveedores {% endblock title %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <h1 class="page-title">Lista de Proveedores</h1>
+    </div>
+</div>
+
+<div class="row mb-3 justify-content-center">
+    <div class="col-md-10">
+        <form method="GET" action="{% url 'supplier_list' %}" class="form">
+            <div class="input-group">
+                <label class="input-group-text" for="per_page_select">Mostrar:</label>
+                <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+                <div class="position-relative flex-grow-1">
+                    <input type="text" class="form-control" id="search-input" name="q" value="{{ q|default:'' }}"
+                        placeholder="Buscar por nombre" autocomplete="off">
+                    <div id="search-results" class="position-absolute w-100 bg-white shadow-sm rounded mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                </div>
+                
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col text-end">
+        <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
+            Ver Tabla
+        </button>
+        <a href="{% url 'export_suppliers_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+            Exportar Todo
+        </a>
+        <a href="{% url 'export_suppliers_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+            class="btn btn-info mt-2">
+            Exportar Vista
+        </a>
+        <a href="{% url 'supplier_create' %}" class="mt-2 text-end btn btn-weno">
+            Agregar Proveedor
+        </a>
+    </div>
+</div>
+
+<div id="supplier-cards-view">
+    <div class="row">
+        {% for p in page_obj %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class='row'>
+                        <div class="col-7">
+                            <h5 class="card-title">{{ p.fantasy_name }}</h5>
+                        </div>
+                        <div class="col-5 text-end">
+                            <td>
+                                <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{% url 'supplier_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
+                    </div>
+                    <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>RUT: </strong> {{ p.rut }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Email: </strong> {{ p.email }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Telefono: </strong> {{ p.phone }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40 }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center">No se encontraron proveedores que coincidan con los filtros.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="supplier-table-view" style="display: none;">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=fantasy_name&order={% if current_sort_by == 'fantasy_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Nombre Fantasía</strong>
+                                {% if current_sort_by == 'fantasy_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=bussiness_name&order={% if current_sort_by == 'bussiness_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Razón Social</strong>
+                                {% if current_sort_by == 'bussiness_name' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=rut&order={% if current_sort_by == 'rut' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>RUT</strong>
+                                {% if current_sort_by == 'rut' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=email&order={% if current_sort_by == 'email' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Email</strong>
+                                {% if current_sort_by == 'email' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=phone&order={% if current_sort_by == 'phone' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Teléfono</strong>
+                                {% if current_sort_by == 'phone' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?{{ querystring_sorting }}&sort_by=trade_terms&order={% if current_sort_by == 'trade_terms' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Términos</strong>
+                                {% if current_sort_by == 'trade_terms' %}
+                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in page_obj %}
+                    <tr>
+                        <td>{{ p.fantasy_name }}</td>
+                        <td>{{ p.bussiness_name }}</td>
+                        <td>{{ p.rut }}</td>
+                        <td>{{ p.email|default:"-" }}</td>
+                        <td>{{ p.phone|default:"-" }}</td>
+                        <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm btn-delete" 
+                                    data-url="{% url 'supplier_delete' p.id %}"
+                                    data-item-name="{{ p.fantasy_name }}"> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No se encontraron proveedores que coincidan con los filtros.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Previous">
+          &laquo; Anterior
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&laquo; Anterior</span>
+      </li>
+    {% endif %}
+
+    {% for i in page_obj.paginator.page_range %}
+      {% if page_obj.number == i %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ i }}</span>
+        </li>
+      {% else %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Next">
+          Siguiente &raquo;
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Siguiente &raquo;</span>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+
+<div class="text-center text-muted mt-2">
+  Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
+</div>
+{% endif %}
+{% endblock content %}
+
+
+{% block scripts %}
+    {{ block.super }} 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('toggle-view-btn');
+        const cardsView = document.getElementById('supplier-cards-view');
+        const tableView = document.getElementById('supplier-table-view');
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+
+        const savedView = localStorage.getItem('supplierView') || 'cards';
+        updateView(savedView);
+
+        toggleBtn.addEventListener('click', function() {
+            const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
+            const newView = currentView === 'cards' ? 'table' : 'cards';
+            localStorage.setItem('supplierView', newView);
+            updateView(newView);
+        });
+
+        function updateView(view) {
+            if (view === 'table') {
+                cardsView.style.display = 'none';
+                tableView.style.display = 'block';
+                toggleBtn.textContent = 'Ver Tarjetas';
+            } else {
+                cardsView.style.display = 'block';
+                tableView.style.display = 'none';
+                toggleBtn.textContent = 'Ver Tabla';
+            }
+        }
+
+        let timeout = null;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    hideResults();
+                    return;
+                }
+                
+                fetch(`/products/supplier_search/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        displayResults(data);
+                        console.log('Datos recibidos:', data);
+                    })
+                    .catch(err => {
+                        hideResults();
+                        console.error('Error:', err);
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                hideResults();
+            }
+        });
+
+        function displayResults(suppliers) {
+            if (!suppliers || suppliers.length === 0) {
+                searchResults.innerHTML = '<div class="p-3 text-muted text-center">No se encontraron proveedores</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            const resultsHTML = suppliers.map(supplier => {
+                if (!supplier.id) {
+                    console.warn('Producto sin ID:', supplier);
+                    return '';
+                }
+                
+                return `
+                    <a href="/products/supplier_view/${supplier.id}/" class="dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom p-3">
+                        <div class="pl-5">
+                            <div class="fw-bold">${supplier.bussiness_name || 'Sin nombre'}</div>
+                            <small class="text-muted">${supplier.fantasy_name || 'Sin categoría'} • RUT: ${supplier.rut || 0}</small>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+            
+            searchResults.innerHTML = resultsHTML;
+            searchResults.style.display = 'block';
+        }
+
+        function hideResults() {
+            searchResults.style.display = 'none';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+<style>
+    #search-results {
+        border: 1px solid #dee2e6;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    #search-results .dropdown-item {
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    #search-results .dropdown-item:hover {
+        background-color: #f8f9fa;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

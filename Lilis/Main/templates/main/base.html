@@ -1,4 +1,4 @@
-{% load static %}
+    {% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -29,6 +29,7 @@
     <script>
         //Botón de guardar con SweetAlert2
         const saveConfirmButtons = document.querySelectorAll('.btn-guardar-confirmar');
+        const ADMIN_OVERRIDE_CODE = "Admin123";
 
         saveConfirmButtons.forEach(button => {
             button.addEventListener('click', function (event) {
@@ -43,51 +44,74 @@
                 const title = event.currentTarget.dataset.title || '¿Guardar los cambios?';
                 const text = event.currentTarget.dataset.text || 'Esta acción enviará el formulario.';
 
-                Swal.fire({
-                    title: title,
-                    text: text,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: "Sí, guardar",
-                    cancelButtonText: "Cancelar"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
+                const stockInput = form.querySelector('[name="quantity"], [name="current_quantity"]');
+                let stockValue = null;
+
+                if (stockInput) {
+                    let rawValue = stockInput.value;
+                    
+                    if (rawValue) { 
+                        stockValue = parseFloat(rawValue.replace(',', '.'));
+                    } else {
+                        stockValue = 0;
                     }
-                });
-            });
-        });
-    </script>
+                }
 
-    <script>
-        //Botón de eliminar con SweetAlert2
-        document.addEventListener('DOMContentLoaded', function () {
-            const deleteButtons = document.querySelectorAll('.btn-delete');
-
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-
-                    const url = event.currentTarget.dataset.url;
-                    const itemName = event.currentTarget.dataset.itemName || 'este elemento';
-
+                if (stockValue !== null && !isNaN(stockValue) && stockValue < 0) {
                     Swal.fire({
-                        title: `¿Eliminar ${itemName}?`,
-                        text: "Esta acción no se puede deshacer.",
-                        icon: "warning",
+                        title: 'Stock Negativo Detectado',
+                        text: 'Estás a punto de registrar un stock negativo (' + stockValue + '). Por favor, ingresa el código de administrador para autorizar esta acción.',
+                        icon: 'warning',
+                        input: 'password',
+                        inputPlaceholder: 'Ingresa el código de administrador',
+                        inputAttributes: {
+                            autocapitalize: 'off',
+                            autocorrect: 'off'
+                        },
                         showCancelButton: true,
+                        confirmButtonText: 'Autorizar y Guardar',
+                        cancelButtonText: 'Cancelar',
                         confirmButtonColor: '#d33',
                         cancelButtonColor: '#6c757d',
-                        confirmButtonText: "Sí, eliminar",
+                        showLoaderOnConfirm: true,
+                        preConfirm: (code) => {
+                            if (code === ADMIN_OVERRIDE_CODE) {
+                                return true;
+                            } else {
+                                Swal.showValidationMessage('Código incorrecto');
+                                return false;
+                            }
+                        },
+                        allowOutsideClick: () => !Swal.isLoading()
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Autorizado',
+                                text: 'Stock negativo guardado.',
+                                icon: 'success',
+                                showConfirmButton: false
+                            });
+                            setTimeout(() => form.submit(), 2000);
+                        }
+                    });
+
+                } else {
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: "Sí, guardar",
                         cancelButtonText: "Cancelar"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = url;
+                            form.submit();
                         }
-                    });
                 });
+                }
             });
         });
     </script>
@@ -133,90 +157,34 @@
         });
     });
     </script>
-
+        
     <script>
-    // Botón de exportar a CSV con SweetAlert2        
+        //Botón de eliminar con SweetAlert2
         document.addEventListener('DOMContentLoaded', function () {
-            const exportButtons = document.querySelectorAll('.export-btn');
-
-            exportButtons.forEach(button => {
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            deleteButtons.forEach(button => {
                 button.addEventListener('click', function (event) {
                     event.preventDefault();
-
-                    const tableId = event.currentTarget.dataset.target;
-                    const filename = event.currentTarget.dataset.filename || 'exported_data';
-                    const tableElement = document.getElementById(tableId);
-                    const titleElement = document.querySelector('.page-title');
-                    const cuteFilename = titleElement.innerText;
-                    const downloadFilename = titleElement ? titleElement.innerText.trim().replace(/\s+/g, '_') : filename;
-                    
+                    const url = event.currentTarget.dataset.url;
+                    const itemName = event.currentTarget.dataset.itemName || 'este elemento';
                     Swal.fire({
-                        title: `¿Seguro desea exportar ${cuteFilename}?`,
-                        icon: "info",
+                        title: `¿Eliminar ${itemName}?`,
+                        text: "Esta acción no se puede deshacer.",
+                        icon: "warning",
                         showCancelButton: true,
-                        confirmButtonColor: '#28a745',
+                        confirmButtonColor: '#d33',
                         cancelButtonColor: '#6c757d',
-                        confirmButtonText: "Sí, exportar",
+                        confirmButtonText: "Sí, eliminar",
                         cancelButtonText: "Cancelar"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            if (!tableElement) {
-                                console.error(`Tabla con ID '${tableId}' no encontrada.`);
-                                return;
-                            }
-
-                            const wasHidden = tableElement.style.display === 'none';
-                            if (wasHidden) {
-                                tableElement.style.display = 'block';
-                            }
-
-                            let csvContent = [];
-                            let bom = "\uFEFF";
-                            const rows = tableElement.querySelectorAll("table tr");
-
-                            rows.forEach(function (row) {
-                                let rowData = [];
-                                const cols = row.querySelectorAll("th, td");
-
-                                let colLength = cols.length;
-
-                                const lastHeader = tableElement.querySelector("thead th:last-child");
-                                if (lastHeader && lastHeader.innerText.trim().toLowerCase() === 'acciones') {
-                                    colLength -= 1;
-                                }
-
-                                for (let i = 0; i < colLength; i++) {
-                                    let cellText = cols[i].innerText.trim().replace(/\s+/g, ' ').replace(/;/g, ',');
-
-                                    if (cellText.includes(',')) {
-                                        cellText = '"' + cellText + '"';
-                                    }
-                                    rowData.push(cellText);
-                                }
-                                csvContent.push(rowData.join(";"));
-                            });
-
-                            if (wasHidden) {
-                                tableElement.style.display = 'none';
-                            }
-
-                            let csvString = bom + csvContent.join("\r\n");
-                            let encodedUri = 'data:text/csv;charset=utf-8,' + encodeURI(csvString);
-                            let link = document.createElement("a");
-                            link.setAttribute("href", encodedUri);
-                            link.setAttribute("download", `${downloadFilename}.csv`);
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
+                            window.location.href = url;
                         }
                     });
                 });
             });
         });
     </script>
-
     {% endblock %}
-
 </body>
-
 </html>

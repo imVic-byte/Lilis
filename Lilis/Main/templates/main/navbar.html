@@ -45,6 +45,7 @@
                         <li><a class="dropdown-item" href="{% url 'product_batch_list' %}">Lotes de Productos</a></li>
                         <li><a class="dropdown-item" href="{% url 'raw_batch_list' %}">Lotes de Materia Prima</a></li>
                     </ul>
+                    
                 </li>
                 {% endif %}
                 {% if perms.Sells.view_client or perms.Sells.view_location or perms.Sells.view_warehouse %}
@@ -78,12 +79,19 @@
             <ul class="navbar-nav mb-2 mb-lg-0">
                 {% if user.is_authenticated %}
                 <li class="nav-item me-2">
-                    <a class="nav-link text-warning" href="{% url 'user_view' user.id %}">{{ request.user.username }}</a>
+                    {% if request.user.profile.profile_picture %}
+                    <img src="{{ request.user.profile.profile_picture.url }}" class="rounded-circle" width="50px" height="50px">
+                    {% else %}
+                    <img src="{% static 'img/user.png' %}" class="rounded-circle" width="50px" height="50px">
+                    {% endif %}
+                </li>
+                <li class="nav-item me-2">
+                    <a class="nav-link text-warning text-decoration-underline" href="{% url 'user_view' user.id %}">{{ request.user.username }}</a>
                 </li>
                 <li class="nav-item">
                     <form method="POST" action="{% url 'logout' %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-link nav-link text-warning" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">Cerrar sesión</button>
+                        <button type="submit" class="btn btn-link nav-link text-warning">Cerrar sesión</button>
                     </form>
                 </li>
                 {% else %}

@@ -11,7 +11,10 @@ urlpatterns = [
     path('user_delete/<int:id>', views.user_delete, name='user_delete'),
     path('user_view/<int:id>', views.user_view, name='user_view'),
     path('edit_field/', views.edit_field, name='edit_field'),
+    path('export_users_excel/', views.export_users_excel, name='export_users_excel'),
     path('password_change/', views.password_change, name='password_change'),
     path('token_verify/', views.token_verify, name='token_verify'),
     path('password_recover/', views.password_recover, name='password_recover'),
+    path('role_changer/', views.role_changer, name='role_changer'),
+    path('user_picture/<int:id>', views.user_picture, name='user_picture'),
 ]

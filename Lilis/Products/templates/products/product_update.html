@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} Actualizar Producto {% endblock title %}
+{% block content %}
+    <div class="container d-flex justify-content-center align-items-center mt-3" style="min-height: 100vh;">
+        <div class="card shadow-sm w-100" style="max-width: 500px;">
+            <div class="card-header text-center bg-primary text-white">
+                <h4>Actualizar Producto</h4>
+            </div>
+            <div class="card-body">
+
+                <!-- Form funcional con csrf_token -->
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-weno btn-lg btn-guardar-confirmar" data-title="¿Crear nueva categoría?">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

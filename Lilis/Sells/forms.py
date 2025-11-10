@@ -1,12 +1,11 @@
 from .models import Client, Location, Warehouse, WareClient,Transaction, SaleOrder, SaleOrderDetail
 from django import forms
-import datetime
-from Main.validators import validate_rut_format, validate_phone_format, validate_email, validate_password
+from Main.validators import *
 
 class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
-        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt']
+        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt' ,'is_suspended']
         labels = {
             'bussiness_name': 'Razon social de la empresa',
             'fantasy_name': 'Nombre fantasia de la empresa',
@@ -15,14 +14,39 @@ class ClientForm(forms.ModelForm):
             'phone': 'Telefono',
             'credit_limit': 'Limite de credito',
             'debt': 'Deuda',
-            'max_debt': 'Maximo de deuda'
+            'max_debt': 'Maximo de deuda',
+            'is_suspended': 'Esta suspendido'
         }
     
+    def clean_bussiness_name(self):
+        return validate_text_length(self.cleaned_data.get('bussiness_name'), field_name="La razón social")
+
+    def clean_fantasy_name(self):
+        return validate_text_length(self.cleaned_data.get('fantasy_name'), field_name="El nombre de fantasía")
+
     def clean_rut(self):
-        rut = self.cleaned_data.get('rut')
-        if not validate_rut_format(rut):
-            raise forms.ValidationError('El formato del RUT es invalido.')
-        return rut
+        return validate_rut_format(self.cleaned_data.get('rut'))
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            return validate_email(email)
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            return validate_phone_format(phone)
+        return phone
+
+    def clean_credit_limit(self):
+        return validate_positive_number(self.cleaned_data.get('credit_limit'), field_name="El límite de crédito", allow_zero=True)
+
+    def clean_debt(self):
+        return validate_positive_number(self.cleaned_data.get('debt'), field_name="La deuda", allow_zero=True)
+
+    def clean_max_debt(self):
+        return validate_positive_number(self.cleaned_data.get('max_debt'), field_name="La deuda máxima", allow_zero=True)
         
     def save(self, commit=True):
         client = super(ClientForm, self).save(commit=False)
@@ -40,6 +64,15 @@ class LocationForm(forms.ModelForm):
             'city': 'Ciudad',
             'country': 'Pais'
         }
+        
+    def clean_name(self):
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
+
+    def clean_city(self):
+        return validate_text_length(self.cleaned_data.get('city'), field_name="La ciudad")
+
+    def clean_country(self):
+        return validate_text_length(self.cleaned_data.get('country'), field_name="El país")
         
     def save(self, commit=True):
         location = super(LocationForm, self).save(commit=False)
@@ -59,6 +92,15 @@ class WarehouseForm(forms.ModelForm):
             'location': 'Localidad'
         }
         
+    def clean_name(self):
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
+
+    def clean_address(self):
+        return validate_text_length(self.cleaned_data.get('address'), min_length=5, field_name="La dirección")
+
+    def clean_total_area(self):
+        return validate_positive_number(self.cleaned_data.get('total_area'), field_name="El área total")
+        
     def save(self, commit=True):
         warehouse = super(WarehouseForm, self).save(commit=False)   
         if commit:
@@ -66,22 +108,7 @@ class WarehouseForm(forms.ModelForm):
             return warehouse
         return warehouse
         
-class TransactionForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = ['warehouse', 'type', 'batch']
-        labels = {
-            'warehouse': 'Bodega',
-            'type': 'Tipo',
-            'batch': 'Lote'
-        }
-        
-    def save(self, commit=True):
-        transaction = super(TransactionForm, self).save(commit=False)
-        if commit:
-            transaction.save()
-            return transaction
-        return transaction
+
         
 class SaleOrderForm(forms.ModelForm):
     class Meta:
@@ -94,6 +121,12 @@ class SaleOrderForm(forms.ModelForm):
             'exchange': 'Tipo de cambio',
             'payment_terms': 'Plazo de pago',
         }
+
+    def clean_confirmation_date(self):
+        conf_date = self.cleaned_data.get('confirmation_date')
+        if conf_date:
+            return validate_past_or_today_date(conf_date, field_name="La fecha de confirmación")
+        return conf_date
 
     def save(self, commit=True):
         sale_order = super(SaleOrderForm, self).save(commit=False)
