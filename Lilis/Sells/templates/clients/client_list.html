@@ -24,8 +24,11 @@
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
 
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por RUT, nombre, razón social, email...">
-                
+                <div class="position-relative flex-grow-1">
+                    <input type="text" class="form-control" id="search-input" name="q" value="{{ q|default:'' }}"
+                        placeholder="Buscar por nombre, descripción, categoría..." autocomplete="off">
+                    <div id="search-results" class="position-absolute w-100 bg-white shadow-sm rounded mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                </div>                
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
         </form>
@@ -260,41 +263,122 @@
 
 {% block scripts %}
     {{ block.super }} 
-    <script> 
+    <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
         const cardsView = document.getElementById('client-cards-view');
         const tableView = document.getElementById('client-table-view');
-        
-        
-        const savedView = localStorage.getItem('clientView') || 'cards'; 
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
 
-        if (savedView === 'table') {
-            cardsView.style.display = 'none';
-            tableView.style.display = 'block';
-            toggleBtn.textContent = 'Ver Tarjetas';
-        } else {
-            cardsView.style.display = 'block';
-            tableView.style.display = 'none';
-            toggleBtn.textContent = 'Ver Tabla';
-        }
+        const savedView = localStorage.getItem('clientView') || 'cards';
+        updateView(savedView);
 
-        
         toggleBtn.addEventListener('click', function() {
-            if (cardsView.style.display === 'none') {
-                
-                cardsView.style.display = 'block';
-                tableView.style.display = 'none';
-                toggleBtn.textContent = 'Ver Tabla';
-                localStorage.setItem('clientView', 'cards');
-            } else {
-                
+            const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
+            const newView = currentView === 'cards' ? 'table' : 'cards';
+            localStorage.setItem('clientView', newView);
+            updateView(newView);
+        });
+
+        function updateView(view) {
+            if (view === 'table') {
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';
-                localStorage.setItem('clientView', 'table');
+            } else {
+                cardsView.style.display = 'block';
+                tableView.style.display = 'none';
+                toggleBtn.textContent = 'Ver Tabla';
+            }
+        }
+
+        let timeout = null;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    hideResults();
+                    return;
+                }
+                
+                fetch(`/sells/client_search/?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        displayResults(data);
+                    })
+                    .catch(err => {
+                        hideResults();
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                hideResults();
+            }
+        });
+
+        function displayResults(clients) {
+            if (!clients || clients.length === 0) {
+                searchResults.innerHTML = '<div class="p-3 text-muted text-center">No se encontraron clientes</div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            const resultsHTML = clients.map(client => {
+                if (!client.id) {
+                    console.warn('cliente sin ID:', client);
+                    return '';
+                }
+                
+                return `
+                    <a href="/sells/client_view/${client.id}/" class="dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div>
+                            <div class="fw-bold">${client.fantasy_name || 'Sin nombre de fantasia'}</div>
+                            <small class="text-muted">${client.bussiness_name || 'Sin razon social'} • RUT: ${client.rut || 0}</small>
+                        </div>
+                        <div>
+                            ${client.is_suspended ? 
+                                '<span class="badge bg-warning text-dark">Suspendido</span>' : 
+                                '<span class="badge bg-secondary">Activo</span>'}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+            
+            searchResults.innerHTML = resultsHTML;
+            searchResults.style.display = 'block';
+        }
+
+        function hideResults() {
+            searchResults.style.display = 'none';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
+                e.preventDefault();
             }
         });
     });
-    </script>
+</script>
+<style>
+    #search-results {
+        border: 1px solid #dee2e6;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    #search-results .dropdown-item {
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    #search-results .dropdown-item:hover {
+        background-color: #f8f9fa;
+        text-decoration: none;
+    }
+</style>
+
 {% endblock %}

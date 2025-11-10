@@ -24,7 +24,6 @@
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
                 
-                <!-- Nuevo buscador con autocompletado -->
                 <div class="position-relative flex-grow-1">
                     <input type="text" class="form-control" id="search-input" name="q" value="{{ q|default:'' }}"
                         placeholder="Buscar por nombre, descripción, categoría..." autocomplete="off">
@@ -307,11 +306,9 @@
                 fetch(`/products/product_search/?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
                     .then(data => {
-                        console.log('Datos recibidos:', data); // Debug
                         displayResults(data);
                     })
                     .catch(err => {
-                        console.error('Error:', err);
                         hideResults();
                     });
             }, 300);

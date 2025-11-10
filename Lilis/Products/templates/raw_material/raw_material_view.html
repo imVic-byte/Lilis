@@ -1,12 +1,12 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Producto {% endblock title %}
+{% block title %} Materia prima{% endblock title %}
 {% block content %}
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">Detalle del Producto</h4>
+                        <h4 class="mb-0">Detalle de la materia prima</h4>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title text-center mb-3">
@@ -35,14 +35,14 @@
                         </ul>
 
                         <div class="mt-4 text-center">
-                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary me-2">
+                            <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary me-2">
                                 Editar
                             </a>
-                            <a href="{% url 'products_list' %}" class="btn btn-secondary me-2">
+                            <a href="{% url 'raw_material_list' %}" class="btn btn-secondary me-2">
                                 Volver a la lista
                             </a>
                             <button type="button" class="btn btn-danger btn-delete" 
-                                    data-url="{% url 'product_delete' p.id %}"
+                                    data-url="{% url 'raw_material_delete' p.id %}"
                                     data-item-name="{{ p.name }}">
                                 Eliminar
                             </button>

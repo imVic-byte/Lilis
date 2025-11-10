@@ -27,6 +27,7 @@ suppliers = [
     path('supplier_update/<int:id>/', views.supplier_update, name='supplier_update'),
     path('supplier_delete/<int:id>/', views.supplier_delete, name='supplier_delete'),
     path('export_suppliers_excel/', views.export_suppliers_excel, name='export_suppliers_excel'),
+    path('supplier_search/', views.supplier_search, name='supplier_search'),
 ]
 
 raw_materials = [
@@ -36,6 +37,7 @@ raw_materials = [
     path('raw_material_update/<int:id>/', views.raw_material_update, name='raw_material_update'),
     path('raw_material_delete/<int:id>/', views.raw_material_delete, name='raw_material_delete'),
     path('export_raw_materials_excel/', views.export_raw_materials_excel, name='export_raw_materials_excel'),
+    path('raw_material_search/', views.raw_material_search, name='raw_material_search'),
 ]
 
 batchs =[

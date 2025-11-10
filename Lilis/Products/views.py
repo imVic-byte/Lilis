@@ -161,19 +161,11 @@ def export_categories_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Categorias")
 
 
-#PRODUCTOSSSSSSSSSs
 @login_required
 @permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
 def products_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -182,45 +174,32 @@ def products_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
 
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['name', 'category__name', 'quantity','created_at', 'expiration_date']
-    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
-    order = request.GET.get('order', 'asc')      # Default: asc
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
 
-    # Validar que los campos y el orden sean correctos
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
-    # ¡Optimizamos con select_related para traer la categoría!
     qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
 
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(description__icontains=q) |
-            Q(category__name__icontains=q) # Búsqueda en la FK
+            Q(category__name__icontains=q)
         )
         
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -228,23 +207,16 @@ def products_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
 
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -349,21 +321,28 @@ def export_product_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
 
-#SUPPLIERRRR
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+def supplier_search(request):
+    q = request.GET.get('q', '')
+    suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
+        Q(bussiness_name__icontains=q) |
+        Q(fantasy_name__icontains=q) |
+        Q(rut__icontains=q)
+    ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
+    return JsonResponse(list(suppliers), safe=False)
+
+@login_required
+@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+def supplier_view(request, id):
+    supplier = supplier_service.get(id)
+    return render(request, 'suppliers/supplier_view.html', {'p': supplier})
+
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -372,29 +351,20 @@ def supplier_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
 
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['fantasy_name', 'bussiness_name', 'rut', 'email', 'phone']
-    sort_by = request.GET.get('sort_by', 'fantasy_name') # Default: 'fantasy_name'
-    order = request.GET.get('order', 'asc')           # Default: asc
+    sort_by = request.GET.get('sort_by', 'fantasy_name')
+    order = request.GET.get('order', 'asc')
 
-    # Validar que los campos y el orden sean correctos
     if sort_by not in allowed_sort_fields:
         sort_by = 'fantasy_name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
-    qs = supplier_service.list()
+    qs = supplier_service.list_actives()
 
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(fantasy_name__icontains=q) |
@@ -405,14 +375,11 @@ def supplier_list(request):
             Q(trade_terms__icontains=q)
         )
         
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -420,23 +387,16 @@ def supplier_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
 
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -451,11 +411,6 @@ def supplier_list(request):
         "order_next": "desc" if order == "asc" else "asc",
     }
     return render(request, 'suppliers/supplier_list.html', context)
-@login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
-def supplier_view(request, id):
-    supplier = supplier_service.get(id)
-    return render(request, 'suppliers/supplier.html', {'s': supplier})
 
 @login_required
 @permission_or_redirect('Products.add_supplier','dashboard', 'No teni permiso')
@@ -485,7 +440,7 @@ def supplier_update(request, id):
 @permission_or_redirect('Products.delete_supplier','dashboard', 'No teni permiso')
 def supplier_delete(request, id):
     if request.method == 'GET':
-        success = supplier_service.delete(id)
+        success, obj = supplier_service.make_inactive(id)
         if success:
             return redirect('supplier_list')
     return redirect('supplier_list')
@@ -525,20 +480,11 @@ def export_suppliers_excel(request):
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
 
-#RAWMATERIAAAAAAAAAL
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
-    
+    default_per_page = request.user.profile.per_page
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
@@ -546,71 +492,42 @@ def raw_material_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
-
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['name', 'supplier__fantasy_name', 'category__name']
-    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
-    order = request.GET.get('order', 'asc')      # Default: asc
-
-    # Validar que los campos y el orden sean correctos
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
-
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
     qs = raw_material_service.list_actives().select_related(
         "supplier", 
         "category"
     )
-
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(supplier__fantasy_name__icontains=q) |
             Q(category__name__icontains=q)
         )
-        
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
-
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
-
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
-
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
-
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
-
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -624,14 +541,25 @@ def raw_material_list(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc",
     }
-    return render(request, 'products/raw_material_list.html', context)
+    return render(request, 'raw_material/raw_material_list.html', context)
 
+@login_required
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+def raw_material_search(request):
+    q = request.GET.get('q', '')
+    raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
+        Q(name__icontains=q) |
+        Q(description__icontains=q)
+    ).values(
+        'id', 'name', 'description','supplier', 'category__name', 'quantity', 'is_perishable', 'created_at', 'expiration_date', 'category', 'is_active'
+    )
+    return JsonResponse(list(raw_materials), safe=False)
 
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_view(request, id):
     raw_material = raw_material_service.get(id)
-    return render(request, 'products/raw_material.html', {'rm': raw_material})
+    return render(request, 'raw_material/raw_material_view.html', {'p': raw_material})
 
 @login_required
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
@@ -643,7 +571,7 @@ def raw_material_create(request):
             return redirect('raw_material_list')
         else:
             return render(request, 'products/raw_material_create.html', {'form': obj})
-    return render(request, 'products/raw_material_create.html', {'form': form})
+    return render(request, 'raw_material/raw_material_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')
@@ -655,7 +583,7 @@ def raw_material_update(request, id):
     else:
         raw_material = raw_material_service.get(id)
         form = raw_material_service.form_class(instance=raw_material)
-    return render(request, 'products/raw_material_update.html', {'form': form})
+    return render(request, 'raw_material/raw_material_update.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
@@ -707,19 +635,11 @@ def export_raw_materials_excel(request):
 
     return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
 
-#BATCHESSS
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def product_batch_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -728,44 +648,31 @@ def product_batch_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
 
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['product__name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code') # Default: batch_code
-    order = request.GET.get('order', 'asc')          # Default: asc
+    sort_by = request.GET.get('sort_by', 'batch_code')
+    order = request.GET.get('order', 'asc')
 
-    # Validar que los campos y el orden sean correctos
     if sort_by not in allowed_sort_fields:
         sort_by = 'batch_code'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
-    # ¡Optimizamos con select_related para traer el producto!
     qs = batch_service.list_product().select_related("product")
 
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
-            Q(product__name__icontains=q) | # Buscar por nombre de producto
-            Q(batch_code__icontains=q)      # Buscar por código de lote
+            Q(product__name__icontains=q) |
+            Q(batch_code__icontains=q)
         )
 
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -773,23 +680,16 @@ def product_batch_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
 
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -878,15 +778,8 @@ def export_product_batches_excel(request):
 @login_required
 @permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
 def raw_batch_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    
-    default_per_page = 25  # Nuevo default
+    default_per_page = 25
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -895,47 +788,35 @@ def raw_batch_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    # ===================================
 
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['raw_material__name', 'raw_material__supplier__name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code') # Default: batch_code
-    order = request.GET.get('order', 'asc')          # Default: asc
+    sort_by = request.GET.get('sort_by', 'batch_code')
+    order = request.GET.get('order', 'asc')
 
-    # Validar que los campos y el orden sean correctos
     if sort_by not in allowed_sort_fields:
         sort_by = 'batch_code'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
 
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
     qs = batch_service.list_raw_materials().select_related(
         "raw_material", 
         "raw_material__supplier"
     )
 
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
-            Q(raw_material__name__icontains=q) | # "nombre"
-            Q(batch_code__icontains=q) |         # "codigo"
-            Q(raw_material__supplier__name__icontains=q) # "proveedor"
+            Q(raw_material__name__icontains=q) |
+            Q(batch_code__icontains=q) |
+            Q(raw_material__supplier__name__icontains=q)
         )
         
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
 
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
 
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
@@ -943,23 +824,16 @@ def raw_batch_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
 
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
 
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -1050,7 +924,6 @@ def export_raw_batches_excel(request):
 
     return generate_excel_response(headers, data_rows, "Lilis_Lotes_Materias_Primas") 
 
-#PRICEHISTORIESSSSSSS
 @login_required
 @permission_or_redirect('Products.change_pricehistories','dashboard', 'No teni permiso')
 def price_histories_save(request, id):

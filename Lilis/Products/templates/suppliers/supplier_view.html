@@ -1,49 +1,49 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Producto {% endblock title %}
+{% block title %} Proveedor {% endblock title %}
 {% block content %}
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">Detalle del Producto</h4>
+                        <h4 class="mb-0">Detalles del Proveedor</h4>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title text-center mb-3">
-                            {{ p.name }}
+                            {{ p.bussiness_name }}
                         </h5>
 
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                <strong>Descripción:</strong> {{ p.description|default:"Sin descripción" }}
+                                <strong>RUT:</strong> {{ p.rut }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Categoría:</strong> {{ p.category.name }}
+                                <strong>Nombre de fantasia:</strong> {{ p.fantasy_name }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Stock Actual:</strong> {{ p.quantity }}
+                                <strong>Email:</strong> {{ p.email }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Es perecible:</strong> {{ p.is_perishable|yesno:"Sí,No" }}
+                                <strong>Teléfono:</strong> {{ p.phone }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Fecha de creación:</strong> {{ p.created_at|date:"d/m/Y"|default:"No aplica" }}
+                                <strong>Terminos de servicio:</strong> {{ p.trade_terms }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Fecha de vencimiento:</strong> {{ p.expiration_date|date:"d/m/Y"|default:"No aplica" }}
+                                <strong>Estado:</strong> {{ p.is_active|yesno:"Activo,Inactivo" }}
                             </li>
                         </ul>
 
                         <div class="mt-4 text-center">
-                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary me-2">
+                            <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary me-2">
                                 Editar
                             </a>
-                            <a href="{% url 'products_list' %}" class="btn btn-secondary me-2">
+                            <a href="{% url 'supplier_list' %}" class="btn btn-secondary me-2">
                                 Volver a la lista
                             </a>
                             <button type="button" class="btn btn-danger btn-delete" 
-                                    data-url="{% url 'product_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
+                                    data-url="{% url 'supplier_delete' p.id %}"
+                                    data-item-name="{{ p.fantasy_name }}">
                                 Eliminar
                             </button>
                         </div>

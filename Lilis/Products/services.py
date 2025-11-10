@@ -49,6 +49,31 @@ class SupplierService(CRUD):
     
     def count_inactives(self):
         return self.model.objects.filter(is_active=False).count()
+    
+    def make_inactive(self, id):
+        try:
+            supplier = self.model.objects.filter(id=id).first()
+            if supplier:
+                supplier.is_active = False
+                supplier.save()
+                return True, supplier
+            return False, None
+        except self.model.DoesNotExist:
+            return False, None
+
+    def make_active(self, id):
+        try:
+            supplier = self.model.objects.filter(id=id).first()
+            if supplier:
+                supplier.is_active = True
+                supplier.save()
+                return True, supplier
+            return False, None
+        except self.model.DoesNotExist:
+            return False, None
+
+    def list_actives(self):
+        return self.model.objects.filter(is_active=True)
 
 class RawMaterialService(CRUD):
     def __init__(self):

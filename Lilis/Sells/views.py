@@ -5,6 +5,7 @@ from django.db.models import Q
 from .services import ClientService, WarehouseService, SaleOrderService, TransactionService
 from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
+from django.http import JsonResponse
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -26,7 +27,7 @@ def client_list_all(request):
     #   ¡CAMBIO! Nuevas opciones de paginación
     # ===================================
     allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25  # Nuevo default
+    default_per_page = request.user.profile.per_page
     
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
@@ -56,7 +57,7 @@ def client_list_all(request):
     
 
      
-    qs = client_service.list()
+    qs = client_service.list_actives()
 
     #filtro de búsqueda
     if q:
@@ -112,6 +113,7 @@ def client_list_all(request):
         "current_order": order,
         "order_next": "desc" if order == "asc" else "asc", 
     }
+    request.user.profile.per_page = per_page
     return render(request, 'clients/client_list.html', context)
 
 # --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
@@ -130,6 +132,17 @@ def client_list_inactives(request):
     return render(request, 'clients/client_list.html', {'clients': clients})
 
 # --- Resto de vistas de Cliente (con redirects actualizados) ---
+@login_required()
+@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
+def client_search(request):
+    q = request.GET.get('q', '')
+    clients = client_service.model.objects.filter(is_suspended=False).filter(
+        Q(fantasy_name__icontains=q) |
+        Q(bussiness_name__icontains=q) |
+        Q(rut__icontains=q)
+    ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_suspended', 'credit_limit', 'debt', 'max_debt')
+    return JsonResponse(list(clients), safe=False)
+
 @login_required
 @permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_view(request, id):
@@ -169,10 +182,10 @@ def client_update(request, id):
 @permission_or_redirect('Sells.delete_client','dashboard', 'No teni permiso')
 def client_delete(request, id):
     if request.method == 'GET':
-        success = client_service.delete(id)
+        success = client_service.to_suspend(id)
         if success:
-            return redirect('client_list_all') # ¡Redirect actualizado!
-    return redirect('client_list_all') # ¡Redirect actualizado!
+            return redirect('client_list_all')
+    return redirect('client_list_all')
 
 @login_required
 @permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
