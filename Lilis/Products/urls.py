@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+
 categorys = [
     path('category_list/', views.category_list, name='category_list'),
     path('category_create/', views.category_create, name='category_create'),
@@ -11,11 +12,12 @@ categorys = [
     
 products = [
     path('products_list/' , views.products_list ,name='products_list'),
-    path('product_view<int:id>/', views.product_view, name='product_view'),
+    path('product_view/<int:id>/', views.product_view, name='product_view'),
     path('product_create/' , views.product_create ,name='product_create'),
     path('product_delete/<int:id>/' , views.product_delete ,name='product_delete'),
     path('product_update/<int:id>/' , views.product_update ,name='product_update'),
-    path('export_products_excel/', views.export_products_excel, name='export_products_excel'),
+    path('export_product_excel/', views.export_product_excel, name='export_product_excel'),
+    path('product_search/', views.product_search, name='product_search'),
 ]
 
 suppliers = [
@@ -25,6 +27,7 @@ suppliers = [
     path('supplier_update/<int:id>/', views.supplier_update, name='supplier_update'),
     path('supplier_delete/<int:id>/', views.supplier_delete, name='supplier_delete'),
     path('export_suppliers_excel/', views.export_suppliers_excel, name='export_suppliers_excel'),
+    path('supplier_search/', views.supplier_search, name='supplier_search'),
 ]
 
 raw_materials = [
@@ -34,6 +37,7 @@ raw_materials = [
     path('raw_material_update/<int:id>/', views.raw_material_update, name='raw_material_update'),
     path('raw_material_delete/<int:id>/', views.raw_material_delete, name='raw_material_delete'),
     path('export_raw_materials_excel/', views.export_raw_materials_excel, name='export_raw_materials_excel'),
+    path('raw_material_search/', views.raw_material_search, name='raw_material_search'),
 ]
 
 batchs =[

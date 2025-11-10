@@ -15,6 +15,7 @@ clients = [
     path('client_delete/<int:id>/', views.client_delete, name='client_delete'),
     path('client_view/<int:id>/', views.client_view, name='client_view'),
     path('export_clients_excel/', views.export_clients_excel, name='export_clients_excel'),
+    path('client_search/', views.client_search, name='client_search'),
 ]
 
 locations = [

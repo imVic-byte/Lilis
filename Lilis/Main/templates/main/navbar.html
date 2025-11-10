@@ -39,13 +39,13 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        Movimiento de Lotes
+                        Lotes
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'product_batch_list' %}">Lotes de Productos</a></li>
                         <li><a class="dropdown-item" href="{% url 'raw_batch_list' %}">Lotes de Materia Prima</a></li>
-                        <li><a class="dropdown-item" href="{% url 'transaction' %}">Transacción</a></li>
                     </ul>
+                    
                 </li>
                 {% endif %}
                 {% if perms.Sells.view_client or perms.Sells.view_location or perms.Sells.view_warehouse %}
@@ -79,7 +79,7 @@
             <ul class="navbar-nav mb-2 mb-lg-0">
                 {% if user.is_authenticated %}
                 <li class="nav-item me-2">
-                    {% if user.profile.profile_picture %}
+                    {% if request.user.profile.profile_picture %}
                     <img src="{{ request.user.profile.profile_picture.url }}" class="rounded-circle" width="50px" height="50px">
                     {% else %}
                     <img src="{% static 'img/user.png' %}" class="rounded-circle" width="50px" height="50px">
