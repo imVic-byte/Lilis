@@ -9,8 +9,7 @@ from Main.utils import generate_excel_response
 
 user_service = UserService()
 
-@login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.view_user','dashboard', 'No tienes permiso')
 def user_list(request):
     users = user_service.list()
     return render(request, "user_list.html", {"users": users})
@@ -43,7 +42,7 @@ def password_change(request):
 
 
 @login_required
-@permission_or_redirect('Accounts.add_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.add_user','dashboard', 'No tienes permiso')
 def registro(request):
     if request.method == 'POST':
         form = user_service.form_class(request.POST)
@@ -58,7 +57,7 @@ def registro(request):
     return render(request, 'registro.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.delete_user','dashboard', 'No tienes permiso')
 def user_delete(request, id):
     if request.method == "GET":
         success = user_service.delete_user(id)
@@ -141,7 +140,7 @@ def user_list(request):
     return render(request, "user_list.html", context)
 
 @login_required
-@permission_or_redirect('Accounts.view_profile','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.view_profile','dashboard', 'No tienes permiso')
 def export_users_excel(request):
     q = (request.GET.get("q") or "").strip()
     limit = request.GET.get("limit")
@@ -219,7 +218,7 @@ def password_recover(request):
     return render(request, 'password_recover.html')
 
 @login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
+@permission_or_redirect('Accounts.change_user','dashboard', 'No tienes permiso')
 def role_changer(request):
     user_id = request.GET.get("user_id")
     field_name = request.GET.get("field_name")

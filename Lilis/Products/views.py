@@ -15,7 +15,7 @@ batch_service = BatchService()
 price_histories_service = PriceHistoriesService()
 
 @login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No tienes permiso')
 def product_search(request):
     q = request.GET.get('q', '')
     products = product_service.model.objects.filter( is_active=True ).filter(
@@ -26,7 +26,7 @@ def product_search(request):
     return JsonResponse(list(products), safe=False)
 
 @login_required
-@permission_or_redirect('Products.view_category','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_category','dashboard', 'No tienes permiso')
 def category_list(request):
     
     q = (request.GET.get("q") or "").strip()
@@ -93,7 +93,7 @@ def category_list(request):
     return render(request, 'products/category_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.add_category','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_category','dashboard', 'No tienes permiso')
 def category_create(request):
     form = category_service.form_class()
     if request.method == 'POST':
@@ -106,7 +106,7 @@ def category_create(request):
 
 
 @login_required
-@permission_or_redirect('Products.change_category','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_category','dashboard', 'No tienes permiso')
 def category_update(request, id):
     if request.method == 'POST':
         success, obj = category_service.update(id, request.POST)
@@ -120,7 +120,7 @@ def category_update(request, id):
     return render(request, 'products/category_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_category','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_category','dashboard', 'No tienes permiso')
 def category_delete(request, id):
     if request.method == 'GET':
         success = category_service.delete(id)
@@ -129,7 +129,7 @@ def category_delete(request, id):
     return redirect('category_list') 
 
 @login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No tienes permiso')
 def export_categories_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = category_service.list().order_by('name')
@@ -162,7 +162,7 @@ def export_categories_excel(request):
 
 
 @login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No tienes permiso')
 def products_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
@@ -233,13 +233,13 @@ def products_list(request):
     return render(request, 'products/products_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No tienes permiso')
 def product_view(request, id):
     product = product_service.get(id)
     return render(request, 'products/product.html', {'p': product})
 
 @login_required
-@permission_or_redirect('Products.add_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_product','dashboard', 'No tienes permiso')
 def product_create(request):
     form = product_service.form_class()
     if request.method == 'POST':
@@ -252,7 +252,7 @@ def product_create(request):
 
 
 @login_required
-@permission_or_redirect('Products.change_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_product','dashboard', 'No tienes permiso')
 def product_update(request, id):
     if request.method == 'POST':
         success, obj = product_service.update(id, request.POST)
@@ -266,7 +266,7 @@ def product_update(request, id):
     return render(request, 'products/product_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_product','dashboard', 'No tienes permiso')
 def product_delete(request, id):
         if request.method == 'GET':
             try:
@@ -280,7 +280,7 @@ def product_delete(request, id):
         return redirect('products_list')
 
 @login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product','dashboard', 'No tienes permiso')
 def export_product_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
@@ -322,7 +322,7 @@ def export_product_excel(request):
 
 
 @login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_supplier','dashboard', 'No tienes permiso')
 def supplier_search(request):
     q = request.GET.get('q', '')
     suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
@@ -333,13 +333,13 @@ def supplier_search(request):
     return JsonResponse(list(suppliers), safe=False)
 
 @login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_supplier','dashboard', 'No tienes permiso')
 def supplier_view(request, id):
     supplier = supplier_service.get(id)
     return render(request, 'suppliers/supplier_view.html', {'p': supplier})
 
 @login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_supplier','dashboard', 'No tienes permiso')
 def supplier_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
@@ -413,7 +413,7 @@ def supplier_list(request):
     return render(request, 'suppliers/supplier_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.add_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_supplier','dashboard', 'No tienes permiso')
 def supplier_create(request):
     form = supplier_service.form_class()
     if request.method == 'POST':
@@ -425,7 +425,7 @@ def supplier_create(request):
     return render(request, 'suppliers/supplier_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.change_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_supplier','dashboard', 'No tienes permiso')
 def supplier_update(request, id):
     if request.method == 'POST':
         success, obj = supplier_service.update(id, request.POST)
@@ -437,7 +437,7 @@ def supplier_update(request, id):
     return render(request, 'suppliers/supplier_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_supplier','dashboard', 'No tienes permiso')
 def supplier_delete(request, id):
     if request.method == 'GET':
         success, obj = supplier_service.make_inactive(id)
@@ -446,7 +446,7 @@ def supplier_delete(request, id):
     return redirect('supplier_list')
 
 @login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_supplier','dashboard', 'No tienes permiso')
 def export_suppliers_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = supplier_service.list().order_by('fantasy_name')
@@ -481,7 +481,7 @@ def export_suppliers_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
 
 @login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = request.user.profile.per_page
@@ -544,7 +544,7 @@ def raw_material_list(request):
     return render(request, 'raw_material/raw_material_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_search(request):
     q = request.GET.get('q', '')
     raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
@@ -556,13 +556,13 @@ def raw_material_search(request):
     return JsonResponse(list(raw_materials), safe=False)
 
 @login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_view(request, id):
     raw_material = raw_material_service.get(id)
     return render(request, 'raw_material/raw_material_view.html', {'p': raw_material})
 
 @login_required
-@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_create(request):
     form = raw_material_service.form_class()
     if request.method == 'POST':
@@ -574,7 +574,7 @@ def raw_material_create(request):
     return render(request, 'raw_material/raw_material_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_update(request, id):
     if request.method == 'POST':
         success, obj = raw_material_service.update(id, request.POST)
@@ -586,7 +586,7 @@ def raw_material_update(request, id):
     return render(request, 'raw_material/raw_material_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No tienes permiso')
 def raw_material_delete(request, id):
     if request.method == 'GET':
         success = raw_material_service.delete(id)
@@ -595,7 +595,7 @@ def raw_material_delete(request, id):
     return redirect('raw_material_list') 
 
 @login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No tienes permiso')
 def export_raw_materials_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = raw_material_service.list_actives().select_related(
@@ -636,7 +636,7 @@ def export_raw_materials_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
 
 @login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_batch','dashboard', 'No tienes permiso')
 def product_batch_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
@@ -706,13 +706,13 @@ def product_batch_list(request):
     return render(request, 'batches/product_batch_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_batch','dashboard', 'No tienes permiso')
 def product_batch_view(request, id):
     batch = batch_service.get(id)
     return render(request, 'batches/product_batch.html', {'b': batch})
 
 @login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_batch','dashboard', 'No tienes permiso')
 def product_batch_create(request):
     form = batch_service.product_form_class()
     if request.method == 'POST':
@@ -724,7 +724,7 @@ def product_batch_create(request):
     return render(request, 'batches/product_batch_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_batch','dashboard', 'No tienes permiso')
 def product_batch_update(request, id):
     if request.method == 'POST':
         success, obj = batch_service.update_product_batch(id, request.POST)
@@ -736,7 +736,7 @@ def product_batch_update(request, id):
     return render(request, 'batches/product_batch_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_batch','dashboard', 'No tienes permiso')
 def product_batch_delete(request, id):
     if request.method == 'GET':
         success = batch_service.delete_product_batch(id)
@@ -745,7 +745,7 @@ def product_batch_delete(request, id):
     return redirect('product_batch_list')
 
 @login_required
-@permission_or_redirect('Products.view_product_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_product_batch','dashboard', 'No tienes permiso')
 def export_product_batches_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = batch_service.list_product().select_related("product").order_by('batch_code')
@@ -776,7 +776,7 @@ def export_product_batches_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Lotes_Productos") 
 
 @login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_batch','dashboard', 'No tienes permiso')
 def raw_batch_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
@@ -850,13 +850,13 @@ def raw_batch_list(request):
     return render(request, 'batches/raw_batch_list.html', context)
 
 @login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_batch','dashboard', 'No tienes permiso')
 def raw_batch_view(request, id):
     batch = batch_service.get(id)
     return render(request, 'batches/raw_batch.html', {'b': batch})
 
 @login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.add_batch','dashboard', 'No tienes permiso')
 def raw_batch_create(request):
     form = batch_service.raw_form_class()
     if request.method == 'POST':
@@ -868,7 +868,7 @@ def raw_batch_create(request):
     return render(request, 'batches/raw_batch_create.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_batch','dashboard', 'No tienes permiso')
 def raw_batch_update(request, id):
     if request.method == 'POST':
         success, obj = batch_service.update_raw_batch(id, request.POST)
@@ -880,7 +880,7 @@ def raw_batch_update(request, id):
     return render(request, 'batches/raw_batch_update.html', {'form': form})
 
 @login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.delete_batch','dashboard', 'No tienes permiso')
 def raw_batch_delete(request, id):
     if request.method == 'GET':
         success = batch_service.delete_raw_batch(id)
@@ -889,7 +889,7 @@ def raw_batch_delete(request, id):
     return redirect('raw_batch_list')
 
 @login_required
-@permission_or_redirect('Products.view_raw_batch','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.view_raw_batch','dashboard', 'No tienes permiso')
 def export_raw_batches_excel(request):
     q = (request.GET.get("q") or "").strip()
     qs = batch_service.list_raw_materials().select_related(
@@ -925,7 +925,7 @@ def export_raw_batches_excel(request):
     return generate_excel_response(headers, data_rows, "Lilis_Lotes_Materias_Primas") 
 
 @login_required
-@permission_or_redirect('Products.change_pricehistories','dashboard', 'No teni permiso')
+@permission_or_redirect('Products.change_pricehistories','dashboard', 'No tienes permiso')
 def price_histories_save(request, id):
     form = price_histories_service.form_class()
     if request.method == 'POST':
