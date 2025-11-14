@@ -44,21 +44,20 @@ class WareClient(models.Model):
     
 
 class Transaction(models.Model):
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="transactions")
-    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="transactions")
-    date = models.DateField(auto_now_add=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="transactions",null=True, blank=True)
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="transactions",null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
+    type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida')], default='I')
+    quantity = models.IntegerField(default=1)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
+    batch_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    serie_code = models.CharField(max_length=100, null=True, blank=True)
+    expiration_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.get_type_display()} - Lote: {self.batch.batch_code} - Bodega: {self.warehouse.name} - {self.date}'
-
-class TransactionDetail(models.Model):
-    batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name="transactiondetails")
-    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="transactiondetails")
-
-    def __str__(self):
-        return f'{self.batch.product.name} - {self.batch.batch_code} - {self.Transaction.date}'
-
+        return f'{self.type}: Lote: {self.batch_code} - Bodega: {self.warehouse.name} - {self.date}'
 
 class SaleOrder(models.Model):
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="purchase_orders")

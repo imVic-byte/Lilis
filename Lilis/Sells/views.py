@@ -7,12 +7,15 @@ from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
 from django.http import JsonResponse
 from Products.services import BatchService
+from Products.services import ProductService
+from datetime import date
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
 sale_order_service = SaleOrderService()
 transaction_service = TransactionService()
 batch_service = BatchService()
+product_service = ProductService()
 
 # ===================================
 # VISTAS DE CLIENTES
@@ -592,9 +595,48 @@ def export_warehouse_excel(request):
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
 
+def get_warehouses_by_client(request):
+    client_id = request.GET.get('client_id')
+    warehouses_list = []
+
+    if client_id:
+        client = client_service.get(client_id)
+        if client:
+            warehouses = warehouse_service.filter_by_client(client)
+            for w in warehouses:
+                warehouses_list.append({
+                    'id': w.id,
+                    'name': w.name,
+                    'address': w.address,
+                    'location': w.location,
+                })
+
+    return JsonResponse({'warehouses': warehouses_list})
 
 def transaction(request):
+    products = product_service.list_actives()
     lotes = batch_service.list_product()
     clients = client_service.list_actives()
-    warehouses = warehouse_service.list()
-    return render(request,'transactions/transaction.html',{'lotes': lotes, 'clients': clients})
+    transactions = transaction_service.list()
+    today = []
+    for t in transactions:
+        t.date = t.date.date()
+        if t.date == date.today():
+            today.append(t)
+    transactions_today = len(today)
+    if request.method == 'POST':
+        data = {
+            'warehouse':request.POST.get('warehouse'),
+            'client':request.POST.get('client'),
+            'user':request.user.profile,
+            'notes':request.POST.get('observaciones'),
+            'type':request.POST.get('tipo'),
+            'quantity':request.POST.get('cantidad'),
+            'product':request.POST.get('producto'),
+            'batch_code':request.POST.get('lote'),
+            'serie_code':request.POST.get('serie'),
+            'expiration_date':request.POST.get('fecha'),
+        }
+        transaction_service.create_transaction(data)
+        return redirect('transaction_list')
+    return render(request,'transactions/transaction.html',{'lotes': lotes, 'products': products, 'clients': clients, 'transactions': transactions, 'transactions_today': transactions_today, 'today': date.today()})

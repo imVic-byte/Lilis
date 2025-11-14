@@ -34,6 +34,7 @@ warehouses = [
     path('warehouse_delete/<int:id>/', views.warehouse_delete, name='warehouse_delete'),
     path('warehouse_view/<int:id>/', views.warehouse_view, name='warehouse_view'),
     path('export_warehouse_excel/', views.export_warehouse_excel, name='export_warehouse_excel'),
+    path('warehouses_by_client/', views.get_warehouses_by_client, name='warehouses_by_client'),
 ]
 
 urlpatterns = [

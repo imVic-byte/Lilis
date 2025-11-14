@@ -1,17 +1,18 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Lista de Clientes {% endblock title %}
+{% block title %} Transacciones {% endblock title %}
 {% block content %}
 <div class="row mb-3">
     <div class="col-12 text-center">
         <h1 class="page-title">Transaccion de Lotes</h1>
     </div>
 </div>
+
 <div class="row mb-4">
     <div class="col-md-4">
         <div class="card text-center p-3 shadow-sm">
-            <h5 class="mb-1">Movimientos (hoy)</h5>
-            <h2 class="fw-bold">0</h2>
+            <h5 class="mb-1">Movimientos (hoy)</h5>  
+            <h2 class="fw-bold"> {{ transactions_today }} </h2>
         </div>
     </div>
 
@@ -31,46 +32,49 @@
 </div>
 
 
-<!-- CONTENEDOR REGISTRO -->
 <div class="card shadow-sm mb-4 p-4">
-
-    <h4 class="mb-3">Registrar movimiento</h4>
-
-    <!-- NAV TABS -->
-    <ul class="nav nav-tabs mb-3" id="registroTabs">
-        <li class="nav-item">
-            <a class="nav-link active" data-bs-toggle="tab" href="#tab1">1. Datos del movimiento</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tab2">2. Control avanzado</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#tab3">3. Referencias/Observaciones</a>
-        </li>
-    </ul>
-
-    <div class="tab-content">
-
-        <!-- TAB 1 -->
-        <div class="tab-pane fade show active" id="tab1">
-            {% include 'transactions/tab_datos.html' %}
+    <form id="transaction-form" action="#" method="POST">
+        <div class="row">
+            <div class="col-6">
+                <h4 class="mb-3">Registrar movimiento</h4>
+            </div>
+            <div class="col-6">
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar movimiento</button>
+                    <button type="reset" class="btn btn-secondary">Limpiar</button>
+                </div>
+            </div>
         </div>
+        {% csrf_token %}
+        <ul class="nav nav-tabs mb-3" id="registroTabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tab1">1. Datos del movimiento</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab2">2. Control avanzado</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tab3">3. Referencias/Observaciones</a>
+            </li>
+        </ul>
 
-        <!-- TAB 2 -->
-        <div class="tab-pane fade" id="tab2">
-            {% include 'transactions/tab_control.html' %}
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="tab1">
+                {% include 'transactions/tab_datos.html' %}
+            </div>
+            <div class="tab-pane fade" id="tab2">
+                {% include 'transactions/tab_control.html' %}
+            </div>
+            <div class="tab-pane fade" id="tab3">
+                {% include 'transactions/tab_refs.html' %}
+            </div>
         </div>
+    </form>
 
-        <!-- TAB 3 -->
-        <div class="tab-pane fade" id="tab3">
-            {% include 'transactions/tab_refs.html' %}
-        </div>
-
-    </div>
 </div>
 
 
-<!-- TABLA MOVIMIENTOS -->
 <div class="card shadow-sm p-4">
     <div class="row mb-3">
         <div class="col-md-3">
@@ -110,48 +114,80 @@
                 <th>Lote</th>
                 <th>Serie</th>
                 <th>Vence</th>
-                <th>Doc Ref</th>
                 <th>Acciones</th>
             </tr>
         </thead>
 
         <tbody>
+            {% for t in transactions %}
             <tr>
-                <td>2025-09-10 09:30</td>
-                <td><span class="badge bg-success">ingreso</span></td>
-                <td>SKU-0001</td>
-                <td>76.543.210-5</td>
-                <td>BOD-CENTRAL</td>
-                <td class="text-success fw-bold">+10</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>OC-101</td>
+                <td>{{ t.date }}</td>
+                {% if t.type == 'I' %}
+                <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
+                {% else %}
+                <td><span class="badge bg-success text-center">{{ t.type }}</span></td>
+                {% endif %}
+                <td>{{ t.product.sku }}</td>
+                <td>{{ t.client.rut }}</td>
+                <td>{{ t.warehouse.name }}</td>
+                {% if t.type == 'I' %}
+                <td class="text-danger fw-bold">- {{ t.quantity }}</td>
+                {% else %}
+                <td class="text-success fw-bold">+ {{ t.quantity }}</td>
+                {% endif %}
+                <td>{{ t.batch_code|default_if_none:"-" }}</td>
+                <td>{{ t.serie_code|default_if_none:"-" }}</td>
+                <td>{{ t.expiration_date }}</td>
                 <td>
                     <button class="btn btn-primary btn-sm">Editar</button>
                     <button class="btn btn-danger btn-sm">Eliminar</button>
                 </td>
             </tr>
-
-            <tr>
-                <td>2025-09-10 15:00</td>
-                <td><span class="badge bg-danger">salida</span></td>
-                <td>SKU-0001</td>
-                <td>—</td>
-                <td>BOD-CENTRAL</td>
-                <td class="text-danger fw-bold">-2</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>FAC-900</td>
-                <td>
-                    <button class="btn btn-primary btn-sm">Editar</button>
-                    <button class="btn btn-danger btn-sm">Eliminar</button>
-                </td>
-            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
 
 
 {% endblock content %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('transaction-form').addEventListener('submit', function (e) {
+            const fecha = document.getElementById('fecha').value;
+            const tipo = document.getElementById('tipo').value;
+            const cantidad = document.getElementById('cantidad').value;
+            const producto = document.getElementById('producto-select').value;
+            const cliente = document.getElementById('client-select').value;
+            const bodega = document.getElementById('warehouse-select').value;
+
+            const loteCheckbox = document.getElementById('control-lotes');
+            const serieCheckbox = document.getElementById('control-series');
+            const vencimientoCheckbox = document.getElementById('control-vencimiento');
+            const loteInput = document.getElementById('input-lote');
+            const serieInput = document.getElementById('input-serie');
+            const vencimientoInput = document.getElementById('input-vencimiento');
+            const observaciones = document.getElementById('observaciones');
+
+            let errores = [];
+
+            if (!fecha) errores.push("Debe seleccionar una fecha.");
+            if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
+            if (!cantidad || cantidad <= 0) errores.push("La cantidad debe ser mayor a 0.");
+            if (!producto) errores.push("Debe seleccionar un producto.");
+            if (!cliente) errores.push("Debe seleccionar un cliente/proveedor.");
+            if (!bodega) errores.push("Debe seleccionar una bodega.");
+
+            if (loteCheckbox.checked && !loteInput.value) errores.push("Debe ingresar un lote.");
+            if (serieCheckbox.checked && !serieInput.value) errores.push("Debe ingresar una serie.");
+            if (vencimientoCheckbox.checked && !vencimientoInput.value) errores.push("Debe ingresar fecha de vencimiento.");
+            if (!observaciones.value) errores.push("Debe ingresar observaciones.");
+            if (errores.length > 0) {
+                e.preventDefault();
+                alert(errores.join("\n"));
+            }
+        });
+    });
+</script>
+
+{% endblock %}

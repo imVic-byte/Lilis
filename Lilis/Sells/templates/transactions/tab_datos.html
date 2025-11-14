@@ -1,50 +1,72 @@
 <div class="row mb-3">
     <div class="col-md-4">
         <label class="form-label">Fecha</label>
-        <input type="datetime-local" class="form-control">
+        <input type="datetime-local" class="form-control" name="fecha" id="fecha">
     </div>
-
     <div class="col-md-4">
         <label class="form-label">Tipo</label>
-        <select class="form-select">
+        <select class="form-select" name="tipo" id="tipo">
             <option>Seleccione...</option>
             <option value="ingreso">Ingreso</option>
             <option value="salida">Salida</option>
         </select>
     </div>
-
     <div class="col-md-4">
         <label class="form-label">Cantidad</label>
-        <input type="number" class="form-control">
+        <input type="number" class="form-control" name="cantidad" id="cantidad">
     </div>
 </div>
-
 <div class="row mb-3">
     <div class="col-md-4">
-        <label class="form-label">Lote</label>
-        <select class="form-select" name="batch" id="0">
-            {% for batch in lotes %}
-            <option value="{batch.id}">Lote de: {{ batch.product.name }}</option>
+        <label class="form-label">Producto</label>
+        <select class="form-select" name="producto" id="product-select">
+            {% for p in products %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
             {% endfor %}
         </select>
     </div>
-
     <div class="col-md-4">
         <label class="form-label">Cliente/Proveedor</label>
-        <select class="form-select" name="client" id="0">
+        <select class="form-select" name="client" id="client-select">
+            <option value="">Seleccione...</option>
             {% for c in clients %}
-            <option value="{c.id}">{{ c.bussiness_name }}</option>
+                <option value="{{ c.id }}" >{{ c.bussiness_name }} / {{ c.fantasy_name }}</option>
             {% endfor %}
         </select>
     </div>
-
     <div class="col-md-4">
         <label class="form-label">Bodega</label>
-        <input type="text" class="form-control" value="BOD-CENTRAL">
+        <select class="form-select" name="warehouse" id="warehouse-select">
+            <option value="">Seleccione un cliente primero</option>
+        </select>
     </div>
 </div>
-
-<div class="text-end mt-3">
-    <button class="btn btn-primary">Guardar movimiento</button>
-    <button class="btn btn-secondary">Limpiar</button>
-</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientSelect = document.getElementById('client-select');
+        const warehouseSelect = document.getElementById('warehouse-select');
+        clientSelect.addEventListener('change', function () {
+            const clientId = this.value;
+            if (!clientId) {
+                warehouseSelect.innerHTML = '<option value="">Seleccione un cliente primero</option>';
+                return;
+            }
+            fetch(`/sells/warehouses_by_client/?client_id=${clientId}`)
+                .then(r => r.json())
+                .then(data => {
+                    warehouseSelect.innerHTML = '';
+                    if (data.warehouses.length === 0) {
+                        warehouseSelect.innerHTML = '<option value="">No hay bodegas para este cliente</option>';
+                        return;
+                    }
+                    data.warehouses.forEach(wc => {
+                        const option = document.createElement('option');
+                        option.value = wc.id;
+                        option.textContent = `${wc.name} - ${wc.address} (${wc.location})`;
+                        warehouseSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar bodegas:', error));
+        });
+    });
+</script>

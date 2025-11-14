@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from Main.CRUD import CRUD
-from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail, TransactionDetail
+from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail
 from .forms import ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
 import datetime
+from Products.services import ProductService
 
 class ClientService(CRUD):  
     def __init__(self):
@@ -57,8 +58,8 @@ class WarehouseService(CRUD):
         if wareclients:
             for w in wareclients:
                 warehouses.append(w.warehouse)
-                return warehouses
-        return None
+            return warehouses
+        return []
     
     def warehouse_assign(self, client, warehouse_id):
         warehouse = self.model.objects.get(id=warehouse_id)
@@ -139,7 +140,21 @@ class SaleOrderService(CRUD):
 class TransactionService(CRUD):
     def __init__(self):
         self.model = Transaction
-        self.details = TransactionDetail
+
+    def create_transaction(self, data):
+        warehouse_service = WarehouseService()
+        client_service = ClientService()
+        product_service = ProductService()
+        warehouse = warehouse_service.get(data['warehouse'])
+        client = client_service.get(data['client'])
+        product = product_service.get(data['product'])
+        data['warehouse'] = warehouse
+        data['client'] = client
+        data['product'] = product
+        transaction = self.model.objects.create(**data)
+        if transaction:
+            return True, transaction
+        return False, None
     
     def get_by_warehouse(self, warehouse_id):
         return self.model.objects.filter(warehouse=warehouse_id)

@@ -164,3 +164,5 @@ class SaleOrderDetailForm(forms.ModelForm):
             sale_order_detail.save()
             return sale_order_detail
         return sale_order_detail
+
+

@@ -33,6 +33,9 @@ class ProductService(CRUD):
     def search_by_description(self, description):
         return self.model.objects.filter(description__icontains=description)
     
+    def list_actives(self):
+        return self.model.objects.filter(is_active=True)
+    
 class SupplierService(CRUD):
     def __init__(self):
         self.model = Supplier
