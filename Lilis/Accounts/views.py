@@ -224,7 +224,7 @@ def role_changer(request):
     field_name = request.GET.get("field_name")
     previous_data = request.GET.get("previous_data")
     if request.method == "POST":
-        role = user_service.roles.objects.get(id=request.POST.get("role"))
+        role = user_service.roles.objects.get(id=request.POST.get("groups"))
         success = user_service.edit_field(user_id, field_name, role)
         if success:
             return redirect('user_view', id=user_id)

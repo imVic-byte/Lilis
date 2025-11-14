@@ -271,20 +271,20 @@ class UpdateFieldForm(forms.Form):
 
 class RoleForm(forms.ModelForm):
     class Meta:
-        model = Profile
-        fields = ['role']
+        model = User
+        fields = ['groups']
         labels = {
-            'role': '',
+            'groups': '',
         }
         widgets = {
-            'role': forms.Select(attrs={
+            'groups': forms.Select(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: Seleccione Rol'
             }),
         }
     
     def clean_role(self):
-        role = self.cleaned_data.get("role")
+        role = self.cleaned_data.get("groups")
         if not role:
             raise forms.ValidationError("Debe seleccionar un rol válido.")
         return role

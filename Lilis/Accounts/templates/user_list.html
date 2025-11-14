@@ -77,7 +77,7 @@
                         <li class="list-group-item"><strong>Email:</strong> {{ user_obj.email|default:"No especificado" }}
                         </li>
                         <li class="list-group-item"><strong>Teléfono:</strong> {{ user_obj.profile.phone|default:"No especificado" }}</li>
-                        <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.profile.role.group.name|default:"No especificado" }}</li>
+                        <li class="list-group-item"><strong>Rol:</strong> {{ user_obj.groups.first.name }}</li>
                     </ul>
                 </div>
             </div>
@@ -116,9 +116,9 @@
                         <th>Teléfono</th>
 
                         <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=profile__role__group__name&order={% if current_sort_by == 'profile__role__group__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                            <a href="?{{ querystring_sorting }}&sort_by=user__groups__first__name&order={% if current_sort_by == 'user__groups__first__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
                                 <strong>Rol</strong>
-                                {% if current_sort_by == 'profile__role__group__name' %}
+                                {% if current_sort_by == 'user' %}
                                     {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
                                 {% endif %}
                             </a>
@@ -135,7 +135,7 @@
                         <td>@{{ user_obj.username }}</td>
                         <td>{{ user_obj.email|default:"-" }}</td>
                         <td>{{ user_obj.profile.phone|default:"-" }}</td>
-                        <td>{{ user_obj.profile.role.group.name|default:"-" }}</td>
+                        <td>{{ user_obj.groups.first.name|default:"-" }}</td>
                         <td>
                             {% if perms.auth.change_user %}
                             <a href="{% url 'user_view' user_obj.id %}" class="btn btn-primary btn-sm">Editar</a>
