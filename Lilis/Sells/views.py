@@ -635,8 +635,9 @@ def transaction(request):
             'product':request.POST.get('producto'),
             'batch_code':request.POST.get('lote'),
             'serie_code':request.POST.get('serie'),
-            'expiration_date':request.POST.get('fecha'),
+            'expiration_date':request.POST.get('vencimiento'),
         }
+        print(data['expiration_date'])
         transaction_service.create_transaction(data)
         return redirect('transaction_list')
     return render(request,'transactions/transaction.html',{'lotes': lotes, 'products': products, 'clients': clients, 'transactions': transactions, 'transactions_today': transactions_today, 'today': date.today()})

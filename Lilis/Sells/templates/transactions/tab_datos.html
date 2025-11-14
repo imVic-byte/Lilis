@@ -1,7 +1,7 @@
 <div class="row mb-3">
     <div class="col-md-4">
         <label class="form-label">Fecha</label>
-        <input type="datetime-local" class="form-control" name="fecha" id="fecha">
+        <input type="datetime-local" class="form-control" name="fecha" id="fecha" disabled>
     </div>
     <div class="col-md-4">
         <label class="form-label">Tipo</label>
@@ -20,6 +20,7 @@
     <div class="col-md-4">
         <label class="form-label">Producto</label>
         <select class="form-select" name="producto" id="product-select">
+            <option value="">Seleccione...</option>
             {% for p in products %}
                 <option value="{{ p.id }}">{{ p.name }}</option>
             {% endfor %}
@@ -70,3 +71,13 @@
         });
     });
 </script>
+<script>
+            window.addEventListener('DOMContentLoaded', function () {
+                const input = document.getElementById('fecha');
+                if (!input) return;
+                const now = new Date();
+                const tzOffset = now.getTimezoneOffset() * 60000;
+                const localISO = new Date(now - tzOffset).toISOString().slice(0,16);
+                input.value = localISO;
+            });
+        </script>

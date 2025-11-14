@@ -122,25 +122,24 @@
             {% for t in transactions %}
             <tr>
                 <td>{{ t.date }}</td>
-                {% if t.type == 'I' %}
-                <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
-                {% else %}
+                {% if t.type == 'ingreso' %}
                 <td><span class="badge bg-success text-center">{{ t.type }}</span></td>
+                {% else %}
+                <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
                 {% endif %}
                 <td>{{ t.product.sku }}</td>
                 <td>{{ t.client.rut }}</td>
                 <td>{{ t.warehouse.name }}</td>
-                {% if t.type == 'I' %}
-                <td class="text-danger fw-bold">- {{ t.quantity }}</td>
-                {% else %}
+                {% if t.type == 'ingreso' %}
                 <td class="text-success fw-bold">+ {{ t.quantity }}</td>
+                {% else %}
+                <td class="text-danger fw-bold">- {{ t.quantity }}</td>
                 {% endif %}
                 <td>{{ t.batch_code|default_if_none:"-" }}</td>
                 <td>{{ t.serie_code|default_if_none:"-" }}</td>
                 <td>{{ t.expiration_date }}</td>
                 <td>
                     <button class="btn btn-primary btn-sm">Editar</button>
-                    <button class="btn btn-danger btn-sm">Eliminar</button>
                 </td>
             </tr>
             {% endfor %}
@@ -151,43 +150,142 @@
 
 {% endblock content %}
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('transaction-form').addEventListener('submit', function (e) {
-            const fecha = document.getElementById('fecha').value;
-            const tipo = document.getElementById('tipo').value;
-            const cantidad = document.getElementById('cantidad').value;
-            const producto = document.getElementById('producto-select').value;
-            const cliente = document.getElementById('client-select').value;
-            const bodega = document.getElementById('warehouse-select').value;
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('transaction-form');
+    const ADMIN_OVERRIDE_CODE = "Admin123";
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
 
-            const loteCheckbox = document.getElementById('control-lotes');
-            const serieCheckbox = document.getElementById('control-series');
-            const vencimientoCheckbox = document.getElementById('control-vencimiento');
-            const loteInput = document.getElementById('input-lote');
-            const serieInput = document.getElementById('input-serie');
-            const vencimientoInput = document.getElementById('input-vencimiento');
-            const observaciones = document.getElementById('observaciones');
+        const getVal = id => {
+            const el = document.getElementById(id);
+            return el ? (el.value || '').trim() : '';
+        };
 
-            let errores = [];
+        const fecha = getVal('fecha');
+        const tipo = getVal('tipo');
+        const cantidad = getVal('cantidad');
+        const producto = getVal('product-select');
+        const cliente = getVal('client-select');
+        const bodega = getVal('warehouse-select');
 
-            if (!fecha) errores.push("Debe seleccionar una fecha.");
-            if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
-            if (!cantidad || cantidad <= 0) errores.push("La cantidad debe ser mayor a 0.");
-            if (!producto) errores.push("Debe seleccionar un producto.");
-            if (!cliente) errores.push("Debe seleccionar un cliente/proveedor.");
-            if (!bodega) errores.push("Debe seleccionar una bodega.");
+        const loteCheckbox = document.getElementById('control-lotes');
+        const serieCheckbox = document.getElementById('control-series');
+        const vencimientoCheckbox = document.getElementById('control-vencimiento');
+        const loteInput = document.getElementById('input-lote');
+        const serieInput = document.getElementById('input-serie');
+        const vencimientoInput = document.getElementById('input-vencimiento');
+        const observaciones = document.getElementById('observaciones');
 
-            if (loteCheckbox.checked && !loteInput.value) errores.push("Debe ingresar un lote.");
-            if (serieCheckbox.checked && !serieInput.value) errores.push("Debe ingresar una serie.");
-            if (vencimientoCheckbox.checked && !vencimientoInput.value) errores.push("Debe ingresar fecha de vencimiento.");
-            if (!observaciones.value) errores.push("Debe ingresar observaciones.");
-            if (errores.length > 0) {
-                e.preventDefault();
-                alert(errores.join("\n"));
+        let errores = [];
+
+        if (!fecha) errores.push("Debe seleccionar una fecha.");
+        if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
+        if (!cantidad) errores.push("La cantidad no debe ser 0");
+        if (!producto) errores.push("Debe seleccionar un producto.");
+        if (!cliente) errores.push("Debe seleccionar un cliente/proveedor.");
+        if (!bodega) errores.push("Debe seleccionar una bodega.");
+
+        if (loteCheckbox && loteCheckbox.checked && !loteInput || !loteInput.value.trim()) {
+            errores.push("Debe ingresar un lote.");
+        }
+        if (serieCheckbox && serieCheckbox.checked && !serieInput || !serieInput.value.trim()) {
+            errores.push("Debe ingresar una serie.");
+        }
+
+        if (loteCheckbox && loteCheckbox.checked && loteInput && vencimientoCheckbox && !vencimientoCheckbox.checked || !vencimientoInput || !vencimientoInput.value.trim()) {
+            errores.push("Debe ingresar fecha de vencimiento.");
+        }
+
+        if (loteCheckbox && !loteCheckbox.checked && serieCheckbox && !serieCheckbox.checked) {
+            errores.push("Debe seleccionar un tipo de control.");
+        }
+
+        if (vencimientoCheckbox && vencimientoCheckbox.checked) {
+            if (!vencimientoInput || !vencimientoInput.value.trim()) {
+            errores.push("Debe ingresar fecha de vencimiento.");
+            } else if (new Date(vencimientoInput.value) < new Date()) {
+            errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
             }
-        });
+        }
+
+        if (!observaciones || !observaciones.value.trim()) {
+            errores.push("Debe ingresar observaciones.");
+        } else if (observaciones.value.trim().length > 500) {
+            errores.push("Las observaciones no pueden exceder los 500 caracteres.");
+        }
+
+        if (errores.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Errores en el formulario',
+                html: '<ul style="text-align:left; margin:0;">' + errores.map(err => '<li>' + err + '</li>').join('') + '</ul>',
+                confirmButtonText: 'Corregir'
+            });
+            return;
+        }
+
+        if (cantidad !== '' && !isNaN(cantidad) && Number(cantidad) < 0) {
+            Swal.fire({
+                title: 'Stock Negativo Detectado',
+                text: 'Estás a punto de registrar un stock negativo (' + cantidad + '). Por favor, ingresa el código de administrador para autorizar esta acción.',
+                icon: 'warning',
+                input: 'password',
+                inputPlaceholder: 'Ingresa el código de administrador',
+                inputAttributes: {
+                    autocapitalize: 'off',
+                    autocorrect: 'off'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Autorizar y Guardar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                showLoaderOnConfirm: true,
+                preConfirm: (code) => {
+                    if (code === ADMIN_OVERRIDE_CODE) {
+                        return true;
+                    } else {
+                        Swal.showValidationMessage('Código incorrecto');
+                        return false;
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Autorizado',
+                        text: 'Stock negativo guardado.',
+                        icon: 'success',
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => form.submit(), 2000);
+                }
+            });
+        } else {
+            Swal.fire({
+                title: '¿Desea guardar el movimiento?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Guardando...',
+                        didOpen: () => {
+                            Swal.showLoading();
+                            form.submit();
+                        },
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
     });
+});
 </script>
 
 {% endblock %}
