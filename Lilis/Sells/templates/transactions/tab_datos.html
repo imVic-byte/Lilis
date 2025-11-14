@@ -1,0 +1,50 @@
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Fecha</label>
+        <input type="datetime-local" class="form-control">
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Tipo</label>
+        <select class="form-select">
+            <option>Seleccione...</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="salida">Salida</option>
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Cantidad</label>
+        <input type="number" class="form-control">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Lote</label>
+        <select class="form-select" name="batch" id="0">
+            {% for batch in lotes %}
+            <option value="{batch.id}">Lote de: {{ batch.product.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Cliente/Proveedor</label>
+        <select class="form-select" name="client" id="0">
+            {% for c in clients %}
+            <option value="{c.id}">{{ c.bussiness_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Bodega</label>
+        <input type="text" class="form-control" value="BOD-CENTRAL">
+    </div>
+</div>
+
+<div class="text-end mt-3">
+    <button class="btn btn-primary">Guardar movimiento</button>
+    <button class="btn btn-secondary">Limpiar</button>
+</div>

@@ -44,6 +44,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'product_batch_list' %}">Lotes de Productos</a></li>
                         <li><a class="dropdown-item" href="{% url 'raw_batch_list' %}">Lotes de Materia Prima</a></li>
+                        <li><a class="dropdown-item" href="{% url 'transaction_list' %}">Transacciones</a></li>
                     </ul>
                     
                 </li>
@@ -58,9 +59,6 @@
                     <ul class="dropdown-menu">
                         {% if perms.Sells.view_client %}
                         <li><a class="dropdown-item" href="{% url 'client_list_all' %}">Clientes</a></li>
-                        {% endif %}
-                        {% if perms.Sells.view_location %}
-                        <li><a class="dropdown-item" href="{% url 'location_list' %}">Direcciones</a></li>
                         {% endif %}
                         {% if perms.Sells.view_warehouse %}
                         <li><a class="dropdown-item" href="{% url 'warehouse_list' %}">Bodegas</a></li>

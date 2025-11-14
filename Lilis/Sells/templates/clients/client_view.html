@@ -1,61 +1,95 @@
 {% extends 'main/base.html' %}
 {% load crispy_forms_tags %}
-{% block title %} Actualizar Producto {% endblock title %}
-{% block content %}
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">Detalle del Cliente</h4>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center mb-3">
-                            {{ b.fantasy_name }}
-                        </h5>
 
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>Razón social:</strong> {{ b.bussiness_name }}
+{% block title %} Detalle del Cliente {% endblock title %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Detalle del Cliente</h4>
+            </div>
+
+            <div class="card-body">
+
+                <h4 class="text-center mb-4">{{ b.fantasy_name }}</h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-2">Información General</h5>
+                        <ul class="list-group mb-4">
+                            <li class="list-group-item"><strong>Razón social:</strong> {{ b.bussiness_name }}</li>
+                            <li class="list-group-item"><strong>RUT:</strong> {{ b.rut }}</li>
+                            <li class="list-group-item"><strong>Email:</strong> {{ b.email|default:"No registrado" }}
                             </li>
-                            <li class="list-group-item">
-                                <strong>RUT:</strong> {{ b.rut }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Email:</strong> {{ b.email|default:"No registrado" }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Teléfono:</strong> {{ b.phone|default:"No registrado" }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Límite de crédito:</strong> ${{ b.credit_limit }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Deuda actual:</strong> ${{ b.debt }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Deuda máxima:</strong> ${{ b.max_debt }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Cuenta suspendida:</strong> {{ b.is_suspended|yesno:"Sí,No" }}
+                            <li class="list-group-item"><strong>Teléfono:</strong> {{ b.phone|default:"No registrado" }}
                             </li>
                         </ul>
 
-                        <div class="mt-4 text-center">
-                            <a href="{% url 'client_update' b.id %}" class="btn btn-primary me-2">
-                                Editar
-                            </a>
-                            <a href="{% url 'client_list_all' %}" class="btn btn-secondary">
-                                Volver a la lista
-                            </a>
-                            <button type="button" class="btn btn-danger btn-delete" 
-                                    data-url="{% url 'client_delete' b.id %}"
-                                    data-item-name="{{ b.fantasy_name }}">
-                                Eliminar
-                            </button>                             
-                        </div>
+                        <h5 class="mb-2">Crédito</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Límite:</strong> ${{ b.credit_limit }}</li>
+                            <li class="list-group-item"><strong>Deuda actual:</strong> ${{ b.debt }}</li>
+                            <li class="list-group-item"><strong>Deuda máxima:</strong> ${{ b.max_debt }}</li>
+                            <li class="list-group-item"><strong>Suspendido:</strong> {{ b.is_suspended|yesno:"Sí,No" }}
+                            </li>
+                        </ul>
                     </div>
+                    <div class="col-md-6">
+                        <div class="row mb-2">
+                            <div class="col-6">
+
+                                <h5 class="">Bodegas Asociadas</h5>
+                            </div>
+                            <div class="col-6 text-end align-text-bottom align-top">
+                                <a class="btn btn-danger align-text-bottom align-top" href="{% url 'warehouse_create' %}?next={{ request.path }}&client={{ b.id }}">
+                                    <i class="bi bi-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        {% if warehouses %}
+                        <div class="list-group">
+                            {% for w in warehouses %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ w.warehouse.name }}</strong><br>
+                                    <small class="text-muted">{{ w.warehouse.address }} - {{ w.warehouse.location }} - {{ w.association_date }}</small>
+                                    {% if w.status == 'A' %}
+                                    <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'warehouse_update' w.warehouse.id %}?next={{ request.path }}&client={{ b.id }}" class="btn btn-sm btn-outline-primary">
+                                    Ver / Editar
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary text-center">
+                            No hay bodegas asociadas.
+                        </div>
+                        {% endif %}
+                    </div>
+
                 </div>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'client_update' b.id %}" class="btn btn-primary me-2">Editar</a>
+                    <a href="{% url 'client_list_all' %}" class="btn btn-secondary me-2">Volver</a>
+                    <button type="button" class="btn btn-danger btn-delete" data-url="{% url 'client_delete' b.id %}"
+                        data-item-name="{{ b.fantasy_name }}">
+                        Eliminar
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
+</div>
+
 {% endblock content %}

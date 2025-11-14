@@ -6,11 +6,13 @@ from .services import ClientService, WarehouseService, SaleOrderService, Transac
 from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
 from django.http import JsonResponse
+from Products.services import BatchService
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
 sale_order_service = SaleOrderService()
 transaction_service = TransactionService()
+batch_service = BatchService()
 
 # ===================================
 # VISTAS DE CLIENTES
@@ -148,7 +150,8 @@ def client_search(request):
 def client_view(request, id):
     if request.method == 'GET':
         client = client_service.get(id)
-        return render(request, 'clients/client_view.html', {'b': client})
+        warehouses = client.wareclients.all()
+        return render(request, 'clients/client_view.html', {'b': client, 'warehouses': warehouses})
     else:
         return redirect('client_list_all') # ¡Redirect actualizado!
 
@@ -435,7 +438,7 @@ def warehouse_list(request):
     # ===================================
 
     # 4. Queryset base (¡quitamos el .order_by() de aquí!)
-    qs = warehouse_service.model.objects.select_related("location").all()
+    qs = warehouse_service.model.objects.all()
 
     # 5. Aplicar filtro de búsqueda
     if q:
@@ -506,22 +509,43 @@ def warehouse_view(request, id):
 def warehouse_create(request):
     form = warehouse_service.form_class()
     if request.method == 'POST':
-        success, obj = warehouse_service.save(request.POST)
-        if success:
-            return redirect('warehouse_list')
+        if request.GET.get('client'):
+            client = client_service.get(request.GET.get('client'))
+            success, warehouse = warehouse_service.save(request.POST)
+            if success:
+                success2, obj2 = warehouse_service.warehouse_assign(client, warehouse.id)
+                if success2:
+                    next = request.GET.get('next')
+                    return redirect(next)
+                else:
+                    return render(request, 'warehouses/warehouse_create.html', {'form': obj, 'error': 'No se pudo asignar la bodega.'})
+            else:
+                return render(request, 'warehouses/warehouse_create.html', {'form': obj, 'error': 'No se pudo crear la bodega.'})
         else:
-            return render(request, 'warehouses/warehouse_create.html', {'form': obj})
+            success, obj = warehouse_service.save(request.POST)
+            if success:
+                return redirect('warehouse_list')
+    else:
+        return render(request, 'warehouses/warehouse_create.html', {'form': form})
     return render(request, 'warehouses/warehouse_create.html', {'form': form})
 
 @login_required
 @permission_or_redirect('Sells.change_warehouse','dashboard', 'No teni permiso')
 def warehouse_update(request, id):
     if request.method == 'POST':
-        success, obj = warehouse_service.update(id, request.POST)
-        if success:
-            return redirect('warehouse_list')
+        if request.GET.get('client'):
+            success, obj = warehouse_service.update(id, request.POST)
+            if success:
+                next = request.GET.get('next')
+                return redirect(next)
+            else:
+                return render(request, 'warehouses/warehouse_update.html', {'form': obj})
         else:
-            return render(request, 'warehouses/warehouse_update.html', {'form': obj})
+            success, obj = warehouse_service.update(id, request.POST)
+            if success:
+                return redirect('warehouse_list')
+            else:
+                return render(request, 'warehouses/warehouse_update.html', {'form': obj})
     else:
         warehouse = warehouse_service.model.objects.get(id=id)
         form = warehouse_service.form_class(instance=warehouse)
@@ -533,6 +557,9 @@ def warehouse_delete(request, id):
     if request.method == 'GET':
         success = warehouse_service.delete(id)
         if success:
+            if request.GET.get('client'):
+                next = request.GET.get('next')
+                return redirect(next)
             return redirect('warehouse_list')
     return redirect('warehouse_list')
 
@@ -567,4 +594,7 @@ def export_warehouse_excel(request):
 
 
 def transaction(request):
-    pass
+    lotes = batch_service.list_product()
+    clients = client_service.list_actives()
+    warehouses = warehouse_service.list()
+    return render(request,'transactions/transaction.html',{'lotes': lotes, 'clients': clients})

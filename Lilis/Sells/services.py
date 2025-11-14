@@ -50,18 +50,6 @@ class WarehouseService(CRUD):
         self.location_model = Location
         self.form_class = WarehouseForm
         self.location_form_class = LocationForm
-
-    def filter_by_city(self, city):
-        location = self.location_model.objects.filter(city=city)
-        if location:
-            return self.model.objects.filter(location__in=location)
-        return None
-    
-    def filter_by_country(self, country):
-        location = self.location_model.objects.filter(country=country)
-        if location:
-            return self.model.objects.filter(location__in=location)
-        return None
     
     def filter_by_client(self, client):
         wareclients = self.wareclient_model.objects.filter(client=client)
@@ -72,10 +60,10 @@ class WarehouseService(CRUD):
                 return warehouses
         return None
     
-    def warehouse_assign(self, client_id, warehouse_id):
+    def warehouse_assign(self, client, warehouse_id):
         warehouse = self.model.objects.get(id=warehouse_id)
         if warehouse:
-            wareclient = self.wareclient_model.objects.create(client=client_id, warehouse=warehouse, status='A', date=datetime.datetime.today())
+            wareclient = self.wareclient_model.objects.create(client=client, warehouse=warehouse, status='A', association_date=datetime.datetime.today())
             return True, wareclient
         return False, None
     
@@ -87,32 +75,6 @@ class WarehouseService(CRUD):
             warehouse.delete()
             return True, warehouse
         return False, None
-
-    def create_location(self, data):
-        form = self.location_form_class(data)
-        if form.is_valid():
-            obj = form.save()
-            return True, obj
-        return False, form
-    
-    def update_location(self, location_id, data):
-        location = self.location_model.objects.get(id=location_id)
-        if location:
-            form = self.location_form_class(data, instance=location)
-            if form.is_valid():
-                obj = form.save()
-                return True, obj
-            return False, form
-        return False, None
-    
-    def delete_location(self, location_id):
-        location = self.location_model.objects.get(id=location_id)
-        if location:
-            location.delete()
-            return True, location
-        return False, None
-
-       
 
     
     

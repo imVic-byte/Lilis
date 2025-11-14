@@ -85,7 +85,7 @@
                             <strong>Superficie total:</strong> {{ w.total_area }} m²
                         </li>
                         <li class="list-group-item">
-                            <strong>Ubicación:</strong> {{ w.location.name }}
+                            <strong>Ubicación:</strong> {{ w.location }}
                         </li>
                     </ul>
 
@@ -137,9 +137,9 @@
                             </a>
                         </th>
                         <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=location__name&order={% if current_sort_by == 'location__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                            <a href="?{{ querystring_sorting }}&sort_by=location&order={% if current_sort_by == 'location' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
                                 <strong>Ubicación</strong>
-                                {% if current_sort_by == 'location__name' %}
+                                {% if current_sort_by == 'location' %}
                                     {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
                                 {% endif %}
                             </a>
@@ -160,7 +160,7 @@
                     <tr>
                         <td>{{ w.name }}</td>
                         <td>{{ w.address }}</td>
-                        <td>{{ w.location.name }}</td>
+                        <td>{{ w.location }}</td>
                         <td>{{ w.total_area }} m²</td>
                         <td>
                             <a href="{% url 'warehouse_view' w.id %}" class="btn btn-weno btn-sm">Ver</a>

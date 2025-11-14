@@ -28,10 +28,10 @@ class Warehouse(models.Model):
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=200)
     total_area = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    location = models.ForeignKey("Location", on_delete=models.PROTECT, related_name="warehouses")
+    location = models.CharField(max_length=200)
 
     def __str__(self):
-        return f'{self.name} - {self.location.name}'
+        return f'{self.name} - {self.location}'
     
 class WareClient(models.Model):
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name="wareclients")

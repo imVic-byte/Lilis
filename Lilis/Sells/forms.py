@@ -81,15 +81,29 @@ class LocationForm(forms.ModelForm):
             return location
         return location
         
+PAISES = [
+    ("CL", "Chile"),
+    ("AR", "Argentina"),
+    ("PE", "Perú"),
+    ("CO", "Colombia"),
+    ("MX", "México"),
+    ("ES", "España"),
+    ("US", "Estados Unidos"),
+]
+
 class WarehouseForm(forms.ModelForm):
+    location = forms.ChoiceField(
+        choices=PAISES,
+        label="Localidad",
+    )
     class Meta:
         model = Warehouse
-        fields = ['name', 'address', 'total_area', 'location']
+        fields = ['name', 'address', 'location', 'total_area']
         labels = {
             'name': 'Nombre del almacén',
             'address': 'Direccion',
-            'total_area': 'Area total',
-            'location': 'Localidad'
+            'location': 'Localidad',
+            'total_area': 'Area total'
         }
         
     def clean_name(self):

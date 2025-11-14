@@ -1,0 +1,157 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Lista de Clientes {% endblock title %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <h1 class="page-title">Transaccion de Lotes</h1>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center p-3 shadow-sm">
+            <h5 class="mb-1">Movimientos (hoy)</h5>
+            <h2 class="fw-bold">0</h2>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center p-3 shadow-sm">
+            <h5 class="mb-1">Stock total demo</h5>
+            <h2 class="fw-bold">8</h2>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center p-3 shadow-sm">
+            <h5 class="mb-1">Productos únicos</h5>
+            <h2 class="fw-bold">1</h2>
+        </div>
+    </div>
+</div>
+
+
+<!-- CONTENEDOR REGISTRO -->
+<div class="card shadow-sm mb-4 p-4">
+
+    <h4 class="mb-3">Registrar movimiento</h4>
+
+    <!-- NAV TABS -->
+    <ul class="nav nav-tabs mb-3" id="registroTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#tab1">1. Datos del movimiento</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#tab2">2. Control avanzado</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#tab3">3. Referencias/Observaciones</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- TAB 1 -->
+        <div class="tab-pane fade show active" id="tab1">
+            {% include 'transactions/tab_datos.html' %}
+        </div>
+
+        <!-- TAB 2 -->
+        <div class="tab-pane fade" id="tab2">
+            {% include 'transactions/tab_control.html' %}
+        </div>
+
+        <!-- TAB 3 -->
+        <div class="tab-pane fade" id="tab3">
+            {% include 'transactions/tab_refs.html' %}
+        </div>
+
+    </div>
+</div>
+
+
+<!-- TABLA MOVIMIENTOS -->
+<div class="card shadow-sm p-4">
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <input type="text" class="form-control" placeholder="Buscar por SKU, proveedor...">
+        </div>
+
+        <div class="col-md-2">
+            <select class="form-select">
+                <option value="todos">Tipo: todos</option>
+                <option value="ingreso">Ingreso</option>
+                <option value="salida">Salida</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <input type="date" class="form-control">
+        </div>
+
+        <div class="col-md-2">
+            <input type="date" class="form-control">
+        </div>
+
+        <div class="col-md-3 text-end">
+            <button class="btn btn-success">Exportar a Excel</button>
+        </div>
+    </div>
+
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>SKU</th>
+                <th>Proveedor</th>
+                <th>Bodega</th>
+                <th>Cantidad</th>
+                <th>Lote</th>
+                <th>Serie</th>
+                <th>Vence</th>
+                <th>Doc Ref</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>2025-09-10 09:30</td>
+                <td><span class="badge bg-success">ingreso</span></td>
+                <td>SKU-0001</td>
+                <td>76.543.210-5</td>
+                <td>BOD-CENTRAL</td>
+                <td class="text-success fw-bold">+10</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>OC-101</td>
+                <td>
+                    <button class="btn btn-primary btn-sm">Editar</button>
+                    <button class="btn btn-danger btn-sm">Eliminar</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>2025-09-10 15:00</td>
+                <td><span class="badge bg-danger">salida</span></td>
+                <td>SKU-0001</td>
+                <td>—</td>
+                <td>BOD-CENTRAL</td>
+                <td class="text-danger fw-bold">-2</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>FAC-900</td>
+                <td>
+                    <button class="btn btn-primary btn-sm">Editar</button>
+                    <button class="btn btn-danger btn-sm">Eliminar</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock content %}
