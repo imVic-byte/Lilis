@@ -7,7 +7,7 @@
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">Detalle del Usuario</h4>
+                <h4 class="mb-0">Perfil</h4>
             </div>
             <div class="row">
                 <div class="col-6">
@@ -54,10 +54,10 @@
 
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>Rol:</strong> {{ user.profile.role.description }}
+                                    <strong>Rol:</strong> {{ user.groups.first.name }}
                                 </div>
                                 {% if request.user.is_staff %}
-                                <a href="{% url 'role_changer' %}?field_name=role&previous_data={{ user.profile.role|urlencode }}&user_id={{ user.id }}"
+                                <a href="{% url 'role_changer' %}?field_name=groups&previous_data={{ user.groups.first.name|urlencode }}&user_id={{ user.id }}"
                                     class="text-decoration-none text-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>

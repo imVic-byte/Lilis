@@ -51,8 +51,8 @@ class RawMaterialAdmin(admin.ModelAdmin):
 class RoleModulePermissionAdmin(admin.ModelAdmin):
     list_display = ('role', 'module', 'can_view', 'can_add', 'can_edit', 'can_delete')
     list_filter = ('role', 'module')
-    search_fields = ('role__description', 'module__name')
-    ordering = ('role__description', 'module__name')
+    search_fields = ('role__description',)
+    ordering = ('role__description',)
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):

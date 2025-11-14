@@ -7,6 +7,7 @@ class Supplier(models.Model):
     email = models.EmailField(null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     trade_terms = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.bussiness_name} - {self.rut}'

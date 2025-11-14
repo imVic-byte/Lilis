@@ -47,33 +47,11 @@
                             <a href="{% url 'client_list_all' %}" class="btn btn-secondary">
                                 Volver a la lista
                             </a>
-                            <button type="button" class="btn btn-danger ms-2" data-bs-toggle="modal"
-                                data-bs-target="#confirmDeleteModal{{ b.id }}">
+                            <button type="button" class="btn btn-danger btn-delete" 
+                                    data-url="{% url 'client_delete' b.id %}"
+                                    data-item-name="{{ b.fantasy_name }}">
                                 Eliminar
-                            </button>
-
-                            <div class="modal fade" id="confirmDeleteModal{{ b.id }}" tabindex="-1"
-                                aria-labelledby="modalLabel{{ b.id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-sm">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white p-2">
-                                            <h6 class="modal-title" id="modalLabel{{ b.id }}">Confirmar</h6>
-                                            <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
-                                                aria-label="Cerrar"></button>
-                                        </div>
-                                        <div class="modal-body p-2 text-center">
-                                            ¿Eliminar cliente <strong>{{ b.fantasy_name }}</strong>?
-                                        </div>
-                                        <div class="modal-footer p-2 justify-content-center">
-                                            <button type="button" class="btn btn-secondary btn-sm"
-                                                data-bs-dismiss="modal">Cancelar</button>
-                                            <a href="{% url 'client_delete' b.id %}"
-                                                class="btn btn-danger btn-sm">Eliminar</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                              
+                            </button>                             
                         </div>
                     </div>
                 </div>
