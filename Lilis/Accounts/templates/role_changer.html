@@ -33,11 +33,11 @@
 {% block scripts %}
    <script>
 document.querySelector('form').addEventListener('submit', function(e) {
-    const input = document.querySelector('#fieldInput'); // tu input
+    const input = document.querySelector('#fieldInput');
     const newValue = document.querySelector('input[name="new_value"]').value.trim();
 
     if (!newValue) {
-        e.preventDefault(); // evita el submit
+        e.preventDefault();
         alert("El campo no puede estar vacío.");
     }
 });

@@ -54,10 +54,10 @@
 
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>Rol:</strong> {{ user.profile.role.description }}
+                                    <strong>Rol:</strong> {{ user.groups.first.name }}
                                 </div>
                                 {% if request.user.is_staff %}
-                                <a href="{% url 'role_changer' %}?field_name=role&previous_data={{ user.profile.role|urlencode }}&user_id={{ user.id }}"
+                                <a href="{% url 'role_changer' %}?field_name=groups&previous_data={{ user.groups.first.name|urlencode }}&user_id={{ user.id }}"
                                     class="text-decoration-none text-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>

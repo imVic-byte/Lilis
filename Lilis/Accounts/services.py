@@ -1,5 +1,5 @@
 from .forms import RegistroForm, UserForm, ProfileForm, UpdateFieldForm, RoleForm
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .models import Profile, password_reset_token,Role
 from Main.CRUD import CRUD
 import re
@@ -17,7 +17,7 @@ class UserService(CRUD ):
         self.picture_form_class = ProfileForm
         self.update_field_form_class = UpdateFieldForm
         self.role_form_class = RoleForm
-        self.roles = Role
+        self.roles = Group
 
     def save_user(self, data):
         form = self.form_class(data)
@@ -88,10 +88,16 @@ class UserService(CRUD ):
         try:
             usuario = self.model.objects.select_related('profile').get(id=user_id)
             profile = usuario.profile
-            if field_name == 'run' or field_name == 'phone' or field_name == 'role':
+            if field_name == 'run' or field_name == 'phone':
                 setattr(profile, field_name, data)
                 print(field_name,data)
                 profile.save()
+                return True
+            elif field_name == 'groups':
+                user = usuario
+                user.groups.clear()
+                user.groups.add(data)
+                user.save()
                 return True
             else:
                 setattr(usuario, field_name, data)
