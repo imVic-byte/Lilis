@@ -248,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const cantidadNum = Number(cantidad);
 
         let errores = [];
-
         if (!fecha) errores.push("Debe seleccionar una fecha.");
         if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
         if (!cantidad || cantidadNum === 0) errores.push("La cantidad no debe ser 0");

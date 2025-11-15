@@ -81,26 +81,15 @@ class CategoryForm(forms.ModelForm):
 class ProductBatchForm(forms.ModelForm):
     class Meta:
         model = Batch
-        fields = ['product', 'batch_code', 'min_quantity', 'current_quantity', 'max_quantity']
+        fields = ['product', 'batch_code', 'current_quantity']
         labels = {
             'product': 'Producto',
             'batch_code': 'Codigo de lote',
-            'min_quantity': 'Cantidad Minima (Generar Aviso)',
             'current_quantity': 'Cantidad actual',
-            'max_quantity' : 'Cantidad Maxima',
         }
-
-    def clean_batch_code(self):
-        return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
-    
-    def clean_min_quantity(self):
-        return validate_positive_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima")
 
     def clean_current_quantity(self):
         return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
-
-    def clean_max_quantity(self):
-        return validate_positive_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
 
     def save(self, commit=True):
         batch = super().save(commit=False)
@@ -111,28 +100,16 @@ class ProductBatchForm(forms.ModelForm):
 class RawBatchForm(forms.ModelForm):
     class Meta:
         model = Batch
-        fields = ['raw_material', 'batch_code', 'min_quantity', 'current_quantity', 'max_quantity']
+        fields = ['raw_material', 'batch_code', 'current_quantity',]
         labels = {
             'raw_material': 'Materia Prima',
             'batch_code': 'Codigo de lote',
-            'min_quantity': 'Cantidad minima (Generar Aviso)',
             'current_quantity': 'Cantidad actual',
-            'max_quantity' : 'Cantidad Maxima'
         }
-
-    def clean_batch_code(self):
-        return validate_alphanumeric(self.cleaned_data.get('batch_code'), field_name="El código de lote")
-
-    def clean_min_quantity(self):
-        return validate_positive_number(self.cleaned_data.get('min_quantity'), field_name="La cantidad mínima")
 
     def clean_current_quantity(self):
         return validate_is_number(self.cleaned_data.get('current_quantity'), field_name="La cantidad actual", allow_zero=True)
 
-    def clean_max_quantity(self):
-        return validate_positive_number(self.cleaned_data.get('max_quantity'), field_name="La cantidad máxima")
-
-    
     def save(self, commit=True):
         batch = super().save(commit=False)
         if commit:

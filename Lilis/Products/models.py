@@ -66,9 +66,8 @@ class Batch(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, related_name="batches")
     raw_material = models.ForeignKey(RawMaterial, on_delete=models.CASCADE, null=True, related_name="batches")
     batch_code = models.CharField(max_length=100, unique=True)
-    min_quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    serie = models.BooleanField(default=False)
     current_quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    max_quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f"{self.product.name} - {self.batch_code}"

@@ -7,7 +7,7 @@ from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
 from django.http import JsonResponse
 from Products.services import BatchService
-from Products.services import ProductService
+from Products.services import ProductService, RawMaterialService
 from datetime import date
 
 client_service = ClientService()
@@ -16,6 +16,7 @@ sale_order_service = SaleOrderService()
 transaction_service = TransactionService()
 batch_service = BatchService()
 product_service = ProductService()
+raw_material_service = RawMaterialService()
 
 # ===================================
 # VISTAS DE CLIENTES
@@ -618,7 +619,17 @@ def get_stock_by_product(request):
     stock = product_service.get_stock_by_product(product_id)
     return JsonResponse({'stock': stock})
 
+def get_products(request):
+    products = product_service.list_actives()
+    return JsonResponse({'products': products})
 
+def get_raw_materials(request):
+    raw_materials = raw_material_service.list_actives()
+    return JsonResponse({'raw_materials': raw_materials})
+
+def validate_code(request):
+    code = request.GET.get('code')
+    return JsonResponse({'valid': transaction_service.validate_code(code)})
 
 def transaction(request):
     q = (request.GET.get("q") or "").strip()
@@ -636,9 +647,9 @@ def transaction(request):
     if sort_by not in allowed_sort_fields:
         sort_by = 'date'
     if order not in ['asc', 'desc']:
-        order = 'desc'
+        order = 'asc'
         
-    order_by_field = f'-{sort_by}' if order == 'asc' else sort_by
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
     qs = transaction_service.list()
     if q:
         qs = qs.filter(
@@ -686,6 +697,7 @@ def transaction(request):
             'serie_code':request.POST.get('serie'),
             'expiration_date':request.POST.get('vencimiento'),
         }
+        print(data)
         transaction_service.create_transaction(data)
         return redirect('transaction_list')
     return render(request,'transactions/transaction.html',{

@@ -153,24 +153,38 @@ class TransactionService(CRUD):
         data['warehouse'] = warehouse
         data['client'] = client
         data['product'] = product
-        if data['type'] == 'salida':
-            if data['batch_code']:
-                batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'], min_quantity=0, max_quantity=data['quantity'])
-            else:
-                
+        if data['type'] == 'salida' and data['batch_code']:
+            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'])
             transaction = self.model.objects.create(**data)
             if transaction:
                 self.discount_stock(transaction, batch)
                 return True, transaction
             return False, None
-        else:
-            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['batch_code'], current_quantity=data['quantity'], min_quantity=0, max_quantity=data['quantity'])
+        elif data['type'] == 'ingreso' and data['batch_code']:
+            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'])
             transaction = self.model.objects.create(**data)
             if transaction:
                 self.increase_stock(transaction, batch)
                 return True, transaction
             return False, None
-        
+        elif data['type'] == 'salida' and data['batch_code'] == None:
+            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
+            transaction = self.model.objects.create(**data)
+            if transaction:
+                self.discount_stock(transaction, batch)
+                return True, transaction
+            return False, None
+        elif data['type'] == 'ingreso' and data['batch_code'] == None:
+            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
+            transaction = self.model.objects.create(**data)
+            if transaction:
+                self.increase_stock(transaction, batch)
+                return True, transaction
+            return False, None
+        else:
+            return False, None
+
+            
         
     
     def get_by_warehouse(self, warehouse_id):
@@ -203,3 +217,10 @@ class TransactionService(CRUD):
                 return True, product
             return False, None
         return False, None
+    
+    def validate_code(self, code):
+        if self.model.objects.filter(serie_code=code).count() > 0:
+            return False
+        if self.model.objects.filter(batch_code=code).count() > 0:
+            return False
+        return True
