@@ -36,6 +36,11 @@ class ProductService(CRUD):
     def list_actives(self):
         return self.model.objects.filter(is_active=True)
     
+    def get_stock_by_product(self, product_id):
+        product = self.get(id=product_id)
+        quantity = product.quantity
+        return quantity
+    
 class SupplierService(CRUD):
     def __init__(self):
         self.model = Supplier

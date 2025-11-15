@@ -53,7 +53,7 @@ class Transaction(models.Model):
     quantity = models.IntegerField(default=1)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
     batch_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    serie_code = models.CharField(max_length=100, null=True, blank=True)
+    serie_code = models.CharField(max_length=100, unique=True, null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
 
     def __str__(self):

@@ -19,9 +19,7 @@ price_histories_service = PriceHistoriesService()
 def product_search(request):
     q = request.GET.get('q', '')
     products = product_service.model.objects.filter( is_active=True ).filter(
-        Q(name__icontains=q) |
-        Q(description__icontains=q) |
-        Q(category__name__icontains=q)
+        Q(name__icontains=q)
     ).values('id', 'name', 'description', 'category__name', 'quantity', 'is_perishable')    
     return JsonResponse(list(products), safe=False)
 
@@ -191,8 +189,7 @@ def products_list(request):
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
-            Q(description__icontains=q) |
-            Q(category__name__icontains=q)
+            Q(description__icontains=q)
         )
         
     qs = qs.order_by(order_by_field)

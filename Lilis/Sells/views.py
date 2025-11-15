@@ -613,6 +613,13 @@ def get_warehouses_by_client(request):
 
     return JsonResponse({'warehouses': warehouses_list})
 
+def get_stock_by_product(request):
+    product_id = request.GET.get('product_id')
+    stock = product_service.get_stock_by_product(product_id)
+    return JsonResponse({'stock': stock})
+
+
+
 def transaction(request):
     q = (request.GET.get("q") or "").strip()
     allowed_per_page = [5, 25, 50, 100]
@@ -679,7 +686,6 @@ def transaction(request):
             'serie_code':request.POST.get('serie'),
             'expiration_date':request.POST.get('vencimiento'),
         }
-        print(data['expiration_date'])
         transaction_service.create_transaction(data)
         return redirect('transaction_list')
     return render(request,'transactions/transaction.html',{

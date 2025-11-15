@@ -13,7 +13,8 @@
     </div>
     <div class="col-md-4">
         <label class="form-label">Cantidad</label>
-        <input type="number" class="form-control" name="cantidad" id="cantidad">
+        <input type="number" class="form-control" name="cantidad" id="cantidad" disabled placeholder="Seleccione un producto">
+        <input type="number" class="d-none" name="stock" id="stock" disabled>
     </div>
 </div>
 <div class="row mb-3">
@@ -42,10 +43,34 @@
         </select>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const clientSelect = document.getElementById('client-select');
         const warehouseSelect = document.getElementById('warehouse-select');
+        const productSelect = document.getElementById('product-select');
+        const cantidadInput = document.getElementById('cantidad');
+        const stockInput = document.getElementById('stock');
+
+        productSelect.addEventListener('change', function () {
+            const productId = this.value;
+            if (!productId) {
+                cantidadInput.disabled = true;
+                cantidadInput.value = '';
+                stockInput.value = '';
+                cantidadInput.placeholder = 'Seleccione un producto';
+                return;
+            }
+            fetch(`/sells/get_stock_by_product/?product_id=${productId}`)
+                .then(r => r.json())
+                .then(data => {
+                    cantidadInput.disabled = false;
+                    cantidadInput.value = data.stock;
+                    stockInput.value = data.stock;
+                })
+                .catch(error => console.error('Error al obtener stock:', error));
+        });
+
         clientSelect.addEventListener('change', function () {
             const clientId = this.value;
             if (!clientId) {
@@ -80,4 +105,4 @@
                 const localISO = new Date(now - tzOffset).toISOString().slice(0,16);
                 input.value = localISO;
             });
-        </script>
+</script>

@@ -3,7 +3,8 @@ from Main.CRUD import CRUD
 from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail
 from .forms import ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
 import datetime
-from Products.services import ProductService
+from Products.services import ProductService, BatchService
+from decimal import Decimal
 
 class ClientService(CRUD):  
     def __init__(self):
@@ -145,19 +146,60 @@ class TransactionService(CRUD):
         warehouse_service = WarehouseService()
         client_service = ClientService()
         product_service = ProductService()
+        batch_service = BatchService()
         warehouse = warehouse_service.get(data['warehouse'])
         client = client_service.get(data['client'])
         product = product_service.get(data['product'])
         data['warehouse'] = warehouse
         data['client'] = client
         data['product'] = product
-        transaction = self.model.objects.create(**data)
-        if transaction:
-            return True, transaction
-        return False, None
+        if data['type'] == 'salida':
+            if data['batch_code']:
+                batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'], min_quantity=0, max_quantity=data['quantity'])
+            else:
+                
+            transaction = self.model.objects.create(**data)
+            if transaction:
+                self.discount_stock(transaction, batch)
+                return True, transaction
+            return False, None
+        else:
+            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['batch_code'], current_quantity=data['quantity'], min_quantity=0, max_quantity=data['quantity'])
+            transaction = self.model.objects.create(**data)
+            if transaction:
+                self.increase_stock(transaction, batch)
+                return True, transaction
+            return False, None
+        
+        
     
     def get_by_warehouse(self, warehouse_id):
         return self.model.objects.filter(warehouse=warehouse_id)
     
     def get_by_client(self, client_id):
         return self.model.objects.filter(client=client_id)
+    
+    def discount_stock(self, transaction, batch):
+        product = transaction.product
+        if product:
+            product_stock = product.quantity
+            if batch:
+                batch_stock = batch.current_quantity
+                product_stock -= Decimal(batch_stock)
+                product.quantity = product_stock
+                product.save()
+                return True, product
+            return False, None
+        return False, None
+
+    def increase_stock(self, transaction, batch):
+        product = transaction.product
+        if product:
+            product_stock = product.quantity
+            if batch:
+                product_stock += batch.current_quantity
+                product.quantity = product_stock
+                product.save()
+                return True, product
+            return False, None
+        return False, None

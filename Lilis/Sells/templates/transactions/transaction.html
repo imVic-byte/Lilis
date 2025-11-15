@@ -242,35 +242,45 @@ document.addEventListener('DOMContentLoaded', function () {
         const serieInput = document.getElementById('input-serie');
         const vencimientoInput = document.getElementById('input-vencimiento');
         const observaciones = document.getElementById('observaciones');
+        const stockInput = document.getElementById('stock');
+
+        const stock = stockInput ? Number(stockInput.value) : 0;
+        const cantidadNum = Number(cantidad);
 
         let errores = [];
 
         if (!fecha) errores.push("Debe seleccionar una fecha.");
         if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
-        if (!cantidad) errores.push("La cantidad no debe ser 0");
+        if (!cantidad || cantidadNum === 0) errores.push("La cantidad no debe ser 0");
         if (!producto) errores.push("Debe seleccionar un producto.");
         if (!cliente) errores.push("Debe seleccionar un cliente/proveedor.");
         if (!bodega) errores.push("Debe seleccionar una bodega.");
-
-        if (loteCheckbox && loteCheckbox.checked && !loteInput || !loteInput.value.trim()) {
+        
+        if (tipo === "salida" && cantidadNum < 0) {
+            errores.push("La cantidad de salida no puede ser menor que 0");
+        }
+        if (tipo === "ingreso" && cantidadNum < 0) {
+            errores.push("La cantidad de entrada no puede ser menor que 0");
+        }
+        
+        if (loteCheckbox && loteCheckbox.checked && (!loteInput || !loteInput.value.trim())) {
             errores.push("Debe ingresar un lote.");
         }
-        if (serieCheckbox && serieCheckbox.checked && !serieInput || !serieInput.value.trim()) {
+        if (serieCheckbox && serieCheckbox.checked && (!serieInput || !serieInput.value.trim())) {
             errores.push("Debe ingresar una serie.");
         }
 
         if (loteCheckbox.checked) {
             if (!vencimientoCheckbox.checked || !vencimientoInput.value.trim()) {
                 errores.push("Debe activar vencimiento e ingresar una fecha.");
-            }else if (new Date(vencimientoInput.value) < new Date()) {
-            errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
+            } else if (new Date(vencimientoInput.value) < new Date()) {
+                errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
             }
         }
 
         if (loteCheckbox && !loteCheckbox.checked && serieCheckbox && !serieCheckbox.checked) {
             errores.push("Debe seleccionar un tipo de control.");
         }
-
 
         if (!observaciones || !observaciones.value.trim()) {
             errores.push("Debe ingresar observaciones.");
@@ -287,65 +297,67 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             return;
         }
-
-        if (cantidad !== '' && !isNaN(cantidad) && Number(cantidad) < 0) {
+        if (tipo === "salida" && cantidadNum < 0) {
             Swal.fire({
                 title: 'Stock Negativo Detectado',
-                text: 'Estás a punto de registrar un stock negativo (' + cantidad + '). Por favor, ingresa el código de administrador para autorizar esta acción.',
+                text: 'Estás registrando un stock negativo (' + cantidad + '). Ingresa el código de administrador.',
                 icon: 'warning',
                 input: 'password',
-                inputPlaceholder: 'Ingresa el código de administrador',
-                inputAttributes: {
-                    autocapitalize: 'off',
-                    autocorrect: 'off'
-                },
+                inputPlaceholder: 'Código de administrador',
                 showCancelButton: true,
                 confirmButtonText: 'Autorizar y Guardar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                showLoaderOnConfirm: true,
                 preConfirm: (code) => {
-                    if (code === ADMIN_OVERRIDE_CODE) {
-                        return true;
-                    } else {
-                        Swal.showValidationMessage('Código incorrecto');
-                        return false;
-                    }
-                },
-                allowOutsideClick: () => !Swal.isLoading()
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Autorizado',
-                        text: 'Stock negativo guardado.',
-                        icon: 'success',
-                        showConfirmButton: false
-                    });
-                    setTimeout(() => form.submit(), 2000);
+                    if (code === ADMIN_OVERRIDE_CODE) return true;
+                    Swal.showValidationMessage('Código incorrecto');
+                    return false;
                 }
+            }).then((r) => {
+                if (r.isConfirmed) form.submit();
             });
-        } else {
-            Swal.fire({
-                title: '¿Desea guardar el movimiento?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Guardando...',
-                        didOpen: () => {
-                            Swal.showLoading();
-                            form.submit();
-                        },
-                        allowOutsideClick: false,
-                        showConfirmButton: false
-                    });
-                }
-            });
+            return;
         }
+
+        if (tipo === "salida" && cantidadNum > stock) {
+            Swal.fire({
+                title: 'La salida supera el stock actual',
+                text: 'Esto generará una deuda de stock (' + cantidad + '). Ingresa el código de administrador.',
+                icon: 'warning',
+                input: 'password',
+                inputPlaceholder: 'Código de administrador',
+                showCancelButton: true,
+                confirmButtonText: 'Autorizar y Guardar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (code) => {
+                    if (code === ADMIN_OVERRIDE_CODE) return true;
+                    Swal.showValidationMessage('Código incorrecto');
+                    return false;
+                }
+            }).then((r) => {
+                if (r.isConfirmed) form.submit();
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: '¿Desea guardar el movimiento?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Guardando...',
+                    didOpen: () => {
+                        Swal.showLoading();
+                        form.submit();
+                    },
+                    allowOutsideClick: false,
+                    showConfirmButton: false
+                });
+            }
+        });
     });
 });
 </script>

@@ -2,12 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from Accounts.services import UserService
 from Products.services import SupplierService, ProductService
-from Sells.services import ClientService
+from Sells.services import ClientService, TransactionService
 
 user_service = UserService()
 supplier_service = SupplierService()
 product_service = ProductService()
 client_service = ClientService()
+transaction_service = TransactionService()
 
 
 @login_required
@@ -18,6 +19,7 @@ def dashboard(request):
     productos = product_service.count()
     clientes_activos = client_service.count_actives()
     clientes= client_service.count()
+    transacciones = transaction_service.list()[:5]
     return render(request, 'main/dashboard.html',
                   {
                       'productos': productos,
@@ -26,4 +28,5 @@ def dashboard(request):
                       'usuarios': usuarios,
                       'clientes_activos': clientes_activos,
                       'clientes': clientes,
+                      'transacciones': transacciones
                   })

@@ -43,4 +43,5 @@ urlpatterns = [
     *warehouses,
     path('transaction_list/', views.transaction, name='transaction_list'),
     path('export_transaction_excel/', views.export_transaction_excel, name='export_transaction_excel'),
+    path('get_stock_by_product/', views.get_stock_by_product, name='get_stock_by_product'),
 ]
