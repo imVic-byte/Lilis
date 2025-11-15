@@ -48,13 +48,13 @@
         {% csrf_token %}
         <ul class="nav nav-tabs mb-3" id="registroTabs">
             <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#tab1">1. Datos del movimiento</a>
+                <a class="nav-link active text-dark" data-bs-toggle="tab" href="#tab1">1. Datos del movimiento</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab2">2. Control avanzado</a>
+                <a class="nav-link text-dark" data-bs-toggle="tab" href="#tab2">2. Control avanzado</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tab3">3. Referencias/Observaciones</a>
+                <a class="nav-link text-dark" data-bs-toggle="tab" href="#tab3">3. Referencias/Observaciones</a>
             </li>
         </ul>
 
@@ -76,78 +76,143 @@
 
 
 <div class="card shadow-sm p-4">
-    <div class="row mb-3">
+<div class="row mb-2 justify-content-center">
+    <div class="col-md-9 mt-2">
+        <form method="GET" action="{% url 'transaction_list' %}" class="form">
+            <div class="input-group">
+                <label class="input-group-text" for="per_page_select">Mostrar:</label>
+                <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
+                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+
+                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+
+                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+                <input type="hidden" name="order" value="{{ current_order }}">
+
+                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por SKU, tipo, RUT cliente...">
+                
+                <button class="btn btn-primary" type="submit">Buscar</button>
+            </div>
+        </div>
         <div class="col-md-3">
-            <input type="text" class="form-control" placeholder="Buscar por SKU, proveedor...">
+            <div class="col text-end">
+                <a href="{% url 'export_transaction_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+                    Exportar Todo
+                </a>
+                <a href="{% url 'export_transaction_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+                    class="btn btn-info mt-2">
+                    Exportar Vista
+                </a>
+            </div>
         </div>
-
-        <div class="col-md-2">
-            <select class="form-select">
-                <option value="todos">Tipo: todos</option>
-                <option value="ingreso">Ingreso</option>
-                <option value="salida">Salida</option>
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <input type="date" class="form-control">
-        </div>
-
-        <div class="col-md-2">
-            <input type="date" class="form-control">
-        </div>
-
-        <div class="col-md-3 text-end">
-            <button class="btn btn-success">Exportar a Excel</button>
-        </div>
-    </div>
+        </div>  
 
     <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Tipo</th>
-                <th>SKU</th>
-                <th>Proveedor</th>
-                <th>Bodega</th>
-                <th>Cantidad</th>
-                <th>Lote</th>
-                <th>Serie</th>
-                <th>Vence</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>SKU</th>
+            <th>Proveedor</th>
+            <th>Bodega</th>
+            <th>Cantidad</th>
+            <th>Lote</th>
+            <th>Serie</th>
+            <th>Vence</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
 
-        <tbody>
-            {% for t in transactions %}
-            <tr>
-                <td>{{ t.date }}</td>
-                {% if t.type == 'ingreso' %}
+    <tbody>
+        {% for t in page_obj %}
+        <tr>
+            <td>{{ t.date }}</td>
+
+            {% if t.type == 'ingreso' %}
                 <td><span class="badge bg-success text-center">{{ t.type }}</span></td>
-                {% else %}
+            {% else %}
                 <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
-                {% endif %}
-                <td>{{ t.product.sku }}</td>
-                <td>{{ t.client.rut }}</td>
-                <td>{{ t.warehouse.name }}</td>
-                {% if t.type == 'ingreso' %}
+            {% endif %}
+
+            <td>{{ t.product.sku }}</td>
+            <td>{{ t.client.rut }}</td>
+            <td>{{ t.warehouse.name }}</td>
+
+            {% if t.type == 'ingreso' %}
                 <td class="text-success fw-bold">+ {{ t.quantity }}</td>
-                {% else %}
+            {% else %}
                 <td class="text-danger fw-bold">- {{ t.quantity }}</td>
-                {% endif %}
-                <td>{{ t.batch_code|default_if_none:"-" }}</td>
-                <td>{{ t.serie_code|default_if_none:"-" }}</td>
-                <td>{{ t.expiration_date }}</td>
-                <td>
-                    <button class="btn btn-primary btn-sm">Editar</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            {% endif %}
+
+            <td>{{ t.batch_code|default_if_none:"-" }}</td>
+            <td>{{ t.serie_code|default_if_none:"-" }}</td>
+            <td>{{ t.expiration_date|default_if_none:"-" }}</td>
+
+            <td>
+                <button class="btn btn-primary btn-sm">Editar</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="10" class="text-center">
+                No se encontraron datos que coincidan con los filtros.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 </div>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
 
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Previous">
+          &laquo; Anterior
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&laquo; Anterior</span>
+      </li>
+    {% endif %}
 
+    {% for i in page_obj.paginator.page_range %}
+      {% if page_obj.number == i %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ i }}</span>
+        </li>
+      {% else %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Next">
+          Siguiente &raquo;
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">Siguiente &raquo;</span>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>
+
+<div class="text-center text-muted mt-2">
+  Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total }} resultados.
+</div>
+{% endif %}
 {% endblock content %}
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -194,21 +259,18 @@ document.addEventListener('DOMContentLoaded', function () {
             errores.push("Debe ingresar una serie.");
         }
 
-        if (loteCheckbox && loteCheckbox.checked && loteInput && vencimientoCheckbox && !vencimientoCheckbox.checked || !vencimientoInput || !vencimientoInput.value.trim()) {
-            errores.push("Debe ingresar fecha de vencimiento.");
+        if (loteCheckbox.checked) {
+            if (!vencimientoCheckbox.checked || !vencimientoInput.value.trim()) {
+                errores.push("Debe activar vencimiento e ingresar una fecha.");
+            }else if (new Date(vencimientoInput.value) < new Date()) {
+            errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
+            }
         }
 
         if (loteCheckbox && !loteCheckbox.checked && serieCheckbox && !serieCheckbox.checked) {
             errores.push("Debe seleccionar un tipo de control.");
         }
 
-        if (vencimientoCheckbox && vencimientoCheckbox.checked) {
-            if (!vencimientoInput || !vencimientoInput.value.trim()) {
-            errores.push("Debe ingresar fecha de vencimiento.");
-            } else if (new Date(vencimientoInput.value) < new Date()) {
-            errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
-            }
-        }
 
         if (!observaciones || !observaciones.value.trim()) {
             errores.push("Debe ingresar observaciones.");

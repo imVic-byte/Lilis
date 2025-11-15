@@ -42,4 +42,5 @@ urlpatterns = [
     *locations,
     *warehouses,
     path('transaction_list/', views.transaction, name='transaction_list'),
+    path('export_transaction_excel/', views.export_transaction_excel, name='export_transaction_excel'),
 ]

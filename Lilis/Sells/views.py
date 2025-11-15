@@ -614,6 +614,48 @@ def get_warehouses_by_client(request):
     return JsonResponse({'warehouses': warehouses_list})
 
 def transaction(request):
+    q = (request.GET.get("q") or "").strip()
+    allowed_per_page = [5, 25, 50, 100]
+    default_per_page = 25
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    if per_page not in allowed_per_page:
+        per_page = default_per_page
+    allowed_sort_fields = ['date', 'type', 'sku', 'client']
+    sort_by = request.GET.get('sort_by', 'date')
+    order = request.GET.get('order', 'desc')
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'date'
+    if order not in ['asc', 'desc']:
+        order = 'desc'
+        
+    order_by_field = f'-{sort_by}' if order == 'asc' else sort_by
+    qs = transaction_service.list()
+    if q:
+        qs = qs.filter(
+            Q(product__sku__istartswith=q)|
+            Q(type__icontains=q)|
+            Q(client__rut__startswith=q)
+        )
+    qs = qs.order_by(order_by_field)
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
     products = product_service.list_actives()
     lotes = batch_service.list_product()
     clients = client_service.list_actives()
@@ -640,4 +682,51 @@ def transaction(request):
         print(data['expiration_date'])
         transaction_service.create_transaction(data)
         return redirect('transaction_list')
-    return render(request,'transactions/transaction.html',{'lotes': lotes, 'products': products, 'clients': clients, 'transactions': transactions, 'transactions_today': transactions_today, 'today': date.today()})
+    return render(request,'transactions/transaction.html',{
+        'lotes': lotes, 
+        'products': products, 
+        'clients': clients, 
+        'transactions': transactions, 
+        'transactions_today': transactions_today,
+        "page_obj": page_obj,  
+        "q": q,
+        "per_page": per_page,
+        "total": qs.count(),
+        "querystring": querystring_pagination, 
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc",
+        })
+
+def export_transaction_excel(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = transaction_service.list().order_by('date')
+    limit = request.GET.get("limit")
+    if q:
+        qs = qs.filter(
+            Q(product__sku__istartswith=q)|
+            Q(type__icontains=q)|
+            Q(client__rut__startswith=q)
+        )
+    if limit:
+        try:
+            limit = int(limit)
+            qs = qs[:limit]
+        except ValueError:
+            pass
+    data_rows = []
+    for transaction in qs:
+        data_rows.append([
+            transaction.type,
+            transaction.product.sku,
+            transaction.client.rut,
+            transaction.warehouse.name,
+            transaction.date.strftime("%Y-%m-%d"),
+            transaction.expiration_date.strftime("%Y-%m-%d") if transaction.expiration_date else "",
+            transaction.batch_code,
+            transaction.serie_code,
+            transaction.notes,
+        ])
+    headers = ["Tipo", "SKU", "Cliente", "Bodega", "Fecha", "Vencimiento", "Lote", "Serie", "Observaciones"]
+    return generate_excel_response(headers, data_rows, "Lilis_Transacciones")
