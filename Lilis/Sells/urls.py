@@ -45,4 +45,5 @@ urlpatterns = [
     path('export_transaction_excel/', views.export_transaction_excel, name='export_transaction_excel'),
     path('get_stock_by_product/', views.get_stock_by_product, name='get_stock_by_product'),
     path('validate_code/', views.validate_code, name='validate_code'),
+    path('get_by_type/', views.get_by_type, name='get_by_type'),
 ]

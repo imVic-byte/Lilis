@@ -21,10 +21,7 @@
     <div class="col-md-4">
         <label class="form-label">Producto</label>
         <select class="form-select" name="producto" id="product-select">
-            <option value="">Seleccione...</option>
-            {% for p in products %}
-                <option value="{{ p.id }}">{{ p.name }}</option>
-            {% endfor %}
+            <option value="">Seleccione un tipo de movimiento</option>
         </select>
     </div>
     <div class="col-md-4">
@@ -51,6 +48,34 @@
         const productSelect = document.getElementById('product-select');
         const cantidadInput = document.getElementById('cantidad');
         const stockInput = document.getElementById('stock');
+        const typeSelect = document.getElementById('tipo');
+
+        typeSelect.addEventListener('change', function () {
+            const type = this.value;
+            if (!type) {
+                productSelect.disabled = true;
+                productSelect.value = '';
+                productSelect.placeholder = 'Seleccione un movimiento';
+                return;
+            }
+            fetch(`/sells/get_by_type/?type=${type}`)
+                .then(r => r.json())
+                .then(data => {
+                    productSelect.disabled = false;
+                    productSelect.innerHTML = '';
+                    if (data.data.length === 0) {
+                        productSelect.innerHTML = '<option value="">No hay productos para este tipo de movimiento</option>';
+                        return;
+                    }
+                    data.data.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = `${p.name}`;
+                        productSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar datos:', error));
+        });
 
         productSelect.addEventListener('change', function () {
             const productId = this.value;

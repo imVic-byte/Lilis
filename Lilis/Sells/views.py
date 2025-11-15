@@ -619,13 +619,26 @@ def get_stock_by_product(request):
     stock = product_service.get_stock_by_product(product_id)
     return JsonResponse({'stock': stock})
 
-def get_products(request):
-    products = product_service.list_actives()
-    return JsonResponse({'products': products})
-
-def get_raw_materials(request):
-    raw_materials = raw_material_service.list_actives()
-    return JsonResponse({'raw_materials': raw_materials})
+def get_by_type(request):
+    type = request.GET.get('type')
+    if type == 'ingreso':
+        raw_materials = raw_material_service.list_actives()
+        data = []
+        for rm in raw_materials:
+            data.append({
+                'id': rm.id,
+                'name': rm.name,
+                })
+        return JsonResponse({'data': data})
+    else:
+        products = product_service.list_actives()
+        data = []
+        for p in products:
+            data.append({
+                'id': p.id,
+                'name': p.name,
+                })
+        return JsonResponse({'data': data})
 
 def validate_code(request):
     code = request.GET.get('code')

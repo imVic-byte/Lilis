@@ -20,6 +20,7 @@ class Category(models.Model):
         return self.name  
     
 class RawMaterial(models.Model):
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     is_perishable = models.BooleanField(default=False)

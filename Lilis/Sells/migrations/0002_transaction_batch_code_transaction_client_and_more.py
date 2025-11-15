@@ -15,11 +15,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='transaction',
-            name='batch_code',
-            field=models.CharField(blank=True, max_length=100, null=True, unique=True),
-        ),
-        migrations.AddField(
-            model_name='transaction',
             name='client',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='transactions', to='Sells.client'),
         ),

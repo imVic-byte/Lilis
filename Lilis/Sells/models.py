@@ -1,5 +1,5 @@
 from django.db import models
-from Products.models import Product, Batch
+from Products.models import Product, Batch, RawMaterial
 from Accounts.models import Profile
 
 class Client(models.Model):
@@ -51,6 +51,7 @@ class Transaction(models.Model):
     notes = models.TextField(blank=True, null=True)
     type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida')], default='I')
     quantity = models.IntegerField(default=1)
+    raw_material = models.ForeignKey(RawMaterial, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
     batch_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
     serie_code = models.CharField(max_length=100, unique=True, null=True, blank=True)

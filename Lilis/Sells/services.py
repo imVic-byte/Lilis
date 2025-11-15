@@ -3,7 +3,7 @@ from Main.CRUD import CRUD
 from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail
 from .forms import ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
 import datetime
-from Products.services import ProductService, BatchService
+from Products.services import ProductService, BatchService, RawMaterialService
 from decimal import Decimal
 
 class ClientService(CRUD):  
@@ -147,13 +147,14 @@ class TransactionService(CRUD):
         client_service = ClientService()
         product_service = ProductService()
         batch_service = BatchService()
+        raw_material_service = RawMaterialService()
         warehouse = warehouse_service.get(data['warehouse'])
         client = client_service.get(data['client'])
-        product = product_service.get(data['product'])
         data['warehouse'] = warehouse
         data['client'] = client
-        data['product'] = product
         if data['type'] == 'salida' and data['batch_code']:
+            product = product_service.get(data['product'])
+            data['product'] = product
             batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'])
             transaction = self.model.objects.create(**data)
             if transaction:
@@ -161,13 +162,18 @@ class TransactionService(CRUD):
                 return True, transaction
             return False, None
         elif data['type'] == 'ingreso' and data['batch_code']:
-            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'])
+            product = raw_material_service.get(data['product'])
+            data['raw_material'] = product
+            data['product'] = None
+            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['batch_code'], current_quantity=data['quantity'])
             transaction = self.model.objects.create(**data)
             if transaction:
                 self.increase_stock(transaction, batch)
                 return True, transaction
             return False, None
         elif data['type'] == 'salida' and data['batch_code'] == None:
+            product = product_service.get(data['product'])
+            data['product'] = product
             batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
             transaction = self.model.objects.create(**data)
             if transaction:
@@ -175,7 +181,10 @@ class TransactionService(CRUD):
                 return True, transaction
             return False, None
         elif data['type'] == 'ingreso' and data['batch_code'] == None:
-            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
+            product = raw_material_service.get(data['product'])
+            data['raw_material'] = product
+            data['product'] = None
+            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
             transaction = self.model.objects.create(**data)
             if transaction:
                 self.increase_stock(transaction, batch)
@@ -184,9 +193,6 @@ class TransactionService(CRUD):
         else:
             return False, None
 
-            
-        
-    
     def get_by_warehouse(self, warehouse_id):
         return self.model.objects.filter(warehouse=warehouse_id)
     
