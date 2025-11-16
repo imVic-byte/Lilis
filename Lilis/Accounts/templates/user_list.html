@@ -177,16 +177,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">
@@ -216,40 +251,27 @@
         const toggleBtn = document.getElementById('toggle-view-btn');
         const cardsView = document.getElementById('user-cards-view');
         const tableView = document.getElementById('user-table-view');
-        
-        // --- 1. Al cargar la página (ej. al paginar) ---
-        // Lee la vista guardada en localStorage y la aplica.
         const savedView = localStorage.getItem('userView') || 'cards'; // 'cards' es el default
 
         if (savedView === 'table') {
-            // Muestra TABLA
             cardsView.style.display = 'none';
             tableView.style.display = 'block';
             toggleBtn.textContent = 'Ver Tarjetas';
         } else {
-            // Muestra TARJETAS
             cardsView.style.display = 'block';
             tableView.style.display = 'none';
             toggleBtn.textContent = 'Ver Tabla';
         }
-
-        // --- 2. Al hacer clic en el botón ---
-        // Cambia la vista AL INSTANTE (sin recargar) 
-        // Y guarda la preferencia para el paginador.
         toggleBtn.addEventListener('click', function() {
             if (cardsView.style.display === 'none') {
-                // Si está en TABLA -> Cambiar a TARJETAS
                 cardsView.style.display = 'block';
                 tableView.style.display = 'none';
                 toggleBtn.textContent = 'Ver Tabla';
-                // Guarda la preferencia
                 localStorage.setItem('userView', 'cards');
             } else {
-                // Si está en TARJETAS -> Cambiar a TABLA
                 cardsView.style.display = 'none';
                 tableView.style.display = 'block';
                 toggleBtn.textContent = 'Ver Tarjetas';
-                // Guarda la preferencia
                 localStorage.setItem('userView', 'table');
             }
         });

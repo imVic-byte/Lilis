@@ -213,12 +213,12 @@ class TransactionService(CRUD):
         return False, None
 
     def increase_stock(self, transaction, batch):
-        product = transaction.product
+        product = transaction.raw_material
         if product:
             product_stock = product.quantity
             if batch:
                 product_stock += batch.current_quantity
-                product.quantity = product_stock
+                product.quantity = Decimal(product_stock)
                 product.save()
                 return True, product
             return False, None

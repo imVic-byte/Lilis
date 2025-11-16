@@ -221,18 +221,52 @@
             <span class="page-link">&laquo; Anterior</span>
         </li>
         {% endif %}
-
         {% for i in page_obj.paginator.page_range %}
-        {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-        {% else %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
         {% endif %}
-        {% endfor %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
         {% if page_obj.has_next %}
         <li class="page-item">
