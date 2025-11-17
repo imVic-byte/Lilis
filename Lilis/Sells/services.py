@@ -62,6 +62,15 @@ class WarehouseService(CRUD):
             return warehouses
         return []
     
+    def filter_by_supplier(self, supplier):
+        wareclients = self.wareclient_model.objects.filter(client=supplier)
+        warehouses = []
+        if wareclients:
+            for w in wareclients:
+                warehouses.append(w.warehouse)
+            return warehouses
+        return []
+    
     def warehouse_assign(self, client, warehouse_id):
         warehouse = self.model.objects.get(id=warehouse_id)
         if warehouse:

@@ -59,7 +59,7 @@
                 <div class="card-body">
                     <div class='row'>
                         <div class="col-7">
-                            <h5 class="card-title">{{ p.name }}</h5>
+                            <h5 class="card-title">{{ p.raw_material_class.name }}</h5>
                         </div>
                         <div class="col-5 text-end">
                             <td>
@@ -72,21 +72,21 @@
                         </div>
 
                     </div>
-                    <h6 class="card-subtitle mb-2 text-muted">Proveedor: {{ p.supplier.fantasy_name }}</h6>
-                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+                    <h6 class="card-subtitle mb-2 text-muted">Proveedor: {{ p.raw_material_class.supplier.fantasy_name }}</h6>
+                    <p class="card-text">{{ p.raw_material_class.description|truncatechars:40|default:"Sin descripción" }}</p>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <strong>Categoría:</strong> {{ p.category.name }}
+                            <strong>Categoría:</strong> {{ p.raw_material_class.category.name }}
                         </li>
                         <li class="list-group-item">
                             <strong>Stock Actual:</strong> {{ p.quantity }}
                         </li>
                         <li class="list-group-item">
                             <strong>Perecible:</strong>
-                            {% if p.is_perishable %}
-                            Si
+                            {% if p.raw_material_class.is_perishable %}
+                            <span class="badge bg-warning text-dark">Sí</span>
                             {% else %}
-                            No
+                            <span class="badge bg-success text-dark">No</span>
                             {% endif %}
                         </li>
                         <li class="list-group-item">

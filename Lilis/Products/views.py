@@ -333,7 +333,8 @@ def supplier_search(request):
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_view(request, id):
     supplier = supplier_service.get(id)
-    return render(request, 'suppliers/supplier_view.html', {'p': supplier})
+    raw_materials = raw_material_service.raw_material_class.objects.all().filter(supplier=supplier)
+    return render(request, 'suppliers/supplier_view.html', {'p': supplier,'raw_materials': raw_materials})
 
 @login_required
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
@@ -489,8 +490,8 @@ def raw_material_list(request):
     
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    allowed_sort_fields = ['name', 'supplier__fantasy_name', 'category__name']
-    sort_by = request.GET.get('sort_by', 'name')
+    allowed_sort_fields = ['raw_material_class__name', 'raw_maerial_class__supplier__fantasy_name', 'raw_material_class__category__name']
+    sort_by = request.GET.get('sort_by', 'raw_material_class__name')
     order = request.GET.get('order', 'asc')
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
@@ -498,10 +499,7 @@ def raw_material_list(request):
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = raw_material_service.list_actives().select_related(
-        "supplier", 
-        "category"
-    )
+    qs = raw_material_service.list()
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
@@ -561,14 +559,74 @@ def raw_material_view(request, id):
 @login_required
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_create(request):
-    form = raw_material_service.form_class()
+    supplier = supplier_service.get(request.GET.get('supplier'))
+    form = raw_material_service.form_class(initial={'supplier': supplier})
     if request.method == 'POST':
-        success, obj = raw_material_service.save(request.POST)
-        if success:
-            return redirect('raw_material_list')
+        if request.GET.get('supplier'):
+            supplier = supplier_service.get(request.GET.get('supplier'))
+            data = {
+                'name': request.POST.get('name'),
+                'description': request.POST.get('description'),
+                'sku': request.POST.get('sku'),
+                'expiration_date': request.POST.get('expiration_date'),
+                'is_perishable': request.POST.get('is_perishable'),
+                'supplier': supplier,
+                'category': request.POST.get('category'),
+                'measurement_unit': request.POST.get('measurement_unit'),
+                'quantity': request.POST.get('quantity'),
+            }
+            success, obj = raw_material_service.save(data)
+            if success:
+                next = request.GET.get('next')
+                return redirect(next)
+            else:
+                return render(request, 'raw_material/raw_material_create.html', {'form': obj})
         else:
-            return render(request, 'products/raw_material_create.html', {'form': obj})
+            success, obj = raw_material_service.save(request.POST)
+            if success:
+                return redirect('raw_material_list')
+            else:
+                return render(request, 'raw_material/raw_material_create.html', {'form': obj})
     return render(request, 'raw_material/raw_material_create.html', {'form': form})
+
+@login_required()
+@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
+def raw_material_create_class(request):
+    supplier = supplier_service.get(request.GET.get('supplier'))
+    form = raw_material_service.raw_material_class_form_class()
+    if request.method == 'POST':
+        success, obj = raw_material_service.save_raw_material_class(request.POST, supplier)
+        if success:
+            next = request.GET.get('next')
+            return redirect(next)
+        else:
+            return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
+    return render(request, 'raw_material/raw_material_create_class.html', {'form': form, 'supplier': supplier.id})
+
+@login_required()
+@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
+def raw_material_create_class_update(request, id):
+    supplier = supplier_service.get(request.GET.get('supplier'))
+    raw_material = raw_material_service.raw_material_class.objects.get(id=id)
+    form = raw_material_service.raw_material_class_form_class(instance=raw_material)
+    if request.method == 'POST':
+        success, obj = raw_material_service.update_raw_material_class(id, request.POST)
+        if success:
+            next = request.GET.get('next')
+            return redirect(next)
+        else:
+            return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
+    return render(request, 'raw_material/raw_material_create_class.html', {'form': form, 'supplier': supplier.id})
+
+@login_required()
+@permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
+def raw_material_delete_class(request, id):
+    next = request.GET.get('next')
+    if request.method == 'GET':
+        success = raw_material_service.delete_raw_material_class(id)
+        if success:
+            return redirect(next)
+    return redirect(next)
 
 @login_required
 @permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')

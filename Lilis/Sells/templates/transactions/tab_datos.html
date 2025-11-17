@@ -9,6 +9,9 @@
             <option>Seleccione...</option>
             <option value="ingreso">Ingreso</option>
             <option value="salida">Salida</option>
+            <option value="ajuste">Ajuste</option>
+            <option value="devolucion">Devolucion</option>
+            <option value="transferencia">Transferencia</option>
         </select>
     </div>
     <div class="col-md-4">
@@ -53,29 +56,107 @@
         typeSelect.addEventListener('change', function () {
             const type = this.value;
             if (!type) {
-                productSelect.disabled = true;
-                productSelect.value = '';
-                productSelect.placeholder = 'Seleccione un movimiento';
+                clientSelect.disabled = true;
+                clientSelect.value = '';
+                clientSelect.placeholder = 'Seleccione un movimiento';
                 return;
             }
-            fetch(`/sells/get_by_type/?type=${type}`)
+            if (type === 'ingreso'){
+                fetch(`/sells/get_by_type/?type=${type}`)
                 .then(r => r.json())
                 .then(data => {
-                    productSelect.disabled = false;
-                    productSelect.innerHTML = '';
+                    clientSelect.disabled = false;
+                    clientSelect.innerHTML = '';
                     if (data.data.length === 0) {
-                        productSelect.innerHTML = '<option value="">No hay productos para este tipo de movimiento</option>';
+                    clientSelect.innerHTML = '<option value="">No hay clientes para este tipo de movimiento</option>';
+                        return;
+                    }
+                    else {
+                        warehouseSelect.innerHTML = '<option value="">Seleccione una bodega</option>';
+                        data.data.forEach(p => {
+                            const option = document.createElement('option');
+                            option.value = p.id;
+                            option.textContent = `${p.bussiness_name}`;
+                            clientSelect.appendChild(option);
+                            p.warehouses.forEach(warehouse => {
+                                const warehouseOption = document.createElement('option');
+                                warehouseOption.value = warehouse.id;
+                                warehouseOption.textContent = `${warehouse.name} - ${p.bussiness_name}`;
+                                warehouseSelect.appendChild(warehouseOption);
+                            });
+                    })
+                }})
+                .catch(error => console.error('Error al cargar datos:', error));
+            }
+            else if (type === 'salida'){
+                fetch(`/sells/get_by_type/?type=${type}`)
+                .then(r => r.json())
+                .then(data => {
+                    clientSelect.disabled = false;
+                    clientSelect.innerHTML = '';
+                    if (data.data.length === 0) {
+                        clientSelect.innerHTML = '<option value="">No hay clientes para este tipo de movimiento</option>';
+                        return;
+                    }
+                    data.data.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = `${p.bussiness_name}`;
+                        clientSelect.appendChild(option);
+                    });
+                    data.data.p.forEach(warehouses => {
+                        const option = document.createElement('option');
+                        option.value = p.warehouses.id;
+                        option.textContent = `${p.warehouses.name} - ${p.bussiness_name}`;
+                        warehouseSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar datos:', error));
+            }
+            else if (type === 'ajuste' || type === 'devolucion' || type === 'transferencia') {
+                fetch(`/sells/get_by_type/?type=${type}`)
+                .then(r => r.json())
+                .then(data => {
+                    clientSelect.disabled = false;
+                    clientSelect.innerHTML = '';
+                    if (data.data.length === 0) {
+                        clientSelect.innerHTML = '<option value="">No hay clientes para este tipo de movimiento</option>';
                         return;
                     }
                     data.data.forEach(p => {
                         const option = document.createElement('option');
                         option.value = p.id;
                         option.textContent = `${p.name}`;
-                        productSelect.appendChild(option);
+                        clientSelect.appendChild(option);
                     });
                 })
                 .catch(error => console.error('Error al cargar datos:', error));
+            }
         });
+        
+
+        clientSelect.addEventListener('change', function() {
+        const selectedClientId = this.value;
+        
+        if (selectedClientId) {
+            warehouseSelect.disabled = false;
+            Array.from(warehouseSelect.options).forEach(option => {
+                if (option.value) {
+                    option.style.display = 'none';
+                }
+            });
+            Array.from(warehouseSelect.options).forEach(option => {
+                if (option.getAttribute('data-client') == selectedClientId) {
+                    option.style.display = 'block';
+                }
+            });
+            warehouseSelect.value = '';
+        } else {
+            warehouseSelect.disabled = true;
+            warehouseSelect.value = '';
+        }
+    });
+
 
         productSelect.addEventListener('change', function () {
             const productId = this.value;

@@ -42,11 +42,6 @@ class SupplierAdmin(admin.ModelAdmin):
     search_fields = ('bussiness_name', 'fantasy_name', 'rut', 'email', 'phone')
     ordering = ('bussiness_name',)
 
-@admin.register(RawMaterial)
-class RawMaterialAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'is_perishable', 'is_active', 'supplier', 'measurement_unit', 'quantity', 'category','expiration_date')
-    search_fields = ('name',)
-    ordering = ('name',)
 @admin.register(RoleModulePermission)
 class RoleModulePermissionAdmin(admin.ModelAdmin):
     list_display = ('role', 'module', 'can_view', 'can_add', 'can_edit', 'can_delete')

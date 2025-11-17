@@ -1,55 +1,92 @@
 {% extends 'main/base.html' %}
+{% load crispy_forms_tags %}
 
-{% block title %} Proveedor {% endblock title %}
+{% block title %} Detalle del Cliente {% endblock title %}
 {% block content %}
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">Detalles del Proveedor</h4>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center mb-3">
-                            {{ p.bussiness_name }}
-                        </h5>
 
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>RUT:</strong> {{ p.rut }}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Detalle del Proveedor</h4>
+            </div>
+
+            <div class="card-body">
+
+                <h4 class="text-center mb-4">{{ b.fantasy_name }}</h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-4">Información General</h5>
+                        <ul class="list-group mb-4">
+                            <li class="list-group-item"><strong>Razón social:</strong> {{ p.bussiness_name }}</li>
+                            <li class="list-group-item"><strong>RUT:</strong> {{ p.rut }}</li>
+                            <li class="list-group-item"><strong>Email:</strong> {{ p.email|default:"No registrado" }}
                             </li>
-                            <li class="list-group-item">
-                                <strong>Nombre de fantasia:</strong> {{ p.fantasy_name }}
+                            <li class="list-group-item"><strong>Teléfono:</strong> {{ p.phone|default:"No registrado" }}
                             </li>
-                            <li class="list-group-item">
-                                <strong>Email:</strong> {{ p.email }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Teléfono:</strong> {{ p.phone }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Terminos de servicio:</strong> {{ p.trade_terms }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Estado:</strong> {{ p.is_active|yesno:"Activo,Inactivo" }}
-                            </li>
+                            <li class="list-group-item"><strong>Terminos de comercio:</strong>{{ p.trade_terms }}</li>
                         </ul>
-
-                        <div class="mt-4 text-center">
-                            <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary me-2">
-                                Editar
-                            </a>
-                            <a href="{% url 'supplier_list' %}" class="btn btn-secondary me-2">
-                                Volver a la lista
-                            </a>
-                            <button type="button" class="btn btn-danger btn-delete" 
-                                    data-url="{% url 'supplier_delete' p.id %}"
-                                    data-item-name="{{ p.fantasy_name }}">
-                                Eliminar
-                            </button>
-                        </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="row mb-2">
+                            <div class="col-6">
+
+                                <h5 class="">Materias Primas Asociadas</h5>
+                            </div>
+                            <div class="col-6 text-end align-text-bottom align-top">
+                                <a class="btn btn-danger align-text-bottom align-top" href="{% url 'raw_material_create_class' %}?next={{ request.path }}&supplier={{ p.id }}">
+                                    <i class="bi bi-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% if raw_materials %}
+                        <div class="list-group">
+                            {% for w in raw_materials %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ w.name }}</strong><br>
+                                    <small class="text-muted">{{ w.description }}</small><br>
+                                    <span>Unidad de medida: {{ w.measurement_unit }}</span><br>
+                                    {% if w.is_perishable %}
+                                    <span class="badge bg-warning">Perecible</span>
+                                    {% else %}
+                                    <span class="badge bg-success">No Perecible</span>
+                                    {% endif %}
+                                </div>
+                                <div> 
+                                    <a href="{% url 'raw_material_update_class' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-primary">
+                                    Ver / Editar
+                                </a>
+                                <a href="{% url 'raw_material_delete_class' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-danger">
+                                    Eliminar
+                                </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary text-center">
+                            No hay bodegas asociadas.
+                        </div>
+                        {% endif %}
+                    </div>
+
                 </div>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary me-2">Editar</a>
+                    <a href="{% url 'supplier_list' %}" class="btn btn-secondary me-2">Volver</a>
+                    <button type="button" class="btn btn-danger btn-delete" data-url="{% url 'supplier_delete' p.id %}"
+                        data-item-name="{{ b.fantasy_name }}">
+                        Eliminar
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
+</div>
+
 {% endblock content %}

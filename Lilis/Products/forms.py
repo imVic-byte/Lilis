@@ -1,5 +1,5 @@
 from django import forms
-from Products.models import Product, Category, Supplier, RawMaterial, PriceHistories, Batch
+from Products.models import Product, Category, Supplier, RawMaterial, PriceHistories, Batch, RawMaterialClass
 from Main.validators import *
 
 class ProductForm(forms.ModelForm):
@@ -155,18 +155,61 @@ class SupplierForm(forms.ModelForm):
         if commit:
             supplier.save()
         return supplier
-
-class RawMaterialForm(forms.ModelForm):
+    
+class RawMaterialClassForm(forms.ModelForm):
     class Meta:
-        model = RawMaterial
-        fields = ['name', 'description', 'is_perishable', 'supplier' , 'category' , 'measurement_unit', 'quantity', 'created_at', 'expiration_date']
+        model = RawMaterialClass
+        exclude = ['supplier']
+        fields = ['supplier', 'name', 'description', 'is_perishable', 'measurement_unit', 'category']
         labels = {
             'name': 'Nombre',
             'description': 'Descripción',
             'is_perishable' : 'Es perecible',
-            'supplier': 'Proveedor',
-            'category': 'Categoria',
             'measurement_unit' : 'Unidad de medida',
+            'category': 'Categoría',
+            'supplier': '',
+        }
+        widgets = {
+            'measurement_unit': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'supplier': forms.Select(attrs={'disabled': True, 'class':'d-none'}),
+        }
+
+        def clean_name(self):
+            return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
+
+        def clean_description(self):
+            return validate_text_length(self.cleaned_data.get('description'), min_length=5, field_name="La descripción", allow_empty=True)
+
+        def clean_quantity(self):
+            return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")
+
+        def clean_expiration_date(self):
+            is_perishable = self.cleaned_data.get('is_perishable')
+            exp_date = self.cleaned_data.get('expiration_date')
+            if is_perishable and not exp_date:
+                raise forms.ValidationError('Productos perecibles deben tener fecha de vencimiento.')
+            if exp_date:
+                return validate_future_date(exp_date, field_name="La fecha de vencimiento", allow_today=True)
+            return exp_date
+
+        def clean_created_at(self):
+            created_at = self.cleaned_data.get('created_at')
+            if created_at:
+                return validate_past_or_today_date(created_at, field_name="La fecha de creación")
+            return created_at
+
+        def save(self, commit=True):
+            raw_material_class = super().save(commit=False)
+            if commit:
+                raw_material_class.save()
+            return raw_material_class
+
+class RawMaterialForm(forms.ModelForm):
+    class Meta:
+        model = RawMaterial
+        fields = ['raw_material_class','quantity', 'created_at', 'expiration_date']
+        labels = {
+            'raw_material_class' : 'Materia Prima',
             'quantity' : 'Cantidad',
             'created_at' : 'Fecha de creacion',
             'expiration_date' : 'Fecha de vencimiento'
@@ -181,13 +224,6 @@ class RawMaterialForm(forms.ModelForm):
                 attrs={'type': 'date', 'required': True}
             ),
         }
-
-    def clean_name(self):
-        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
-
-    def clean_description(self):
-        return validate_text_length(self.cleaned_data.get('description'), min_length=5, field_name="La descripción", allow_empty=True)
-
     def clean_quantity(self):
         return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")
 

@@ -37,6 +37,9 @@ raw_materials = [
     path('raw_material_delete/<int:id>/', views.raw_material_delete, name='raw_material_delete'),
     path('export_raw_materials_excel/', views.export_raw_materials_excel, name='export_raw_materials_excel'),
     path('raw_material_search/', views.raw_material_search, name='raw_material_search'),
+    path('raw_material_create_class/', views.raw_material_create_class, name='raw_material_create_class'),
+    path('raw_material_update_class/<int:id>/', views.raw_material_create_class_update, name='raw_material_update_class'),
+    path('raw_material_delete_class/<int:id>/', views.raw_material_delete_class, name='raw_material_delete_class'),
 ]
 
 batchs =[

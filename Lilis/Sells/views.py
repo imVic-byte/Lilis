@@ -7,7 +7,7 @@ from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
 from django.http import JsonResponse
 from Products.services import BatchService
-from Products.services import ProductService, RawMaterialService
+from Products.services import ProductService, RawMaterialService, SupplierService
 from datetime import date
 
 client_service = ClientService()
@@ -17,6 +17,7 @@ transaction_service = TransactionService()
 batch_service = BatchService()
 product_service = ProductService()
 raw_material_service = RawMaterialService()
+supplier_service = SupplierService()
 
 # ===================================
 # VISTAS DE CLIENTES
@@ -25,47 +26,24 @@ raw_material_service = RawMaterialService()
 @login_required
 @permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_list_all(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
     allowed_per_page = [5, 25, 50, 100]
     default_per_page = request.user.profile.per_page
-    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
-    
-    # Validar que el valor esté en la lista permitida
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    # ===================================
-    
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['rut', 'fantasy_name', 'bussiness_name', 'email', 'phone']
-    sort_by = request.GET.get('sort_by', 'fantasy_name') # Default: fantasy_name
-    order = request.GET.get('order', 'asc')              # Default: asc
-
-    # Validar que los campos y el orden sean correctos
+    sort_by = request.GET.get('sort_by', 'fantasy_name')
+    order = request.GET.get('order', 'asc')
     if sort_by not in allowed_sort_fields:
         sort_by = 'fantasy_name'
     if order not in ['asc', 'desc']:
         order = 'asc'
-        
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    
-
-     
     qs = client_service.list_actives()
-
-    #filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(fantasy_name__icontains=q) |
@@ -74,46 +52,29 @@ def client_list_all(request):
             Q(email__icontains=q) |
             Q(phone__icontains=q)
         )
-        
-    #ordenamiento
     qs = qs.order_by(order_by_field)
-
-    #Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
-
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
-
-
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
-
-   
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-   
-
-    
     context = {
         "page_obj": page_obj,  
         "q": q,
         "per_page": per_page,
         "total": qs.count(),
-        
-        
         "querystring": querystring_pagination, 
-        
-        
         "querystring_sorting": querystring_sorting,
         "current_sort_by": sort_by,
         "current_order": order,
@@ -137,7 +98,6 @@ def client_list_inactives(request):
     
     return render(request, 'clients/client_list.html', {'clients': clients})
 
-# --- Resto de vistas de Cliente (con redirects actualizados) ---
 @login_required()
 @permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
 def client_search(request):
@@ -157,7 +117,7 @@ def client_view(request, id):
         warehouses = client.wareclients.all()
         return render(request, 'clients/client_view.html', {'b': client, 'warehouses': warehouses})
     else:
-        return redirect('client_list_all') # ¡Redirect actualizado!
+        return redirect('client_list_all')
 
 @login_required
 @permission_or_redirect('Sells.add_client','dashboard', 'No teni permiso')
@@ -166,7 +126,7 @@ def client_create(request):
     if request.method == 'POST':
         success, obj = client_service.save(request.POST)
         if success:
-            return redirect('client_list_all') # ¡Redirect actualizado!
+            return redirect('client_list_all')
         else:
             return render(request, 'clients/client_create.html', {'form': obj})
     return render(request, 'clients/client_create.html', {'form': form})
@@ -404,86 +364,48 @@ def export_locations_excel(request):
 @login_required
 @permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
 def warehouse_list(request):
-    
-    # 1. Obtener filtros de la URL
     q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
     allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25  # Nuevo default
-    
+    default_per_page = 25
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
-    
-    # Validar que el valor esté en la lista permitida
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    # ===================================
-
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
     allowed_sort_fields = ['name', 'address', 'location__name', 'total_area']
-    sort_by = request.GET.get('sort_by', 'name') # Default: 'name' (como pediste)
-    order = request.GET.get('order', 'asc')      # Default: asc
-
-    # Validar que los campos y el orden sean correctos
+    sort_by = request.GET.get('sort_by', 'name')
+    order = request.GET.get('order', 'asc')
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
     if order not in ['asc', 'desc']:
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
-
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
     qs = warehouse_service.model.objects.all()
-
-    # 5. Aplicar filtro de búsqueda
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
             Q(address__icontains=q) |
-            Q(location__name__icontains=q) # Búsqueda en la FK
+            Q(location__name__icontains=q)
         )
-        
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
     qs = qs.order_by(order_by_field)
-
-    # 7. Paginación
     paginator = Paginator(qs, per_page)
     page_number = request.GET.get("page")
-
-    # 8. Obtener página
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
-
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
     params_pagination = request.GET.copy()
     params_pagination.pop("page", None)
     querystring_pagination = params_pagination.urlencode()
-
-    # 10. Querystring para Ordenamiento
     params_sorting = request.GET.copy()
     params_sorting.pop("page", None)
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    # ===================================
-
-    # 11. Contexto
     context = {
         "page_obj": page_obj,  
         "q": q,
@@ -522,9 +444,9 @@ def warehouse_create(request):
                     next = request.GET.get('next')
                     return redirect(next)
                 else:
-                    return render(request, 'warehouses/warehouse_create.html', {'form': obj, 'error': 'No se pudo asignar la bodega.'})
+                    return render(request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': 'No se pudo asignar la bodega.'})
             else:
-                return render(request, 'warehouses/warehouse_create.html', {'form': obj, 'error': 'No se pudo crear la bodega.'})
+                return render(request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': 'No se pudo crear la bodega.'})
         else:
             success, obj = warehouse_service.save(request.POST)
             if success:
@@ -596,23 +518,43 @@ def export_warehouse_excel(request):
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
 
-def get_warehouses_by_client(request):
-    client_id = request.GET.get('client_id')
-    warehouses_list = []
+def get_warehouses(request):
+    id = request.GET.get('id')
+    type = request.GET.get('type')
+    if type == 'salida':
+        warehouses_list = []
+        if id:
+            client = client_service.get(id)
+            if client:
+                warehouses = warehouse_service.filter_by_client(client)
+                for w in warehouses:
+                    warehouses_list.append({
+                        'id': w.id,
+                        'name': w.name,
+                        'address': w.address,
+                        'location': w.location,
+                    })
+        return JsonResponse({'warehouses': warehouses_list})
+    elif type == 'ingreso':
+        warehouses_list = []
+        if id:
+            suppliers = supplier_service.list_actives()
+            for s in suppliers:
+                warehouses = warehouse_service.filter_by_supplier(s)
+                for w in warehouses:
+                    warehouses_list.append({
+                        'id': w.id,
+                        'name': w.name,
+                        'address': w.address,
+                        'location': w.location,
+                    })
+            return JsonResponse({'warehouses': warehouses_list})    
+    else:
+        warehouses_list = []
+        if id:
+            clients = client_service.list_actives().filter(id=id)
 
-    if client_id:
-        client = client_service.get(client_id)
-        if client:
-            warehouses = warehouse_service.filter_by_client(client)
-            for w in warehouses:
-                warehouses_list.append({
-                    'id': w.id,
-                    'name': w.name,
-                    'address': w.address,
-                    'location': w.location,
-                })
 
-    return JsonResponse({'warehouses': warehouses_list})
 
 def get_stock_by_product(request):
     product_id = request.GET.get('product_id')
@@ -622,24 +564,90 @@ def get_stock_by_product(request):
 def get_by_type(request):
     type = request.GET.get('type')
     if type == 'ingreso':
-        raw_materials = raw_material_service.list_actives()
         data = []
-        for rm in raw_materials:
-            data.append({
-                'id': rm.id,
-                'name': rm.name,
+        Lilis = client_service.search_by_rut('2519135-8')
+        l = Lilis[0] #esto es lilis xd
+        lilis_warehouses = [] #lista de bodegas de lilis
+        warehouses = warehouse_service.filter_by_client(l)
+        for w in warehouses:
+                lilis_warehouses.append({
+                    'id': w.id,
+                    'name': w.name,
+                    'address': w.address,
+                    'location': w.location,
                 })
+        suppliers = supplier_service.list_actives()
+        supplier_data = []
+        for s in suppliers:
+            supplier_data = {
+                    'id': s.id,
+                    'bussiness_name': s.bussiness_name,
+                    'rut': s.rut,
+                    'raw_materials': [],
+                }
+        
+        data.append(supplier_data)
+        return JsonResponse({'data': data})
+    elif type == 'salida':
+        data = []
+        clients = client_service.list_actives().exclude(rut='2519135-8')
+        for c in clients:
+            client_data = {
+                'id': c.id,
+                'bussiness_name': c.bussiness_name,
+                'rut': c.rut,
+                'warehouses': [],
+            }
+            warehouses = warehouse_service.filter_by_client(c)
+            for w in warehouses:
+               client_data['warehouses'].append({
+                    'id': w.id,
+                    'name': w.name,
+                    'address': w.address,
+                    'location': w.location,
+               })
+            data.append(client_data)
+        return JsonResponse({'data': data})
+    elif type == 'devolucion':
+        data = []
+        clients = client_service.list_actives().exclude(rut='2519135-8')
+        for c in clients:
+            client_data = {
+                'id': c.id,
+                'name': c.bussiness_name,
+                }
+            data.append(client_data)
+        suppliers = supplier_service.list_actives().exclude(rut='2519135-8')
+        for s in suppliers:
+            supplier_data = {
+                'id': s.id,
+                'bussiness_name': s.bussiness_name,
+                'rut': s.rut,
+            }
+            data.append(supplier_data)
         return JsonResponse({'data': data})
     else:
-        products = product_service.list_actives()
         data = []
-        for p in products:
-            data.append({
-                'id': p.id,
-                'name': p.name,
-                })
+        client = client_service.search_by_rut('2519135-8')
+        c = client[0]
+        client_data = {
+            'id': c.id,
+            'bussiness_name': c.bussiness_name,
+            'rut': c.rut,
+            'warehouses': [],
+        }
+        warehouses = warehouse_service.filter_by_client(c)
+        for w in warehouses:
+            warehouse_data = {
+                'id': w.id,
+                'name': w.name,
+                'address': w.address,
+                'location': w.location,
+            }
+            client_data['warehouses'].append(warehouse_data)
+        data.append(client_data)
         return JsonResponse({'data': data})
-
+    
 def validate_code(request):
     code = request.GET.get('code')
     return JsonResponse({'valid': transaction_service.validate_code(code)})

@@ -19,21 +19,28 @@ class Category(models.Model):
     def __str__(self):
         return self.name  
     
-class RawMaterial(models.Model):
+class RawMaterialClass(models.Model):
     sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     is_perishable = models.BooleanField(default=False)
-    expiration_date = models.DateField(null=True, blank=True)
-    created_at = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="raw_materials")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="raw_materials")
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')])
+
+    def __str__(self):
+        return self.name
+    
+class RawMaterial(models.Model):
+    raw_material_class = models.ForeignKey(RawMaterialClass, on_delete=models.PROTECT, related_name="raw_materials")
+    expiration_date = models.DateField(null=True, blank=True)
+    created_at = models.DateField(null=True, blank=True)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.name    
+    
     
 class Product(models.Model):
     name = models.CharField(max_length=100)

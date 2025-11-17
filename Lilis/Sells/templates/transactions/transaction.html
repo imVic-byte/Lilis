@@ -136,8 +136,19 @@
             {% else %}
                 <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
             {% endif %}
-
-            <td>{{ t.product.sku }}</td>
+            {% if t.type == 'ingreso' %}
+                {% if t.raw_material %}
+                <td>{{ t.raw_material.sku|default_if_none:"No aplica." }}</td>
+                {% else %}
+                <td>{{t.product.sku|default_if_none:"No aplica." }}</td>
+                {% endif %}
+            {% else %}
+                {% if t.raw_material %}
+                <td>{{ t.raw_material.sku|default_if_none:"No aplica." }}</td>
+                {% else %}
+                <td>{{t.product.sku|default_if_none:"No aplica." }}</td>
+                {%endif%}
+            {% endif %}
             <td>{{ t.client.rut }}</td>
             <td>{{ t.warehouse.name }}</td>
 
@@ -147,9 +158,9 @@
                 <td class="text-danger fw-bold">- {{ t.quantity }}</td>
             {% endif %}
 
-            <td>{{ t.batch_code|default_if_none:"-" }}</td>
-            <td>{{ t.serie_code|default_if_none:"-" }}</td>
-            <td>{{ t.expiration_date|default_if_none:"-" }}</td>
+            <td>{{ t.batch_code|default_if_none:"No aplica." }}</td>
+            <td>{{ t.serie_code|default_if_none:"No aplica." }}</td>
+            <td>{{ t.expiration_date|default_if_none:"Sin vencimiento" }}</td>
 
             <td>
                 <button class="btn btn-primary btn-sm">Editar</button>

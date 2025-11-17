@@ -15,9 +15,7 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item"><strong>Dirección:</strong> {{ w.address }}</li>
                             <li class="list-group-item"><strong>Superficie total:</strong> {{ w.total_area }} m²</li>
-                            <li class="list-group-item"><strong>Ubicación:</strong> {{ w.location.name }}</li>
-                            <li class="list-group-item"><strong>Ciudad:</strong> {{ w.location.city }}</li>
-                            <li class="list-group-item"><strong>País:</strong> {{ w.location.country }}</li>
+                            <li class="list-group-item"><strong>País:</strong> {{ w.location }}</li>
                         </ul>
                         <div class="mt-4 text-center">
                             <a href="{% url 'warehouse_update' w.id %}" class="btn btn-primary me-2">Editar</a>

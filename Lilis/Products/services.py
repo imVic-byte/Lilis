@@ -1,11 +1,11 @@
 from Products.models import (
-    Product, Category, RawMaterial, Batch, Supplier, PriceHistories,
+    Product, Category, RawMaterial, Batch, Supplier, PriceHistories, RawMaterialClass
 )
 
 
 from Products.forms import (
     RawMaterialForm,  PriceHistoriesForm, ProductBatchForm,RawBatchForm, ProductForm, 
-    CategoryForm, SupplierForm,
+    CategoryForm, SupplierForm, RawMaterialClassForm,
 )
 
 from Main.CRUD import CRUD
@@ -86,6 +86,8 @@ class SupplierService(CRUD):
 class RawMaterialService(CRUD):
     def __init__(self):
         self.model = RawMaterial
+        self.raw_material_class = RawMaterialClass
+        self.raw_material_class_form_class = RawMaterialClassForm
         self.form_class = RawMaterialForm
     
     def search_by_description(self, description):
@@ -105,6 +107,32 @@ class RawMaterialService(CRUD):
     def list_actives(self):
         return self.model.objects.filter(is_active=True)
 
+    def save_raw_material_class(self, data, supplier):
+        form = self.raw_material_class_form_class(data)
+        if form.is_valid():
+            raw_material_class = form.save(commit=False)
+            raw_material_class.supplier = supplier
+            raw_material_class.save()
+            return True, raw_material_class
+        return False, form
+    
+    def update_raw_material_class(self, id, data):
+        form = self.raw_material_class_form_class(data, instance=self.raw_material_class.objects.get(id=id))
+        if form.is_valid():
+            raw_material_class = form.save(commit=False)
+            raw_material_class.supplier = self.raw_material_class.objects.get(id=id).supplier
+            raw_material_class.save()
+            return True, raw_material_class
+        return False, form
+
+    def delete_raw_material_class(self, id):
+        try:
+            raw_material_class = self.raw_material_class.objects.get(id=id)
+            raw_material_class.delete()
+            return True, raw_material_class
+        except self.raw_material_class.DoesNotExist:
+            return False, None
+        
 class BatchService(CRUD):
     def __init__(self):
         self.model = Batch
