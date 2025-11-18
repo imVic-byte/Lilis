@@ -5,7 +5,7 @@ from .forms import TransactionForm,ClientForm, LocationForm, WarehouseForm,  Sal
 import datetime
 from Products.services import ProductService, BatchService, RawMaterialService
 from decimal import Decimal
-
+from django.utils import timezone
 class ClientService(CRUD):  
     def __init__(self):
         self.model = Client
@@ -176,12 +176,12 @@ class TransactionService(CRUD):
             data['product'] = product
             data['raw_material'] = None
         elif is_ingreso:
-            tipo, id = data['raw_material'].split('-')
+            id = data['product']
             raw_material_class = raw_material_service.raw_material_class.objects.get(id=id)
             raw_data = {
                 'raw_material_class': raw_material_class,
                 'expiration_date': data['expiration_date'],
-                'created_at': data['date'],
+                'created_at': timezone.localdate(),
                 'quantity': data['quantity'],
             }
             raw = raw_material_service.model.objects.create(**raw_data)
@@ -205,6 +205,7 @@ class TransactionService(CRUD):
             current_quantity=data['quantity'],
             serie=not is_lote
         )
+        data['batch'] = batch
         transaction = self.model.objects.create(**data)
         if not transaction:
             return False, None

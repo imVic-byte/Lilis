@@ -189,7 +189,8 @@ def products_list(request):
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
-            Q(description__icontains=q)
+            Q(description__icontains=q)|
+            Q(sku__icontains=q)
         )
         
     qs = qs.order_by(order_by_field)
@@ -844,7 +845,7 @@ def raw_batch_list(request):
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
-    allowed_sort_fields = ['raw_material__name', 'raw_material__supplier__name', 'batch_code']
+    allowed_sort_fields = ['raw_material_class__name', 'raw_material_class__supplier__fantasy_name', 'batch_code']
     sort_by = request.GET.get('sort_by', 'batch_code')
     order = request.GET.get('order', 'asc')
 
@@ -855,10 +856,7 @@ def raw_batch_list(request):
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
 
-    qs = batch_service.list_raw_materials().select_related(
-        "raw_material", 
-        "raw_material__supplier"
-    )
+    qs = batch_service.list_raw_materials()
 
     if q:
         qs = qs.filter(

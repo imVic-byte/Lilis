@@ -2,7 +2,7 @@ from Products.models import (
     Product, Category, RawMaterial, Batch, Supplier, PriceHistories, RawMaterialClass
 )
 
-
+from decimal import Decimal
 from Products.forms import (
     RawMaterialForm,  PriceHistoriesForm, ProductBatchForm,RawBatchForm, ProductForm, 
     CategoryForm, SupplierForm, RawMaterialClassForm,
@@ -90,6 +90,14 @@ class RawMaterialService(CRUD):
         self.raw_material_class_form_class = RawMaterialClassForm
         self.form_class = RawMaterialForm
     
+    def get_stock_by_raw_material(self, id):
+        rm = self.model.objects.filter(raw_material_class__id=id)
+        stock = 0
+        for r in rm:
+            stock += Decimal(r.quantity)
+        return stock
+
+
     def search_by_description(self, description):
         return self.model.objects.filter(description__icontains=description)
     
@@ -212,6 +220,11 @@ class BatchService(CRUD):
     
     def list_raw_materials(self):
         return self.model.objects.filter(raw_material__isnull=False)
+    
+    def where_is_batch(self, batch_id):
+        batch = self.model.objects.filter(batch__id=batch_id)
+        warehouse = batch.transactions.first().warehouse
+        return warehouse
     
 class PriceHistoriesService(CRUD):
     

@@ -556,8 +556,12 @@ def get_warehouses(request):
             clients = client_service.list_actives().filter(id=id)
 
 def get_stock_by_product(request):
-    product_id = request.GET.get('product_id')
-    stock = product_service.get_stock_by_product(product_id)
+    product = request.GET.get('product_id')
+    p, id = product.split('-')
+    if p == 'product':
+        stock = product_service.get_stock_by_product(id)
+    else:
+        stock = raw_material_service.get_stock_by_raw_material(id)
     return JsonResponse({'stock': stock})
 
 
