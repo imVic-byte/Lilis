@@ -19,6 +19,7 @@ product_service = ProductService()
 raw_material_service = RawMaterialService()
 supplier_service = SupplierService()
 
+LILIS_RUT = "2519135-8"
 # ===================================
 # VISTAS DE CLIENTES
 # ===================================
@@ -554,99 +555,158 @@ def get_warehouses(request):
         if id:
             clients = client_service.list_actives().filter(id=id)
 
-
-
 def get_stock_by_product(request):
     product_id = request.GET.get('product_id')
     stock = product_service.get_stock_by_product(product_id)
     return JsonResponse({'stock': stock})
 
-def get_by_type(request):
-    type = request.GET.get('type')
-    if type == 'ingreso':
-        data = []
-        Lilis = client_service.search_by_rut('2519135-8')
-        l = Lilis[0] #esto es lilis xd
-        lilis_warehouses = [] #lista de bodegas de lilis
-        warehouses = warehouse_service.filter_by_client(l)
-        for w in warehouses:
-                lilis_warehouses.append({
-                    'id': w.id,
-                    'name': w.name,
-                    'address': w.address,
-                    'location': w.location,
-                })
-        suppliers = supplier_service.list_actives()
-        supplier_data = []
-        for s in suppliers:
-            supplier_data = {
-                    'id': s.id,
-                    'bussiness_name': s.bussiness_name,
-                    'rut': s.rut,
-                    'raw_materials': [],
-                }
-        
-        data.append(supplier_data)
-        return JsonResponse({'data': data})
-    elif type == 'salida':
-        data = []
-        clients = client_service.list_actives().exclude(rut='2519135-8')
-        for c in clients:
-            client_data = {
-                'id': c.id,
-                'bussiness_name': c.bussiness_name,
-                'rut': c.rut,
-                'warehouses': [],
-            }
-            warehouses = warehouse_service.filter_by_client(c)
-            for w in warehouses:
-               client_data['warehouses'].append({
-                    'id': w.id,
-                    'name': w.name,
-                    'address': w.address,
-                    'location': w.location,
-               })
-            data.append(client_data)
-        return JsonResponse({'data': data})
-    elif type == 'devolucion':
-        data = []
-        clients = client_service.list_actives().exclude(rut='2519135-8')
-        for c in clients:
-            client_data = {
-                'id': c.id,
-                'name': c.bussiness_name,
-                }
-            data.append(client_data)
-        suppliers = supplier_service.list_actives().exclude(rut='2519135-8')
-        for s in suppliers:
-            supplier_data = {
-                'id': s.id,
-                'bussiness_name': s.bussiness_name,
-                'rut': s.rut,
-            }
-            data.append(supplier_data)
-        return JsonResponse({'data': data})
-    else:
-        data = []
-        client = client_service.search_by_rut('2519135-8')
-        c = client[0]
+
+def warehouse_to_dict(w):
+    return {
+        'id': w.id,
+        'name': w.name,
+        'address': w.address,
+        'location': w.location,
+    }
+
+
+def raw_material_to_dict(rm):
+    return {
+        'id': rm.id,
+        'name': rm.name,
+        'sku': rm.sku,
+        'measurement_unit': rm.measurement_unit,
+    }
+
+
+def supplier_base_dict(s):
+    return {
+        'id': s.id,
+        'bussiness_name': s.bussiness_name,
+        'rut': s.rut,
+    }
+
+
+def get_warehouses_for_client(client):
+    warehouses = warehouse_service.filter_by_client(client)
+    return [warehouse_to_dict(w) for w in warehouses]
+
+
+def handle_ingreso():
+    l = client_service.search_by_rut(LILIS_RUT)[0]
+    data = {
+        'warehouses': get_warehouses_for_client(l),
+        'suppliers': [],
+    }
+    suppliers = supplier_service.list_actives()
+    for s in suppliers:
+        supplier_data = supplier_base_dict(s)
+        rms = raw_material_service.raw_material_class.objects.filter(supplier=s)
+        supplier_data['raw_materials'] = [raw_material_to_dict(rm) for rm in rms]
+        data['suppliers'].append(supplier_data)
+    return JsonResponse({'data': data})
+
+def handle_salida():
+    data = []
+    clients = client_service.list_actives().exclude(rut=LILIS_RUT)
+
+    for c in clients:
         client_data = {
             'id': c.id,
             'bussiness_name': c.bussiness_name,
             'rut': c.rut,
-            'warehouses': [],
+            'warehouses': get_warehouses_for_client(c),
         }
-        warehouses = warehouse_service.filter_by_client(c)
-        for w in warehouses:
-            warehouse_data = {
-                'id': w.id,
-                'name': w.name,
-                'address': w.address,
-                'location': w.location,
-            }
-            client_data['warehouses'].append(warehouse_data)
         data.append(client_data)
-        return JsonResponse({'data': data})
+
+    return JsonResponse({'data': data})
+
+
+def handle_devolucion():
+    data = {
+        'clients': [],
+        'products': [],
+        'raw_materials': [],
+        'warehouses': [],
+    }
+    clients = client_service.list_actives().exclude(rut=LILIS_RUT)
+    for c in clients:
+        data['clients'].append(supplier_base_dict(c))
+    suppliers = supplier_service.list_actives().exclude(rut=LILIS_RUT)
+    for s in suppliers:
+        data['clients'].append(supplier_base_dict(s))
+    products = product_service.list_actives()
+    for p in products:
+        data['products'].append(raw_material_to_dict(p))
+    raw_materials = raw_material_service.raw_material_class.objects.filter(is_active=True)
+    for rm in raw_materials:
+        data['raw_materials'].append(raw_material_to_dict(rm))
+    l = client_service.search_by_rut(LILIS_RUT)[0]
+    warehouses = get_warehouses_for_client(l)
+    for w in warehouses:
+        data['warehouses'].append(w)
+    return JsonResponse({'data': data})
+
+
+def handle_transfer():
+    c = client_service.search_by_rut(LILIS_RUT)[0]
+    data = {
+        'clients': [supplier_base_dict(c)],
+        'products': [],
+        'raw_materials': [],
+        'warehouses': [],
+    }
+    products = product_service.list_actives()
+    for p in products:
+        data['products'].append(raw_material_to_dict(p))
+    raw_materials = raw_material_service.raw_material_class.objects.filter(is_active=True)
+    for rm in raw_materials:
+        data['raw_materials'].append(raw_material_to_dict(rm))
+    l = client_service.search_by_rut(LILIS_RUT)[0]
+    warehouses = get_warehouses_for_client(l)
+    for w in warehouses:
+        data['warehouses'].append(w)
+    return JsonResponse({'data': data})
+
+def get_raw_materials_by_supplier(request):
+    id = request.GET.get('id')
+    type = request.GET.get('type')
+    if type == 'ingreso':
+        p = []
+        raw_materials = raw_material_service.raw_material_class.objects.filter(supplier_id=id)
+        for rm in raw_materials:
+            p.append({
+                'id': rm.id,
+                'name': rm.name,
+                'sku': rm.sku,
+                'measurement_unit': rm.measurement_unit,
+            })
+        return JsonResponse({'p': p})
+    elif type == 'salida':
+        p = []
+        products = product_service.list_actives()
+        for pr in products:
+            p.append({
+                'id': pr.id,
+                'sku': pr.sku,
+                'name': pr.name,
+                'measurement_unit': pr.measurement_unit,
+            })
+        return JsonResponse({'p': p})
+
+
+
+def get_by_type(request):
+    tipo = request.GET.get('type')
+    match tipo:
+        case 'ingreso':
+            return handle_ingreso()
+        case 'salida':
+            return handle_salida()
+        case 'devolucion':
+            return handle_devolucion()
+        case _:
+            return handle_transfer()
     
 def validate_code(request):
     code = request.GET.get('code')
@@ -717,6 +777,7 @@ def transaction(request):
             'batch_code':request.POST.get('lote'),
             'serie_code':request.POST.get('serie'),
             'expiration_date':request.POST.get('vencimiento'),
+            'date':request.POST.get('fecha'),
         }
         print(data)
         transaction_service.create_transaction(data)
@@ -769,3 +830,16 @@ def export_transaction_excel(request):
         ])
     headers = ["Tipo", "SKU", "Cliente", "Bodega", "Fecha", "Vencimiento", "Lote", "Serie", "Observaciones"]
     return generate_excel_response(headers, data_rows, "Lilis_Transacciones")
+
+@login_required
+@permission_or_redirect('Sells.change_transaction','dashboard', 'No teni permiso')
+def transaction_update(request, id):
+    original = transaction_service.model.objects.get(id=id)
+    if request.method == 'POST':
+        form = transaction_service.form_class(request.POST, base_transaction=original)
+        if form.is_valid():
+            form.save() 
+            return redirect('transaction_list')
+    else:
+        form = transaction_service.form_class(base_transaction=original)
+    return render(request, 'transactions/transaction_update.html', {'form': form})

@@ -133,8 +133,14 @@
 
             {% if t.type == 'ingreso' %}
                 <td><span class="badge bg-success text-center">{{ t.type }}</span></td>
-            {% else %}
+            {% elif t.type == 'devolucion' %}
+                <td><span class="badge bg-warning text-center">{{ t.type }}</span></td>
+            {% elif t.type == 'transferencia' %}
+                <td><span class="badge bg-warning text-center">{{ t.type }}</span></td>
+            {% elif t.type == 'salida' %}
                 <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
+            {% else %}
+                <td><span class="badge bg-info text-center">Ajuste</span></td>
             {% endif %}
             {% if t.type == 'ingreso' %}
                 {% if t.raw_material %}
@@ -153,9 +159,15 @@
             <td>{{ t.warehouse.name }}</td>
 
             {% if t.type == 'ingreso' %}
-                <td class="text-success fw-bold">+ {{ t.quantity }}</td>
+                <td class="text-success fw-bold text-center">+ {{ t.quantity }}</td>
+            {% elif t.type == 'devolucion' %}
+                <td class="text-warning fw-bold text-center">+ {{ t.quantity }}</td>
+            {% elif t.type == 'transferencia' %}
+                <td class="text-warning fw-bold text-center"> {{ t.quantity }}</td>
+            {% elif t.type == 'salida' %}
+                <td class="text-danger fw-bold text-center">- {{ t.quantity }}</td>
             {% else %}
-                <td class="text-danger fw-bold">- {{ t.quantity }}</td>
+                <td class="text-info fw-bold text-center"> {{ t.quantity }}</td>
             {% endif %}
 
             <td>{{ t.batch_code|default_if_none:"No aplica." }}</td>
@@ -163,7 +175,7 @@
             <td>{{ t.expiration_date|default_if_none:"Sin vencimiento" }}</td>
 
             <td>
-                <button class="btn btn-primary btn-sm">Editar</button>
+                <a href="{% url 'transaction_update' t.id %}" class="btn btn-primary btn-sm">Editar</a>
             </td>
         </tr>
         {% empty %}
@@ -268,19 +280,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const ADMIN_OVERRIDE_CODE = "Admin123";
     form.addEventListener('submit', function (e) {
         e.preventDefault();
-
         const getVal = id => {
             const el = document.getElementById(id);
             return el ? (el.value || '').trim() : '';
         };
-
         const fecha = getVal('fecha');
         const tipo = getVal('tipo');
         const cantidad = getVal('cantidad');
         const producto = getVal('product-select');
         const cliente = getVal('client-select');
         const bodega = getVal('warehouse-select');
-
         const loteCheckbox = document.getElementById('control-lotes');
         const serieCheckbox = document.getElementById('control-series');
         const vencimientoCheckbox = document.getElementById('control-vencimiento');
@@ -289,10 +298,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const vencimientoInput = document.getElementById('input-vencimiento');
         const observaciones = document.getElementById('observaciones');
         const stockInput = document.getElementById('stock');
-
         const stock = stockInput ? Number(stockInput.value) : 0;
         const cantidadNum = Number(cantidad);
-
         let errores = [];
         if (!fecha) errores.push("Debe seleccionar una fecha.");
         if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
@@ -322,17 +329,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
             }
         }
-
+        if (serieCheckbox.checked) {
+            if (!vencimientoCheckbox.checked || !vencimientoInput.value.trim()) {
+                errores.push("Debe activar vencimiento e ingresar una fecha.");
+            } else if (new Date(vencimientoInput.value) < new Date()) {
+                errores.push("La fecha de vencimiento no puede ser anterior a la fecha actual.");
+            }
+        }
         if (loteCheckbox && !loteCheckbox.checked && serieCheckbox && !serieCheckbox.checked) {
             errores.push("Debe seleccionar un tipo de control.");
         }
-
         if (!observaciones || !observaciones.value.trim()) {
             errores.push("Debe ingresar observaciones.");
         } else if (observaciones.value.trim().length > 500) {
             errores.push("Las observaciones no pueden exceder los 500 caracteres.");
         }
-
         if (errores.length > 0) {
             Swal.fire({
                 icon: 'error',
@@ -362,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             return;
         }
-
         if (tipo === "salida" && cantidadNum > stock) {
             Swal.fire({
                 title: 'La salida supera el stock actual',
@@ -406,5 +416,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
 {% endblock %}

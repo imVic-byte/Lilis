@@ -96,6 +96,7 @@ class WarehouseForm(forms.ModelForm):
         choices=PAISES,
         label="Localidad",
     )
+
     class Meta:
         model = Warehouse
         fields = ['name', 'address', 'location', 'total_area']
@@ -165,4 +166,44 @@ class SaleOrderDetailForm(forms.ModelForm):
             return sale_order_detail
         return sale_order_detail
 
+from django import forms
+from .models import Transaction
 
+class TransactionForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = [
+            'warehouse', 'client', 'user', 'notes', 'quantity',
+            'product', 'batch_code', 'serie_code', 'expiration_date'
+        ]
+        labels = {
+            'warehouse': 'Almacén',
+            'client': 'Cliente',
+            'user': 'Usuario',
+            'notes': 'Observaciones',
+            'quantity': 'Cantidad',
+            'product': 'Producto',
+            'batch_code': 'Lote',
+            'serie_code': 'Serie',
+            'expiration_date': 'Vencimiento'
+        }
+        widgets = {
+            'user': forms.HiddenInput(),
+            'type': forms.TextInput(attrs={'class': 'd-none'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        base_transaction = kwargs.pop('base_transaction', None)
+        super().__init__(*args, **kwargs)
+        if base_transaction:
+            for field in self.fields:
+                self.fields[field].initial = getattr(base_transaction, field)
+
+    def save(self, commit=True):
+        transaction = Transaction()
+        transaction.type = 'A'
+        for field in self.cleaned_data:
+            setattr(transaction, field, self.cleaned_data[field])
+        if commit:
+            transaction.save()
+        return transaction

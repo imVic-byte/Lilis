@@ -49,7 +49,7 @@ class Transaction(models.Model):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="transactions",null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
-    type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida')], default='I')
+    type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida'), ('D', 'Devolucion'), ('T', 'Transferencia'), ('A', 'Ajuste')], default='I')
     quantity = models.IntegerField(default=1)
     raw_material = models.ForeignKey(RawMaterial, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)

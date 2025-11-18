@@ -112,8 +112,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             loteInput.disabled = false;
             loteInput.required = true;
-
+            vencimientoCheckbox.checked = false;
             vencimientoCheckbox.disabled = false;
+            vencimientoInput.required = true;
+
         } else {
             serieCheckbox.disabled = false;
             loteInput.disabled = true;
@@ -135,11 +137,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             serieInput.disabled = false;
             serieInput.required = true;
-
             vencimientoCheckbox.checked = false;
-            vencimientoCheckbox.disabled = true;
-            vencimientoInput.disabled = true;
-            vencimientoInput.required = false;
+            vencimientoCheckbox.disabled = false;
+            vencimientoInput.required = true;
         } else {
             loteCheckbox.disabled = false;
             serieInput.disabled = true;

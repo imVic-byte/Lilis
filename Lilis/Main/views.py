@@ -19,7 +19,7 @@ def dashboard(request):
     productos = product_service.count()
     clientes_activos = client_service.count_actives()
     clientes= client_service.count()
-    transacciones = transaction_service.list()[:5]
+    transacciones = transaction_service.list().order_by('-date')[:5]
     return render(request, 'main/dashboard.html',
                   {
                       'productos': productos,

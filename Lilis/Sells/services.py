@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from Main.CRUD import CRUD
 from .models import Client, Location, Warehouse, WareClient, Transaction, SaleOrder, SaleOrderDetail
-from .forms import ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
+from .forms import TransactionForm,ClientForm, LocationForm, WarehouseForm,  SaleOrderForm, SaleOrderDetailForm
 import datetime
 from Products.services import ProductService, BatchService, RawMaterialService
 from decimal import Decimal
@@ -150,6 +150,7 @@ class SaleOrderService(CRUD):
 class TransactionService(CRUD):
     def __init__(self):
         self.model = Transaction
+        self.form_class = TransactionForm
 
     def create_transaction(self, data):
         warehouse_service = WarehouseService()
@@ -157,50 +158,61 @@ class TransactionService(CRUD):
         product_service = ProductService()
         batch_service = BatchService()
         raw_material_service = RawMaterialService()
-        warehouse = warehouse_service.get(data['warehouse'])
-        client = client_service.get(data['client'])
-        data['warehouse'] = warehouse
-        data['client'] = client
-        if data['type'] == 'salida' and data['batch_code']:
-            product = product_service.get(data['product'])
+        data['warehouse'] = warehouse_service.get(data['warehouse'])
+        data['client'] = client_service.get(data['client'])
+        type_ = data['type']
+        is_salida = type_ == 'salida'
+        is_ingreso = type_ == 'ingreso'
+        is_devolucion = type_ == 'devolucion'
+        is_lote = bool(data['batch_code'])
+        code = data['batch_code'] if is_lote else data['serie_code']
+        try:
+            data['quantity'] = float(data['quantity'])
+        except (ValueError, TypeError):
+            return False, None
+        if is_salida:
+            tipo, id = data['product'].split('-')
+            product = product_service.get(id)
             data['product'] = product
-            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['batch_code'], current_quantity=data['quantity'])
-            transaction = self.model.objects.create(**data)
-            if transaction:
-                self.discount_stock(transaction, batch)
-                return True, transaction
-            return False, None
-        elif data['type'] == 'ingreso' and data['batch_code']:
-            product = raw_material_service.get(data['product'])
-            data['raw_material'] = product
+            data['raw_material'] = None
+        elif is_ingreso:
+            tipo, id = data['raw_material'].split('-')
+            raw_material_class = raw_material_service.raw_material_class.objects.get(id=id)
+            raw_data = {
+                'raw_material_class': raw_material_class,
+                'expiration_date': data['expiration_date'],
+                'created_at': data['date'],
+                'quantity': data['quantity'],
+            }
+            raw = raw_material_service.model.objects.create(**raw_data)
+            data['raw_material'] = raw
             data['product'] = None
-            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['batch_code'], current_quantity=data['quantity'])
-            transaction = self.model.objects.create(**data)
-            if transaction:
-                self.increase_stock(transaction, batch)
-                return True, transaction
-            return False, None
-        elif data['type'] == 'salida' and data['batch_code'] == None:
-            product = product_service.get(data['product'])
-            data['product'] = product
-            batch = batch_service.model.objects.create(product=product, raw_material=None, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
-            transaction = self.model.objects.create(**data)
-            if transaction:
-                self.discount_stock(transaction, batch)
-                return True, transaction
-            return False, None
-        elif data['type'] == 'ingreso' and data['batch_code'] == None:
-            product = raw_material_service.get(data['product'])
-            data['raw_material'] = product
-            data['product'] = None
-            batch = batch_service.model.objects.create(product=None , raw_material=product, batch_code=data['serie_code'], current_quantity=data['quantity'], serie=True)
-            transaction = self.model.objects.create(**data)
-            if transaction:
-                self.increase_stock(transaction, batch)
-                return True, transaction
-            return False, None
         else:
+            if data['product']:
+                tipo, id = data['product'].split('-')
+                product = product_service.get(id)
+                data['product'] = product
+                data['raw_material'] = None
+            else:
+                tipo, id = data['raw_material'].split('-')
+                raw_material_class = raw_material_service.raw_material_class.objects.get(id=id)
+                data['raw_material'] = raw_material_class
+                data['product'] = None 
+        batch = batch_service.model.objects.create(
+            product=data.get('product'),
+            raw_material=data.get('raw_material'),
+            batch_code=code,
+            current_quantity=data['quantity'],
+            serie=not is_lote
+        )
+        transaction = self.model.objects.create(**data)
+        if not transaction:
             return False, None
+        if is_salida:
+            self.discount_stock(transaction, batch)
+        elif is_ingreso or is_devolucion:
+            self.increase_stock(transaction, batch)
+        return True, transaction
 
     def get_by_warehouse(self, warehouse_id):
         return self.model.objects.filter(warehouse=warehouse_id)
@@ -209,29 +221,33 @@ class TransactionService(CRUD):
         return self.model.objects.filter(client=client_id)
     
     def discount_stock(self, transaction, batch):
-        product = transaction.product
-        if product:
-            product_stock = product.quantity
-            if batch:
-                batch_stock = batch.current_quantity
-                product_stock -= Decimal(batch_stock)
-                product.quantity = product_stock
-                product.save()
-                return True, product
+        product = transaction.product or transaction.raw_material
+        if not product or not batch:
             return False, None
-        return False, None
+
+        product_stock = Decimal(product.quantity)
+        batch_stock = Decimal(batch.current_quantity)
+
+        product_stock -= batch_stock
+        product.quantity = product_stock
+        product.save()
+
+        return True, product
+
 
     def increase_stock(self, transaction, batch):
-        product = transaction.raw_material
-        if product:
-            product_stock = product.quantity
-            if batch:
-                product_stock += batch.current_quantity
-                product.quantity = Decimal(product_stock)
-                product.save()
-                return True, product
+        product = transaction.raw_material or transaction.product
+        if not product or not batch:
             return False, None
-        return False, None
+
+        product_stock = Decimal(product.quantity)
+        batch_stock = Decimal(batch.current_quantity)
+
+        product_stock += batch_stock
+        product.quantity = product_stock
+        product.save()
+
+        return True, product
     
     def validate_code(self, code):
         if self.model.objects.filter(serie_code=code).count() > 0:

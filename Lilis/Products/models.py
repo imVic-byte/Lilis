@@ -39,7 +39,7 @@ class RawMaterial(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return self.name    
+        return self.raw_material_class.name    
     
     
 class Product(models.Model):
