@@ -36,10 +36,10 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'export_product_batches_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+        <a href="#" class="btn btn-success mt-2">
             Exportar Todo
         </a>
-        <a href="{% url 'export_product_batches_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+        <a href="#"
             class="btn btn-info mt-2">
             Exportar Vista
         </a>
@@ -57,26 +57,26 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
-                    <h5 class="card-title">Lote de: {{ p.product.name }}</h5>
+                    <h5 class="card-title">Lote de: {{ p.inventario.producto.name }}</h5>
                         </div>
                         <div class="col-6 text-end">
-                            <a href="{% url 'product_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                            <a href="#" class="mt-2 text-end btn btn-primary">
                             Editar
                         </a>
-                        <a href="{% url 'product_batch_view' p.id %}" class="mt-2 text-end btn btn-weno">
+                        <a href="#" class="mt-2 text-end btn btn-weno">
                             Ver
                         </a>
                         <button type="button" 
                                     class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'raw_batch_delete' p.id %}"
+                                    data-url="#"
                                     data-item-name="{{ p.name }}">
                             Eliminar
                             </button>
                         </div>
                     </div>
-                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
+                    <h6 class="card-text text-muted">Código: {{ p.codigo }}</h6>
                     <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Cantidad:</strong> {{ p.current_quantity }}</li>
+                        <li class="list-group-item"><strong>Cantidad:</strong> {{ p.cantidad_actual }}</li>
                     </ul>
                     
                 </div>
@@ -121,11 +121,11 @@
                         <td>{{ p.product.name }}</td>
                         <td>{{ p.current_quantity }}</td>
                         <td>
-                            <a href="{% url 'product_batch_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
-                            <a href="{% url 'product_batch_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <a href="#" class="btn btn-weno btn-sm">Ver</a>
+                            <a href="#" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
                                     class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'product_batch_delete' p.id %}"
+                                    data-url="#"
                                     data-item-name="{{ p.batch_code }}">
                                 Eliminar
                             </button>

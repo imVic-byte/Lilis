@@ -17,7 +17,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        Gestión
+                        Catálogo
                     </a>
                 {% endif %}    
                     <ul class="dropdown-menu">
@@ -35,6 +35,9 @@
                         {% endif %}
                     </ul>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link text-warning" href="{% url 'inventory_list' %}">Inventario</a>
+                </li>
                 {% if perms.Products.view_batch %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
@@ -42,7 +45,7 @@
                         Lotes
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Lotes de Productos</a></li>
+                        <li><a class="dropdown-item" href="{% url 'product_batch_list' %}">Lotes de Productos</a></li>
                         <li><a class="dropdown-item" href="#">Lotes de Materia Prima</a></li>
                         <li><a class="dropdown-item" href="{% url 'transaction_list' %}">Transacciones</a></li>
                     </ul>

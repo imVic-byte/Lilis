@@ -41,9 +41,11 @@ raw_materials = [
 
 
 
+
 urlpatterns = [
     *products,
     *raw_materials,
     *suppliers,
     *categorys,
+    path('inventory_list/', views.inventory_list, name='inventory_list'),
 ]

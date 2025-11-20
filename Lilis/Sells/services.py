@@ -1,14 +1,15 @@
 from django.shortcuts import render
 from Main.CRUD import CRUD
 from .models import Serie, TransactionDetail,Client, Location, Warehouse, WareClient, Transaction, Inventario, Lote
-from .forms import TransactionForm,ClientForm, WarehouseForm
+from .forms import LoteProductoForm,TransactionForm,ClientForm, WarehouseForm
 from Products.models import RawMaterialClass, Producto
 from Products.services import ProductService,RawMaterialService
 from decimal import Decimal
 from django.db.models import Sum
 from django.utils import timezone
 import datetime
-
+from django.db.models import Q
+LILIS_RUT = "2519135-8"
 class ClientService(CRUD):  
     def __init__(self):
         self.model = Client
@@ -63,6 +64,15 @@ class WarehouseService(CRUD):
             return warehouses
         return []
     
+    def filter_by_rut(self, rut):
+        wareclients = self.wareclient_model.objects.filter(client__rut=rut)
+        warehouses = []
+        if wareclients:
+            for w in wareclients:
+                warehouses.append(w.warehouse)
+            return warehouses
+        return []
+
     def filter_by_supplier(self, supplier):
         wareclients = self.wareclient_model.objects.filter(client=supplier)
         warehouses = []
@@ -92,9 +102,50 @@ class InventarioService(CRUD):
     def __init__(self):
         self.model = Inventario
         self.lote = Lote
+        self.lote_form_class = LoteProductoForm
         self.raw_class = RawMaterialClass
         self.product_class = Producto
         self.serie = Serie
+        self.bodegas = WarehouseService().filter_by_rut(LILIS_RUT)
+
+    def agregar_lote_producto(self, data):
+        data2 = data.copy()
+        data2['origen'] = 'I'
+        form = self.lote_form_class(data2)
+        producto_id = data2.get('producto')
+        bodega_id = data2.get('bodega')
+        print("todo bien")
+        if not producto_id or not bodega_id:
+            print("producto o bodega no enviados.")
+            return False, "Producto o bodega no enviados."
+        try:
+            producto = Producto.objects.get(id=producto_id)
+        except Producto.DoesNotExist:
+            print("producto inválido.")
+            return False, "Producto inválido."
+        
+        bodega = next((b for b in self.bodegas if str(b.id) == str(bodega_id)), None)
+        if not bodega:
+            print("bodega inválida.")
+            return False, "Bodega inválida."
+
+        inventario, _ = self.model.objects.get_or_create(
+            producto=producto,
+            bodega=bodega,
+            materia_prima=None,
+            defaults={
+                'stock_total': data.get('cantidad_actual'),
+            }
+        )
+        print("inventario creado")
+        if form.is_valid():
+            lote = form.save(commit=False)
+            lote.inventario = inventario
+            lote.codigo = data.get('codigo')
+            lote.save()
+            self.actualizar_stock_total(lote.inventario)
+            return True, lote
+        return False, form
 
     def crear_lote_entrada(self, data):
         if not data:
@@ -198,6 +249,16 @@ class InventarioService(CRUD):
         if resta > 0:
             return False
         return True, lotes_creados
+    
+    def list_actives(self):
+        return (
+            self.model.objects.filter(
+                Q(producto__is_active=True) |
+                Q(materia_prima__is_active=True)
+            )
+            .select_related("materia_prima", "producto", "bodega")
+        )
+        
 
 class TransactionService(CRUD):
     def __init__(self):
@@ -212,10 +273,7 @@ class TransactionService(CRUD):
 
     def resolver(self, data):
         if data['type'] == 'ingreso':
-            mp = self.inventario.model.objects.all().get(materia_prima=data['product'])
-            if not mp:
-                m = self.inventario.raw_class.objects.get(id=data['product'])
-                mp = self.inventario.model.objects.create(materia_prima=m, producto=None, bodega=data['warehouse'], stock_total=data['quantity'])
+            mp = self.inventario.raw_class.objects.get(id=data['product'])
             data['product'] = None
             data['raw_material'] = mp
             return None, mp
@@ -345,3 +403,9 @@ class TransactionService(CRUD):
     
     def get_by_client(self, client_id):
         return self.model.objects.filter(client=client_id)
+
+    def validate_code(self, code):
+        used = self.model.objects.filter(batch_code=code).exists()
+        if used:
+            return False
+        return True

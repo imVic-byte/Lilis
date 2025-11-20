@@ -6,7 +6,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from Main.utils import generate_excel_response
+from Sells.services import InventarioService
 
+inventory_service = InventarioService()
 category_service = CategoryService()
 product_service = ProductService()
 supplier_service = SupplierService()
@@ -661,3 +663,68 @@ def export_raw_materials_excel(request):
             rm.measurement_unit,
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
+
+def inventory_list(request):
+    q = (request.GET.get("q") or "").strip()
+    default_per_page = 25
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    if per_page > 101 or per_page <= 0:
+        per_page = default_per_page
+    allowed_sort_fields = ['materia_prima__name','materia_prima__sku', 'producto__name', 'producto__sku', 'stock_total']
+    sort_by = request.GET.get('sort_by', 'stock_total')
+    order = request.GET.get('order', 'desc')
+
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'stock_total'
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+        
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+    qs = inventory_service.list_actives()
+    if q:
+        qs = qs.filter(
+            Q(materia_prima__name__icontains=q) |
+            Q(materia_prima__sku__icontains=q) |
+            Q(producto__name__icontains=q) |
+            Q(producto__sku__icontains=q)
+        )
+        
+    qs = qs.order_by(order_by_field)
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
+
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
+
+    context = {
+        "page_obj": page_obj,
+        "q": q,
+        "per_page": per_page,
+        "total": qs.count(),
+        
+        "querystring": querystring_pagination, 
+        
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc",
+    }
+    return render(request, 'inventory/inventory_list.html', context)

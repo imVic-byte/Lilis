@@ -9,17 +9,97 @@
                 <h4>Agregar Lote de Producto</h4>
             </div>
             <div class="card-body">
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <div class="d-grid mt-3">
-                        <button type="submit" class="btn btn-weno btn-lg btn-guardar-confirmar" data-title="¿Crear nuevo lote de productos?">
-                            Guardar
-                        </button>
+                <form id="loteForm" method="POST" class="p-3" onsubmit="return validarFormulario()">
+                    {% if error_message %}
+                    <div class="alert alert-danger">
+                        {{ error_message }}
                     </div>
+                    {% endif %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        Revisa los campos marcados.
+                    </div>
+                    {% endif %}
+                    {% csrf_token %}
+                    <label class="form-label fw-semibold" for="codigo">Código de lote:</label>
+                    <input type="text" name="codigo" id="codigo" class="form-control mb-3" required>
+                    <label class="form-label fw-semibold">Producto:</label>
+                    <select name="producto" id="producto" class="form-select" required>
+                        <option value="">Selecciona un producto</option>
+                        {% for p in products %}
+                        <option value="{{ p.id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {{ form.inventario }}
+                    {% if form.inventario.errors %}
+                    <div class="text-danger small">{{ form.inventario.errors.0 }}</div>
+                    {% endif %}
+                    <label class="form-label mt-3 fw-semibold">Cantidad actual*</label>
+                    <input type="number" name="cantidad_actual" id="cantidad_actual" class="form-control" required
+                        min="0.01" step="0.01" placeholder="Ej: 10">
+                    <label class="form-label mt-3 fw-semibold">Fecha de vencimiento</label>
+                    <input type="date" name="fecha_expiracion" id="fecha_expiracion" class="form-control" required>
+                    <label class="form-label mt-3 fw-semibold">Origen*</label>
+                    <input type="text" name="origen" id="origen" class="form-control" disabled value="Ingreso">
+                    <label class="form-label mt-3 fw-semibold">Bodega:</label>
+                    <select name="bodega" id="bodega" class="form-select" required>
+                        {% for w in warehouses %}
+                        <option value="{{ w.id }}">{{ w.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-warning w-100 mt-4 fw-bold">
+                        Guardar
+                    </button>
                 </form>
+
             </div>
         </div>
     </div>
 </div>
 {% endblock content %}
+{%block scripts %}
+<script>
+    function validarFormulario() {
+        const cantidad = parseFloat(document.getElementById("cantidad_actual").value);
+        const fecha = document.getElementById("fecha_expiracion").value;
+
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert("La cantidad debe ser un número mayor que cero.");
+            return false;
+        }
+
+        if (!fecha) {
+            alert("Selecciona una fecha de vencimiento válida.");
+            return false;
+        }
+
+        return true;
+    }
+</script>
+<script>
+    document.addEventListener('codigo', function (e) {
+        const codigo = e.target.value;
+        fetch(`/sells/validate_code/?code=${encodeURIComponent(codigo)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.valid) {
+                    document.getElementById('codigo').classList.remove('is-invalid');
+                } else {
+                    document.getElementById('codigo').classList.add('is-invalid');
+                    document.getElementById('codigo').classList.add('is-invalid');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Código duplicado',
+                        text: data.message || 'Este código de Lote ya existe en el sistema',
+                        confirmButtonText: 'Entendido'
+                    }).then(() => {
+                        document.getElementById('codigo').value = '';
+                        document.getElementById('codigo').focus();
+                    });
+                }
+            })
+            .catch(error => console.error('Error al validar código:', error));
+    });
+</script>
+{% endblock %}

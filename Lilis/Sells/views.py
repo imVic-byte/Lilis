@@ -433,7 +433,7 @@ def handle_ingreso():
     suppliers = supplier_service.list_actives()
     for s in suppliers:
         supplier_data = supplier_base_dict(s)
-        rms = raw_material_service.raw_material_class.objects.filter(supplier=s)
+        rms = transaction_service.inventario.raw_class.objects.filter(supplier_id=s.id)
         supplier_data['raw_materials'] = [raw_material_to_dict(rm) for rm in rms]
         data['suppliers'].append(supplier_data)
     return JsonResponse({'data': data})
@@ -467,10 +467,10 @@ def handle_devolucion():
     suppliers = supplier_service.list_actives().exclude(rut=LILIS_RUT)
     for s in suppliers:
         data['clients'].append(supplier_base_dict(s))
-    products = product_service.list_actives()
+    products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
     for p in products:
         data['products'].append(raw_material_to_dict(p))
-    raw_materials = raw_material_service.raw_material_class.objects.filter(is_active=True)
+    raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
     for rm in raw_materials:
         data['raw_materials'].append(raw_material_to_dict(rm))
     l = client_service.search_by_rut(LILIS_RUT)[0]
@@ -491,7 +491,7 @@ def handle_transfer():
     products = product_service.list_actives()
     for p in products:
         data['products'].append(raw_material_to_dict(p))
-    raw_materials = raw_material_service.raw_material_class.objects.filter(is_active=True)
+    raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
     for rm in raw_materials:
         data['raw_materials'].append(raw_material_to_dict(rm))
     l = client_service.search_by_rut(LILIS_RUT)[0]
@@ -505,7 +505,7 @@ def get_raw_materials_by_supplier(request):
     type = request.GET.get('type')
     if type == 'ingreso':
         p = []
-        raw_materials = raw_material_service.raw_material_class.objects.filter(supplier_id=id)
+        raw_materials = transaction_service.inventario.raw_class.objects.filter(supplier_id=id).filter(is_active=True)
         for rm in raw_materials:
             p.append({
                 'id': rm.id,
@@ -516,7 +516,7 @@ def get_raw_materials_by_supplier(request):
         return JsonResponse({'p': p})
     elif type == 'salida':
         p = []
-        products = product_service.list_actives()
+        products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
         for pr in products:
             p.append({
                 'id': pr.id,
@@ -675,3 +675,97 @@ def transaction_update(request, id):
     else:
         form = transaction_service.form_class(base_transaction=original)
     return render(request, 'transactions/transaction_update.html', {'form': form})
+
+def product_batch_list(request):
+    q = (request.GET.get("q") or "").strip()
+    default_per_page = 25
+    try:
+        per_page = int(request.GET.get("per_page", default_per_page))
+    except ValueError:
+        per_page = default_per_page
+    if per_page > 101 or per_page <= 0:
+        per_page = default_per_page
+    allowed_sort_fields = ['inventario__producto__name', 'inventario__producto__category__name', 'inventario__producto__sku']
+    sort_by = request.GET.get('sort_by', 'inventario__producto__name')
+    order = request.GET.get('order', 'asc')
+
+    if sort_by not in allowed_sort_fields:
+        sort_by = 'inventario__producto__name'
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+        
+    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+    qs = transaction_service.inventario.lote.objects.all().filter(inventario__producto__is_active=True)
+
+    if q:
+        qs = qs.filter(
+            Q(inventario__producto__name__icontains=q) |
+            Q(inventario__producto__description__icontains=q)|
+            Q(inventario__producto__sku__icontains=q)
+        )
+        
+    qs = qs.order_by(order_by_field)
+
+    paginator = Paginator(qs, per_page)
+    page_number = request.GET.get("page")
+
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    params_pagination = request.GET.copy()
+    params_pagination.pop("page", None)
+    querystring_pagination = params_pagination.urlencode()
+
+    params_sorting = request.GET.copy()
+    params_sorting.pop("page", None)
+    params_sorting.pop("sort_by", None)
+    params_sorting.pop("order", None)
+    querystring_sorting = params_sorting.urlencode()
+
+    context = {
+        "page_obj": page_obj,  
+        "q": q,
+        "per_page": per_page,
+        "total": qs.count(),
+        
+        "querystring": querystring_pagination, 
+        
+        "querystring_sorting": querystring_sorting,
+        "current_sort_by": sort_by,
+        "current_order": order,
+        "order_next": "desc" if order == "asc" else "asc",
+    }
+    return render(request, 'batches/product_batch_list.html', context)
+
+def product_batch_create(request):
+    l = client_service.search_by_rut(LILIS_RUT)[0]
+    warehouses = get_warehouses_for_client(l)
+    products = product_service.list_actives()
+    if request.method == 'POST':
+        print(request.POST)
+        success, obj = transaction_service.inventario.agregar_lote_producto(request.POST)
+
+        if success:
+            return redirect('product_batch_list')
+        context = {
+            'warehouses': warehouses,
+            'products': products,
+        }
+
+        if isinstance(obj, str):
+            context['error_message'] = obj
+            context['form'] = transaction_service.inventario.lote_form_class(request.POST)  
+        else:
+            context['form'] = obj
+
+        return render(request, 'batches/product_batch_create.html', context)
+
+    return render(request, 'batches/product_batch_create.html', {
+        'form': transaction_service.inventario.lote_form_class(),
+        'warehouses': warehouses,
+        'products': products,
+    })

@@ -64,6 +64,12 @@ class Inventario(models.Model):
     bodega = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="inventario")
     stock_total = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
 
+    def __str__(self):
+        if self.producto:
+            return f'{self.producto.name} - {self.producto.sku}'
+        return f'{self.materia_prima.name} - {self.materia_prima.sku}'
+
+
 class Lote(models.Model):
     codigo = models.CharField(max_length=100, unique=True)
     inventario = models.ForeignKey(Inventario, on_delete=models.PROTECT, related_name="lotes")
@@ -82,5 +88,5 @@ class Serie(models.Model):
 class TransactionDetail(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT, related_name="details")
     code = models.CharField(max_length=100, unique=True)
-    batch = models.ForeignKey(Lote, on_delete=models.PROTECT, related_name="transactiondetails")
-    serie = models.ForeignKey(Serie, on_delete=models.PROTECT, related_name="transactiondetails")
+    batch = models.ForeignKey(Lote, on_delete=models.PROTECT, related_name="transactiondetails", null=True, blank=True)
+    serie = models.ForeignKey(Serie, on_delete=models.PROTECT, related_name="transactiondetails", null=True, blank=True)

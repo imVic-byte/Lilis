@@ -29,9 +29,14 @@ warehouses = [
     path('warehouses_by_client/', views.get_warehouses, name='warehouses_by_client'),
 ]
 
+batches = [
+    path('product_batch_list/', views.product_batch_list, name='product_batch_list'),
+    path('product_batch_create/', views.product_batch_create, name='product_batch_create'),
+]
 urlpatterns = [
     *clients,
     *warehouses,
+    *batches,
     path('transaction_list/', views.transaction, name='transaction_list'),
     path('transaction_update/<int:id>/', views.transaction_update, name='transaction_update'),
     path('export_transaction_excel/', views.export_transaction_excel, name='export_transaction_excel'),

@@ -1,9 +1,37 @@
-from .models import Client, Location, Warehouse, WareClient,Transaction
+from .models import Client, Location, Warehouse, WareClient,Transaction, Lote, Inventario
+from Products.models import Producto
 from django import forms
 from Main.validators import *
 
-class ClientForm(forms.ModelForm):
+
+class LoteProductoForm(forms.ModelForm):
     class Meta:
+        model = Lote
+        fields = [ 'cantidad_actual', 'fecha_expiracion', 'origen']
+        labels = {
+            'cantidad_actual': 'Cantidad actual',
+            'fecha_expiracion': 'Fecha de vencimiento',
+            'origen': 'Origen',
+        }
+        widgets = {
+            'fecha_expiracion': forms.DateInput(attrs={'class': 'form-control','type': 'date'}),
+        }
+
+    def clean_fecha_expiracion(self):
+        return self.cleaned_data.get('fecha_expiracion')
+
+    def clean_origen(self):
+        return self.cleaned_data.get('origen')
+
+    def save(self, commit=True):
+        lote = super().save(commit=False)
+        if commit:
+            lote.save()
+            return lote
+        return lote
+
+class ClientForm(forms.ModelForm):
+    class Meta: 
         model = Client
         fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt' ,'is_suspended']
         labels = {
