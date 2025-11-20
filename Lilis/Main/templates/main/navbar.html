@@ -42,11 +42,10 @@
                         Lotes
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{% url 'product_batch_list' %}">Lotes de Productos</a></li>
-                        <li><a class="dropdown-item" href="{% url 'raw_batch_list' %}">Lotes de Materia Prima</a></li>
+                        <li><a class="dropdown-item" href="#">Lotes de Productos</a></li>
+                        <li><a class="dropdown-item" href="#">Lotes de Materia Prima</a></li>
                         <li><a class="dropdown-item" href="{% url 'transaction_list' %}">Transacciones</a></li>
                     </ul>
-                    
                 </li>
                 {% endif %}
                 {% if perms.Sells.view_client or perms.Sells.view_location or perms.Sells.view_warehouse %}

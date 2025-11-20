@@ -2,23 +2,19 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from .services import ClientService, WarehouseService, SaleOrderService, TransactionService
+from .services import ClientService, WarehouseService, TransactionService
 from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
 from django.http import JsonResponse
-from Products.services import BatchService
 from Products.services import ProductService, RawMaterialService, SupplierService
 from datetime import date
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
-sale_order_service = SaleOrderService()
 transaction_service = TransactionService()
-batch_service = BatchService()
 product_service = ProductService()
 raw_material_service = RawMaterialService()
 supplier_service = SupplierService()
-
 LILIS_RUT = "2519135-8"
 # ===================================
 # VISTAS DE CLIENTES
@@ -190,174 +186,6 @@ def export_clients_excel(request):
             client.max_debt
         ])
     return generate_excel_response(headers, data_rows, "Lilis_Clientes")
-
-@login_required
-@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
-def location_list(request):
-    
-    # 1. Obtener filtros de la URL
-    q = (request.GET.get("q") or "").strip()
-    
-    # ===================================
-    #   ¡CAMBIO! Nuevas opciones de paginación
-    # ===================================
-    allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25  # Nuevo default
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    # Validar que el valor esté en la lista permitida
-    if per_page not in allowed_per_page:
-        per_page = default_per_page
-    # ===================================
-
-    # ===================================
-    #   ¡NUEVO! Lógica de Ordenamiento
-    # ===================================
-    # 3. Obtener parámetros de ordenamiento
-    allowed_sort_fields = ['name', 'city', 'country']
-    sort_by = request.GET.get('sort_by', 'name') # Default: name
-    order = request.GET.get('order', 'asc')      # Default: asc
-
-    # Validar que los campos y el orden sean correctos
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    # ===================================
-
-    # 4. Queryset base (¡quitamos el .order_by() de aquí!)
-    qs = warehouse_service.location_model.objects.all()
-
-    # 5. Aplicar filtro de búsqueda
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(city__icontains=q) |
-            Q(country__icontains=q)
-        )
-        
-    # 6. Aplicar ordenamiento (¡justo antes de paginar!)
-    qs = qs.order_by(order_by_field)
-
-    # 7. Paginación
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    # 8. Obtener página
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    # ===================================
-    #   ¡NUEVO! Querystrings actualizados
-    # ===================================
-    # 9. Querystring para Paginación
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    # 10. Querystring para Ordenamiento
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    # ===================================
-
-    # 11. Contexto
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        "querystring": querystring_pagination, 
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'locations/location_list.html', context)
-
-@login_required
-@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
-def location_view(request, id):
-    if request.method == 'GET':
-        location = warehouse_service.location_model.objects.get(id=id)
-        return render(request, 'locations/location_view.html', {'location': location})
-    else:
-        return redirect('location_list')
-
-@login_required
-@permission_or_redirect('Sells.add_location','dashboard', 'No teni permiso')
-def location_create(request):
-    form = warehouse_service.location_form_class()
-    if request.method == 'POST':
-        success, obj = warehouse_service.create_location(request.POST)
-        if success:
-            return redirect('location_list')
-        else:
-            return render(request, 'locations/location_create.html', {'form': obj})
-    return render(request, 'locations/location_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Sells.change_location','dashboard', 'No teni permiso')
-def location_update(request, id):
-    if request.method == 'POST':
-        success, obj = warehouse_service.update_location(id, request.POST)
-        if success:
-            return redirect('location_list')
-        else:
-            return render(request, 'location_update.html', {'form': obj})
-    else:
-        location = warehouse_service.location_model.objects.get(id=id)
-        form = warehouse_service.location_form_class(instance=location)
-    return render(request, 'locations/location_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Sells.delete_location','dashboard', 'No teni permiso')
-def location_delete(request, id):
-    if request.method == 'GET':
-        success = warehouse_service.delete_location(id)
-        if success:
-            return redirect('location_list')
-    return redirect('location_list')
-
-@login_required
-@permission_or_redirect('Sells.view_location','dashboard', 'No teni permiso')
-def export_locations_excel(request):
-    q= (request.GET.get("q") or "").strip()
-    qs = warehouse_service.location_model.objects.all().order_by('name')
-    limit = request.GET.get("limit")
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(city__icontains=q) |
-            Q(country__icontains=q)
-        )
-    if limit:
-        try:
-            limit = int(limit)
-            qs = qs[:limit]
-        except ValueError:
-            pass
-    headers = ["Nombre", "Ciudad", "País"]
-    data_rows = []
-    for location in qs:
-        data_rows.append([
-            location.name,
-            location.city,
-            location.country,
-        ])
-    return generate_excel_response(headers, data_rows, "Lilis_Ubicaciones")
 
 # ===================================
 # VISTAS DE WAREHOUSES (Indentación Corregida)
@@ -726,7 +554,7 @@ def transaction(request):
         per_page = default_per_page
     if per_page not in allowed_per_page:
         per_page = default_per_page
-    allowed_sort_fields = ['date', 'type', 'sku', 'client']
+    allowed_sort_fields = ['date', 'type', 'client']
     sort_by = request.GET.get('sort_by', 'date')
     order = request.GET.get('order', 'desc')
     if sort_by not in allowed_sort_fields:
@@ -738,9 +566,9 @@ def transaction(request):
     qs = transaction_service.list()
     if q:
         qs = qs.filter(
-            Q(product__sku__istartswith=q)|
             Q(type__icontains=q)|
-            Q(client__rut__startswith=q)
+            Q(client__rut__startswith=q)|
+            Q(client__bussiness_name__icontains=q)
         )
     qs = qs.order_by(order_by_field)
     paginator = Paginator(qs, per_page)
@@ -759,8 +587,8 @@ def transaction(request):
     params_sorting.pop("sort_by", None)
     params_sorting.pop("order", None)
     querystring_sorting = params_sorting.urlencode()
-    products = product_service.list_actives()
-    lotes = batch_service.list_product()
+    products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
+    raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
     clients = client_service.list_actives()
     transactions = transaction_service.list()
     today = []
@@ -787,8 +615,8 @@ def transaction(request):
         transaction_service.create_transaction(data)
         return redirect('transaction_list')
     return render(request,'transactions/transaction.html',{
-        'lotes': lotes, 
         'products': products, 
+        'raw_materials': raw_materials,
         'clients': clients, 
         'transactions': transactions, 
         'transactions_today': transactions_today,

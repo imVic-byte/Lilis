@@ -37,31 +37,13 @@ raw_materials = [
     path('raw_material_delete/<int:id>/', views.raw_material_delete, name='raw_material_delete'),
     path('export_raw_materials_excel/', views.export_raw_materials_excel, name='export_raw_materials_excel'),
     path('raw_material_search/', views.raw_material_search, name='raw_material_search'),
-    path('raw_material_create_class/', views.raw_material_create_class, name='raw_material_create_class'),
-    path('raw_material_update_class/<int:id>/', views.raw_material_create_class_update, name='raw_material_update_class'),
-    path('raw_material_delete_class/<int:id>/', views.raw_material_delete_class, name='raw_material_delete_class'),
 ]
 
-batchs =[
-    path('product_batch_list/', views.product_batch_list, name='product_batch_list'),
-    path('product_batch_view/<int:id>/', views.product_batch_view, name='product_batch_view'),
-    path('product_batch_create/', views.product_batch_create, name='product_batch_create'),
-    path('product_batch_update/<int:id>/', views.product_batch_update, name='product_batch_update'),
-    path('product_batch_delete/<int:id>/', views.product_batch_delete, name='product_batch_delete'),
-    path('export_product_batches_excel/', views.export_product_batches_excel, name='export_product_batches_excel'),
-    path('raw_batch_list/', views.raw_batch_list, name='raw_batch_list'),
-    path('raw_batch_view/<int:id>/', views.raw_batch_view, name='raw_batch_view'),
-    path('raw_batch_create/', views.raw_batch_create, name='raw_batch_create'),
-    path('raw_batch_update/<int:id>/', views.raw_batch_update, name='raw_batch_update'),
-    path('raw_batch_delete/<int:id>/', views.raw_batch_delete, name='raw_batch_delete'),
-    path('export_raw_batches_excel/', views.export_raw_batches_excel, name='export_raw_batches_excel'),
-]
 
 
 urlpatterns = [
     *products,
     *raw_materials,
     *suppliers,
-    *batchs,
     *categorys,
 ]

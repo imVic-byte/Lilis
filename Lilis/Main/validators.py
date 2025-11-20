@@ -83,7 +83,7 @@ def validate_email(email):
 def validate_text_length(value, min_length=2, max_length=100, field_name="El campo", allow_empty=False):
     if not value and allow_empty:
         return value
-    if not value and not allow_empty:
+    if not value:
         raise forms.ValidationError(f'Se requiere un valor para {field_name}.')
     
     value_str = str(value).strip()

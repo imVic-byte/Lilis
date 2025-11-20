@@ -131,8 +131,8 @@
         <tr>
             <td>{{ t.date }}</td>
 
-            {% if t.type == 'ingreso' %}
-                <td><span class="badge bg-success text-center">{{ t.type }}</span></td>
+            {% if t.type == 'ingreso' or t.type == 'I' %}
+                <td><span class="badge bg-success text-center">Ingreso</span></td>
             {% elif t.type == 'devolucion' %}
                 <td><span class="badge bg-warning text-center">{{ t.type }}</span></td>
             {% elif t.type == 'transferencia' %}
@@ -158,7 +158,7 @@
             <td>{{ t.client.rut }}</td>
             <td>{{ t.warehouse.name }}</td>
 
-            {% if t.type == 'ingreso' %}
+            {% if t.type == 'ingreso' or t.type == 'I' %}
                 <td class="text-success fw-bold text-center">+ {{ t.quantity }}</td>
             {% elif t.type == 'devolucion' %}
                 <td class="text-warning fw-bold text-center">+ {{ t.quantity }}</td>

@@ -19,6 +19,12 @@ class Category(models.Model):
     def __str__(self):
         return self.name  
     
+    def count_products(self):
+        return self.products.filter(is_active=True).count()
+    
+    def count_raw_materials(self):
+        return self.raw_materials.filter(is_active=True).count()
+    
 class RawMaterialClass(models.Model):
     sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
     name = models.CharField(max_length=100)
@@ -31,63 +37,15 @@ class RawMaterialClass(models.Model):
 
     def __str__(self):
         return self.name
-    
-class RawMaterial(models.Model):
-    raw_material_class = models.ForeignKey(RawMaterialClass, on_delete=models.PROTECT, related_name="raw_materials")
-    expiration_date = models.DateField(null=True, blank=True)
-    created_at = models.DateField(null=True, blank=True)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
-    def __str__(self):
-        return self.raw_material_class.name    
-    
-    
-class Product(models.Model):
+class Producto(models.Model):
     name = models.CharField(max_length=100)
     sku = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
     category = models.ForeignKey("Category", on_delete=models.PROTECT, related_name="products")
     is_perishable = models.BooleanField(default=False)
-    expiration_date = models.DateField(null=True, blank=True)
-    created_at = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')])
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return f'{self.name} - {self.sku}'
-    
-    def get_product_price(self):
-        last_price = self.price_histories.order_by('-date').first()
-        return last_price.unit_price
-
-class PriceHistories(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="price_histories")
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField()
-    iva = models.DecimalField(max_digits=10, decimal_places=2, default=1.19)
-
-    def __str__(self):
-        return f'{self.product.name} - {self.unit_price} - {self.date}'
-
-class Batch(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, related_name="batches")
-    raw_material = models.ForeignKey(RawMaterial, on_delete=models.CASCADE, null=True, related_name="batches")
-    batch_code = models.CharField(max_length=100, unique=True)
-    serie = models.BooleanField(default=False)
-    current_quantity = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.product.name} - {self.batch_code}"
-    
-    def get_product_price(self):
-        last_price = self.product.price_histories.order_by('-date').first()
-        return last_price.unit_price
-    
-    def get_total_product_stock(self):
-        stock = self.current_quantity * self.product.quantity
-        return stock
-    
-    def get_total_raw_material_stock(self):
-        stock = self.current_quantity * self.raw_material.quantity
-        return stock

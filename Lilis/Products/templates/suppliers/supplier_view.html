@@ -36,7 +36,7 @@
                                 <h5 class="">Materias Primas Asociadas</h5>
                             </div>
                             <div class="col-6 text-end align-text-bottom align-top">
-                                <a class="btn btn-danger align-text-bottom align-top" href="{% url 'raw_material_create_class' %}?next={{ request.path }}&supplier={{ p.id }}">
+                                <a class="btn btn-danger align-text-bottom align-top" href="{% url 'raw_material_create' %}?next={{ request.path }}&supplier={{ p.id }}">
                                     <i class="bi bi-plus"></i>
                                 </a>
                             </div>
@@ -47,19 +47,19 @@
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     <strong>{{ w.name }}</strong><br>
-                                    <small class="text-muted">{{ w.description }}</small><br>
+                                    <small class="text-muted">{{ w.sku }}</small><br>
                                     <span>Unidad de medida: {{ w.measurement_unit }}</span><br>
                                     {% if w.is_perishable %}
                                     <span class="badge bg-warning">Perecible</span>
                                     {% else %}
-                                    <span class="badge bg-success">No Perecible</span>
+                                    <span class="badge bg-success text-white">No Perecible</span>
                                     {% endif %}
                                 </div>
                                 <div> 
-                                    <a href="{% url 'raw_material_update_class' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-primary">
+                                    <a href="{% url 'raw_material_update' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-primary">
                                     Ver / Editar
                                 </a>
-                                <a href="{% url 'raw_material_delete_class' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-danger">
+                                <a href="{% url 'raw_material_delete' w.id %}?next={{ request.path }}&supplier={{ p.id }}" class="btn btn-sm btn-danger">
                                     Eliminar
                                 </a>
                                 </div>
@@ -68,7 +68,7 @@
                         </div>
                         {% else %}
                         <div class="alert alert-secondary text-center">
-                            No hay bodegas asociadas.
+                            No hay materias primas asociadas.
                         </div>
                         {% endif %}
                     </div>

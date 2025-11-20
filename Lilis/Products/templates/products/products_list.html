@@ -75,13 +75,10 @@
                         </div>
 
                     </div>
-                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+                    <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.sku|default:"Sin SKU" }}</h6>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
                             <strong>Categoría:</strong> {{ p.category.name }}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Stock Actual:</strong> {{ p.quantity }}
                         </li>
                         <li class="list-group-item">
                             <strong>Perecible:</strong>
@@ -92,27 +89,22 @@
                             {% endif %}
                         </li>
                         <li class="list-group-item">
-                            <strong>Creado el:</strong>
-                            {% if p.created_at %}
-                            {{ p.created_at|date:"d-m-Y" }}
+                            {% if p.measurement_unit == 'U' %}
+                            <strong>Medida:</strong> Unidades
+                            {% elif p.measurement_unit == 'KG' %}
+                            <strong>Medida:</strong> Kilogramos
+                            {% elif p.measurement_unit == 'L' %}
+                            <strong>Medida:</strong> Litros
                             {% else %}
-                            No aplica
                             {% endif %}
                         </li>
-                        <li class="list-group-item">
-                            <strong>Vence el:</strong>
-                            {% if p.expiration_date %}
-                            {{ p.expiration_date|date:"d-m-Y" }}
-                            {% else %}
-                            No aplica
-                            {% endif %}
-                        </li>
+                        
                     </ul>
                 </div>
             </div>
         </div>
         {% empty %}
-        <p class="text-center">No se encontraron productos que coincidan con los filtros.</p>
+        <p class="text-center">No se encontraron productos.</p>
         {% endfor %}
     </div>
 </div>
@@ -141,29 +133,10 @@
                         </th>
                         <th>
                             <a href="?{{ querystring_sorting }}&sort_by=quantity&order={% if current_sort_by == 'quantity' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Stock</strong>
-                                {% if current_sort_by == 'quantity' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
+                                <strong>Medida</strong>
                             </a>
                         </th>
                         <th>Perecible</th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=created_at&order={% if current_sort_by == 'created_at' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Creación</strong>
-                                {% if current_sort_by == 'created_at' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=expiration_date&order={% if current_sort_by == 'expiration_date' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Vencimiento</strong>
-                                {% if current_sort_by == 'expiration_date' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -172,16 +145,22 @@
                     <tr>
                         <td>{{ p.name }}</td>
                         <td>{{ p.category.name }}</td>
-                        <td>{{ p.quantity }}</td>
+                        {% if p.measurement_unit == 'U' %}
+                        <td>Unidades</td>
+                        {% elif p.measurement_unit == 'KG' %}
+                        <td>Kilogramos</td>
+                        {% elif p.measurement_unit == 'L' %}
+                        <td>Litros</td>
+                        {% else %}
+                        <td>Sin medida</td>
+                        {% endif %}
                         <td>
                             {% if p.is_perishable %}
                             <span class="badge bg-warning text-dark">Sí</span>
                             {% else %}
-                            <span class="badge bg-secondary">No</span>
+                            <span class="badge bg-secondary text-white">No</span>
                             {% endif %}
                         </td>
-                        <td>{{ p.created_at|date:"d-m-Y"|default:"N/A" }}</td>
-                        <td>{{ p.expiration_date|date:"d-m-Y"|default:"N/A" }}</td>
                         <td>
                             <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 

@@ -18,14 +18,6 @@ clients = [
     path('client_search/', views.client_search, name='client_search'),
 ]
 
-locations = [
-    path('location_list/', views.location_list, name='location_list'),
-    path('location_create/', views.location_create, name='location_create'),
-    path('location_update/<int:id>/', views.location_update, name='location_update'),
-    path('location_delete/<int:id>/', views.location_delete, name='location_delete'),
-    path('location_view/<int:id>/', views.location_view, name='location_view'),
-    path('export_locations_excel/', views.export_locations_excel, name='export_locations_excel'),
-]
 
 warehouses = [
     path('warehouse_list/', views.warehouse_list, name='warehouse_list'),
@@ -39,7 +31,6 @@ warehouses = [
 
 urlpatterns = [
     *clients,
-    *locations,
     *warehouses,
     path('transaction_list/', views.transaction, name='transaction_list'),
     path('transaction_update/<int:id>/', views.transaction_update, name='transaction_update'),

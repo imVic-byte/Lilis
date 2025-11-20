@@ -1,11 +1,10 @@
 from Products.models import (
-    Product, Category, RawMaterial, Batch, Supplier, PriceHistories, RawMaterialClass
+    Category, Supplier, RawMaterialClass, Producto,
 )
 
 from decimal import Decimal
 from Products.forms import (
-    RawMaterialForm,  PriceHistoriesForm, ProductBatchForm,RawBatchForm, ProductForm, 
-    CategoryForm, SupplierForm, RawMaterialClassForm,
+    CategoryForm, SupplierForm, RawMaterialForm, ProductForm
 )
 
 from Main.CRUD import CRUD
@@ -24,7 +23,7 @@ class CategoryService(CRUD):
 
 class ProductService(CRUD):
     def __init__(self):
-        self.model = Product
+        self.model = Producto
         self.form_class = ProductForm
     
     def search_by_sku(self, sku):
@@ -85,18 +84,8 @@ class SupplierService(CRUD):
 
 class RawMaterialService(CRUD):
     def __init__(self):
-        self.model = RawMaterial
-        self.raw_material_class = RawMaterialClass
-        self.raw_material_class_form_class = RawMaterialClassForm
+        self.model = RawMaterialClass
         self.form_class = RawMaterialForm
-    
-    def get_stock_by_raw_material(self, id):
-        rm = self.model.objects.filter(raw_material_class__id=id)
-        stock = 0
-        for r in rm:
-            stock += Decimal(r.quantity)
-        return stock
-
 
     def search_by_description(self, description):
         return self.model.objects.filter(description__icontains=description)
@@ -116,119 +105,10 @@ class RawMaterialService(CRUD):
         return self.model.objects.filter(is_active=True)
 
     def save_raw_material_class(self, data, supplier):
-        form = self.raw_material_class_form_class(data)
+        form = self.form_class(data)
         if form.is_valid():
             raw_material_class = form.save(commit=False)
             raw_material_class.supplier = supplier
             raw_material_class.save()
             return True, raw_material_class
         return False, form
-    
-    def update_raw_material_class(self, id, data):
-        form = self.raw_material_class_form_class(data, instance=self.raw_material_class.objects.get(id=id))
-        if form.is_valid():
-            raw_material_class = form.save(commit=False)
-            raw_material_class.supplier = self.raw_material_class.objects.get(id=id).supplier
-            raw_material_class.save()
-            return True, raw_material_class
-        return False, form
-
-    def delete_raw_material_class(self, id):
-        try:
-            raw_material_class = self.raw_material_class.objects.get(id=id)
-            raw_material_class.delete()
-            return True, raw_material_class
-        except self.raw_material_class.DoesNotExist:
-            return False, None
-        
-class BatchService(CRUD):
-    def __init__(self):
-        self.model = Batch
-        self.product_form_class = ProductBatchForm
-        self.raw_form_class = RawBatchForm
-
-    def save_price(self, data):
-        form = self.price_form(data)
-        if form.is_valid():
-            price = form.save()
-            return True, price
-        return False, form
-    
-    def delete_price(self, id):
-        try:
-            prices = self.price_model.objects.filter(batch__id=id)
-            for p in prices:
-                p.delete()
-            return True, prices
-        except self.price_model.DoesNotExist:
-            return False, None
-    
-    def save_product_batch(self,data):
-        form = self.product_form_class(data)
-        if form.is_valid():
-            product = form.save()
-            return True, product
-        return False, form
-    
-    def save_raw_batch(self,data):
-        form = self.raw_form_class(data)
-        if form.is_valid():
-            raw = form.save()
-            return True, raw
-        return False, form
-    
-    def update_product_batch(self,id,data):
-        batch = self.get(id)
-        form = self.product_form_class(data, instance=batch)
-        if form.is_valid():
-            obj = form.save()
-            return True, obj
-        return False, obj
-    
-    def update_raw_batch(self,id,data):
-        batch = self.get(id)
-        form = self.raw_form_class(data, instance=batch)
-        if form.is_valid():
-            form.save()
-            return True, form
-        return False, form
-    
-    def delete_product_batch(self, id):
-        batch = self.get(id)
-        try:
-            batch.delete()
-            return True, batch
-        except self.model.DoesNotExist:
-            return False, None
-    
-    def delete_raw_batch(self, id):
-        batch = self.get(id)
-        try:
-            batch.delete()
-            return True, batch
-        except self.model.DoesNotExist:
-            return False, None
-
-    def search_by_product(self, product_id):
-        return self.model.objects.filter(product__id=product_id)
-    
-    def search_by_raw_material(self, raw_material_id):
-        return self.model.objects.filter(raw_material__id=raw_material_id)
-    
-    def list_product(self):
-        return self.model.objects.filter(product__isnull=False)
-    
-    def list_raw_materials(self):
-        return self.model.objects.filter(raw_material__isnull=False)
-    
-    def where_is_batch(self, batch_id):
-        batch = self.model.objects.filter(batch__id=batch_id)
-        warehouse = batch.transactions.first().warehouse
-        return warehouse
-    
-class PriceHistoriesService(CRUD):
-    
-    def __init__(self):
-        self.model = PriceHistories
-        self.form_class = PriceHistoriesForm
-    

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .services import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
+from .services import CategoryService, ProductService, SupplierService, RawMaterialService
 from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -11,8 +11,6 @@ category_service = CategoryService()
 product_service = ProductService()
 supplier_service = SupplierService()
 raw_material_service = RawMaterialService()
-batch_service = BatchService()
-price_histories_service = PriceHistoriesService()
 
 @login_required
 @permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
@@ -164,7 +162,6 @@ def export_categories_excel(request):
 def products_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
-    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
@@ -173,7 +170,7 @@ def products_list(request):
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
 
-    allowed_sort_fields = ['name', 'category__name', 'quantity','created_at', 'expiration_date']
+    allowed_sort_fields = ['name', 'category__name', 'sku']
     sort_by = request.GET.get('sort_by', 'name')
     order = request.GET.get('order', 'asc')
 
@@ -334,7 +331,7 @@ def supplier_search(request):
 @permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_view(request, id):
     supplier = supplier_service.get(id)
-    raw_materials = raw_material_service.raw_material_class.objects.all().filter(supplier=supplier)
+    raw_materials = raw_material_service.list().filter(supplier=supplier)
     return render(request, 'suppliers/supplier_view.html', {'p': supplier,'raw_materials': raw_materials})
 
 @login_required
@@ -342,7 +339,6 @@ def supplier_view(request, id):
 def supplier_list(request):
     q = (request.GET.get("q") or "").strip()
     default_per_page = 25
-    
     try:
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
@@ -488,11 +484,10 @@ def raw_material_list(request):
         per_page = int(request.GET.get("per_page", default_per_page))
     except ValueError:
         per_page = default_per_page
-    
     if per_page > 101 or per_page <= 0:
         per_page = default_per_page
-    allowed_sort_fields = ['raw_material_class__name', 'raw_maerial_class__supplier__fantasy_name', 'raw_material_class__category__name']
-    sort_by = request.GET.get('sort_by', 'raw_material_class__name')
+    allowed_sort_fields = ['name', 'supplier__fantasy_name']
+    sort_by = request.GET.get('sort_by', 'name')
     order = request.GET.get('order', 'asc')
     if sort_by not in allowed_sort_fields:
         sort_by = 'name'
@@ -500,12 +495,11 @@ def raw_material_list(request):
         order = 'asc'
         
     order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = raw_material_service.list()
+    qs = raw_material_service.list_actives()
     if q:
         qs = qs.filter(
             Q(name__icontains=q) |
-            Q(supplier__fantasy_name__icontains=q) |
-            Q(category__name__icontains=q)
+            Q(supplier__fantasy_name__icontains=q)
         )
     qs = qs.order_by(order_by_field)
     paginator = Paginator(qs, per_page)
@@ -557,14 +551,19 @@ def raw_material_view(request, id):
     raw_material = raw_material_service.get(id)
     return render(request, 'raw_material/raw_material_view.html', {'p': raw_material})
 
-@login_required
+@login_required()
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_create(request):
     supplier = supplier_service.get(request.GET.get('supplier'))
-    form = raw_material_service.form_class(initial={'supplier': supplier})
+    form = raw_material_service.form_class()
     if request.method == 'POST':
-        if request.GET.get('supplier'):
-            supplier = supplier_service.get(request.GET.get('supplier'))
+        if not supplier:
+            success, obj = raw_material_service.save(request.POST)
+            if success:
+                return redirect('raw_material_list')
+            else:
+                render(request, 'raw_material/raw_material_create.html', {'form': obj})
+        else:
             data = {
                 'name': request.POST.get('name'),
                 'description': request.POST.get('description'),
@@ -574,81 +573,56 @@ def raw_material_create(request):
                 'supplier': supplier,
                 'category': request.POST.get('category'),
                 'measurement_unit': request.POST.get('measurement_unit'),
-                'quantity': request.POST.get('quantity'),
             }
-            success, obj = raw_material_service.save(data)
+            success, obj = raw_material_service.save_raw_material_class(data, supplier)
             if success:
                 next = request.GET.get('next')
                 return redirect(next)
             else:
-                return render(request, 'raw_material/raw_material_create.html', {'form': obj})
-        else:
-            success, obj = raw_material_service.save(request.POST)
-            if success:
-                return redirect('raw_material_list')
-            else:
-                return render(request, 'raw_material/raw_material_create.html', {'form': obj})
-    return render(request, 'raw_material/raw_material_create.html', {'form': form})
+                return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
+    if not supplier:
+        return render(request, 'raw_material/raw_material_create.html', {'form': form})
+    return render(request, 'raw_material/raw_material_create.html', {'form': form, 'supplier': supplier.id})
 
 @login_required()
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_create_class(request):
-    supplier = supplier_service.get(request.GET.get('supplier'))
-    form = raw_material_service.raw_material_class_form_class()
-    if request.method == 'POST':
-        success, obj = raw_material_service.save_raw_material_class(request.POST, supplier)
-        if success:
-            next = request.GET.get('next')
-            return redirect(next)
-        else:
-            return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
-    return render(request, 'raw_material/raw_material_create_class.html', {'form': form, 'supplier': supplier.id})
-
-@login_required()
-@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_create_class_update(request, id):
-    supplier = supplier_service.get(request.GET.get('supplier'))
-    raw_material = raw_material_service.raw_material_class.objects.get(id=id)
-    form = raw_material_service.raw_material_class_form_class(instance=raw_material)
-    if request.method == 'POST':
-        success, obj = raw_material_service.update_raw_material_class(id, request.POST)
-        if success:
-            next = request.GET.get('next')
-            return redirect(next)
-        else:
-            return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
-    return render(request, 'raw_material/raw_material_create_class.html', {'form': form, 'supplier': supplier.id})
-
-@login_required()
-@permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_delete_class(request, id):
-    next = request.GET.get('next')
-    if request.method == 'GET':
-        success = raw_material_service.delete_raw_material_class(id)
-        if success:
-            return redirect(next)
-    return redirect(next)
-
-@login_required
-@permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_update(request, id):
+    supplier = supplier_service.get(request.GET.get('supplier'))
+    next = request.GET.get('next')
+    instance = raw_material_service.get(id)
+    form = raw_material_service.form_class(instance=instance)
     if request.method == 'POST':
         success, obj = raw_material_service.update(id, request.POST)
-        if success:
+        if success and next:
+            next = request.GET.get('next')
+            return redirect(next)
+        elif success and not next:
             return redirect('raw_material_list')
+        elif not success and supplier:
+            return render(request, 'raw_material/raw_material_update.html', {'form': obj, 'supplier': supplier.id})
+        else:
+            return render(request, 'raw_material/raw_material_update.html', {'form': obj})
     else:
         raw_material = raw_material_service.get(id)
         form = raw_material_service.form_class(instance=raw_material)
-    return render(request, 'raw_material/raw_material_update.html', {'form': form})
+    if not supplier:
+        return render(request, 'raw_material/raw_material_update.html', {'form': form})
+    return render(request, 'raw_material/raw_material_update.html', {'form': form, 'supplier': supplier.id})
 
-@login_required
+@login_required()
 @permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_delete(request, id):
+    next = request.GET.get('next')
     if request.method == 'GET':
-        success = raw_material_service.delete(id)
-        if success:
-            return redirect('raw_material_list')
-    return redirect('raw_material_list') 
+        if next:
+            success = raw_material_service.delete(id)
+            if success:
+                return redirect(next)
+        else:
+            success = raw_material_service.delete(id)
+            if success:
+                return redirect('raw_material_list')
+    return redirect('raw_material_list')
 
 @login_required
 @permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
@@ -675,7 +649,7 @@ def export_raw_materials_excel(request):
         except ValueError:
             pass 
 
-    headers = ["Nombre", "Proveedor", "Categoría",  "Cantidad", "Perecible", "Creación", "Vencimiento"]
+    headers = ["Nombre", "Proveedor", "Categoría", "Perecible", 'Unidad de medida']
     data_rows = []
     
     for rm in qs:
@@ -683,316 +657,7 @@ def export_raw_materials_excel(request):
             rm.name,
             rm.supplier.fantasy_name,
             rm.category.name,
-            rm.quantity,
             "Sí" if rm.is_perishable else "No",
-            rm.created_at.strftime("%d-%m-%Y") if rm.created_at else "N/A",
-            rm.expiration_date.strftime("%d-%m-%Y") if rm.expiration_date else "N/A",
+            rm.measurement_unit,
         ])
-
     return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def product_batch_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-
-    allowed_sort_fields = ['product__name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'batch_code'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = batch_service.list_product().select_related("product")
-
-    if q:
-        qs = qs.filter(
-            Q(product__name__icontains=q) |
-            Q(batch_code__icontains=q)
-        )
-
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'batches/product_batch_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def product_batch_view(request, id):
-    batch = batch_service.get(id)
-    return render(request, 'batches/product_batch.html', {'b': batch})
-
-@login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
-def product_batch_create(request):
-    form = batch_service.product_form_class()
-    if request.method == 'POST':
-        success, obj = batch_service.save_product_batch(request.POST)
-        if success:
-            return redirect('product_batch_list')
-        else:
-            return render(request, 'batches/product_batch_create.html', {'form': obj})
-    return render(request, 'batches/product_batch_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
-def product_batch_update(request, id):
-    if request.method == 'POST':
-        success, obj = batch_service.update_product_batch(id, request.POST)
-        if success:
-            return redirect('product_batch_list')
-    else:
-        batch = batch_service.get(id)
-        form = batch_service.product_form_class(instance=batch)
-    return render(request, 'batches/product_batch_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
-def product_batch_delete(request, id):
-    if request.method == 'GET':
-        success = batch_service.delete_product_batch(id)
-        if success:
-            return redirect('product_batch_list')
-    return redirect('product_batch_list')
-
-@login_required
-@permission_or_redirect('Products.view_product_batch','dashboard', 'No teni permiso')
-def export_product_batches_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = batch_service.list_product().select_related("product").order_by('batch_code')
-    if q:
-        qs = qs.filter(
-            Q(product__name__icontains=q) | 
-            Q(batch_code__icontains=q)      
-        )
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass 
-    headers = ["Código Lote", "Producto", "Cantidad Actual", "Cantidad Máxima", "Cantidad Mínima"]
-    data_rows = []
-    for b in qs:
-        data_rows.append([
-            b.batch_code,
-            b.product.name,
-            b.current_quantity,
-            b.max_quantity,
-            b.min_quantity,
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Productos") 
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def raw_batch_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-
-    allowed_sort_fields = ['raw_material_class__name', 'raw_material_class__supplier__fantasy_name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'batch_code'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = batch_service.list_raw_materials()
-
-    if q:
-        qs = qs.filter(
-            Q(raw_material__name__icontains=q) |
-            Q(batch_code__icontains=q) |
-            Q(raw_material__supplier__name__icontains=q)
-        )
-        
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'batches/raw_batch_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def raw_batch_view(request, id):
-    batch = batch_service.get(id)
-    return render(request, 'batches/raw_batch.html', {'b': batch})
-
-@login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
-def raw_batch_create(request):
-    form = batch_service.raw_form_class()
-    if request.method == 'POST':
-        success, obj = batch_service.save_raw_batch(request.POST)
-        if success:
-            return redirect('raw_batch_list')
-        else:
-            return render(request, 'batches/raw_batch_create.html', {'form': obj})
-    return render(request, 'batches/raw_batch_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
-def raw_batch_update(request, id):
-    if request.method == 'POST':
-        success, obj = batch_service.update_raw_batch(id, request.POST)
-        if success:
-            return redirect('raw_batch_list')
-    else:
-        batch = batch_service.get(id)
-        form = batch_service.raw_form_class(instance=batch)
-    return render(request, 'batches/raw_batch_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
-def raw_batch_delete(request, id):
-    if request.method == 'GET':
-        success = batch_service.delete_raw_batch(id)
-        if success:
-            return redirect('raw_batch_list')
-    return redirect('raw_batch_list')
-
-@login_required
-@permission_or_redirect('Products.view_raw_batch','dashboard', 'No teni permiso')
-def export_raw_batches_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = batch_service.list_raw_materials().select_related(
-        "raw_material", 
-        "raw_material__supplier"
-    ).order_by('batch_code')
-    if q:
-        qs = qs.filter(
-            Q(raw_material__name__icontains=q) | 
-            Q(batch_code__icontains=q) |         
-            Q(raw_material__supplier__name__icontains=q) 
-        )
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass 
-    headers = ["Materia Prima","Código de Lote","Proveedor", "Cantidad Actual",  "Cantidad Máxima", "Cantidad Mínima"]
-    data_rows = []
-    for b in qs:
-        data_rows.append([
-            b.raw_material.name,
-            b.batch_code,
-            b.raw_material.supplier.name,            
-            b.current_quantity,
-            b.max_quantity,
-            b.min_quantity,
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Materias_Primas") 
-
-@login_required
-@permission_or_redirect('Products.change_pricehistories','dashboard', 'No teni permiso')
-def price_histories_save(request, id):
-    form = price_histories_service.form_class()
-    if request.method == 'POST':
-        product = product_service.get(id)
-        data = {
-            'product': product,
-            'unit_price' : request.POST.get('unit_price'),
-            'date' : request.POST.get('date'),
-            'iva': request.POST.get('iva')
-        }
-        success, obj = price_histories_service.save(data)
-        if success:
-            return redirect('product_view', id)
-        else:
-            return render(request, 'products/product.html', {'p': product, 'form': obj})
-    return render(request, 'products/product.html', {'p': product, 'form': form})
-

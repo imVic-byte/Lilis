@@ -71,6 +71,8 @@
 
                     </div>
                     <p class="card-text">Descripcion: {{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+                    <p class="card-text">Productos: {{ p.count_products }}</p>
+                    <p class="card-text">Materias Primarias: {{ p.count_raw_materials }}</p>
                     
                 </div>
             </div>
@@ -103,6 +105,8 @@
                                 {% endif %}
                             </a>
                         </th>
+                        <th><strong>Productos</strong></th>
+                        <th><strong>Materias Primas</strong></th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -111,6 +115,8 @@
                     <tr>
                         <td>{{ p.name }}</td>
                         <td>{{ p.description|default:"-" }}</td>
+                        <td>{{ p.count_products }}</td>
+                        <td>{{ p.count_raw_materials }}</td>
                         <td>
                             <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
