@@ -1,5 +1,5 @@
-from .models import Client, Location, Warehouse, WareClient,Transaction, Lote, Inventario
-from Products.models import Producto
+from .models import Client, Location, Warehouse, WareClient
+from Products.models import Producto, Transaction, Lote, Inventario
 from django import forms
 from Main.validators import *
 

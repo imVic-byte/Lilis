@@ -54,50 +54,59 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <div class='row'>
-                        <div class="col-7">
-                            <h5 class="card-title">{{ p.name }}</h5>
-                        </div>
-                        <div class="col-5 text-end">
-                            <td>
-                                <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                    data-url="{% url 'raw_material_delete' p.id %}" data-item-name="{{ p.name }}">
-                                    Eliminar
-                                </button>
-                            </td>
-                        </div>
+    <div class="row">
+        <div class="col-7">
+            <h5 class="card-title">{{ p.name }}</h5>
+            <h6 class="card-subtitle text-muted">SKU: {{ p.sku }}</h6>
+        </div>
+        <div class="col-5 text-end">
+            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <button type="button" class="btn btn-danger btn-sm btn-delete"
+                data-url="{% url 'product_delete' p.id %}"
+                data-item-name="{{ p.name }}">
+                Eliminar
+            </button>
+        </div>
+    </div>
 
-                    </div>
-                    <h6 class="card-subtitle mb-2 text-muted">SKU: {{ p.sku|default:"Sin SKU" }}</h6>
-                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <strong>Proveedor:</strong> {{ p.supplier.fantasy_name }}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Categoría:</strong> {{ p.category.name }}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Perecible:</strong>
-                            {% if p.is_perishable %}
-                            <span class="badge bg-warning text-dark">Sí</span>
-                            {% else %}
-                            <span class="badge bg-success text-white">No</span>
-                            {% endif %}
-                        </li>
-                        <li class="list-group-item">
-                            {% if p.measurement_unit == 'U' %}
-                            <strong>Medida:</strong> Unidades
-                            {% elif p.measurement_unit == 'KG' %}
-                            <strong>Medida:</strong> Kilogramos
-                            {% elif p.measurement_unit == 'L' %}
-                            <strong>Medida:</strong> Litros
-                            {% else %}
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
+    {% if p.url_image %}
+        <div class="text-center mt-2">
+            <img src="{{ p.url_image }}" alt="Imagen" class="img-fluid rounded"
+                 style="max-height:120px; object-fit:contain;">
+        </div>
+    {% endif %}
+
+    <ul class="list-group list-group-flush mt-2">
+        <li class="list-group-item"><strong>EAN/UPC:</strong> {{ p.ean_upc|default:"—" }}</li>
+        <li class="list-group-item"><strong>Modelo:</strong> {{ p.model|default:"—" }}</li>
+        <li class="list-group-item"><strong>Marca:</strong> {{ p.brand|default:"—" }}</li>
+        <li class="list-group-item"><strong>Proveedor:</strong> {{ p.supplier.bussiness_name }}</li>
+        <li class="list-group-item"><strong>Categoría:</strong> {{ p.category.name }}</li>
+        <li class="list-group-item">
+            <strong>U. Compra:</strong> {{ p.get_uom_purchase_display }} |
+            <strong>U. Venta:</strong> {{ p.get_uom_sale_display }}
+        </li>
+        <li class="list-group-item">
+            <strong>Precio:</strong> ${{ p.price }} |
+            <strong>IVA:</strong> {{ p.iva }}%
+        </li>
+        <li class="list-group-item">
+            <strong>Stock Min:</strong> {{ p.min_stock }} |
+            <strong>Stock Max:</strong> {{ p.max_stock }}
+        </li>
+        <li class="list-group-item">
+            <strong>Activo:</strong>
+            {% if p.is_active %}Sí{% else %}No{% endif %}
+        </li>
+        <li class="list-group-item">
+            <strong>Controles:</strong>
+            {% if p.serie_control %}Serie {% endif %}
+            {% if p.batch_control %}Lote{% endif %}
+            {% if not p.serie_control and not p.batch_control %}—{% endif %}
+        </li>
+    </ul>
+</div>
+
             </div>
         </div>
         {% empty %}
@@ -111,90 +120,51 @@
         <div class="card-body">
             <table class="table table-hover align-middle align-content-between">
                 <thead>
-                    <tr>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Nombre</strong>
-                                {% if current_sort_by == 'name' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
+    <tr>
+        <th>Nombre</th>
+        <th>SKU</th>
+        <th>Marca</th>
+        <th>Proveedor</th>
+        <th>Categoría</th>
+        <th>Precio</th>
+        <th>IVA</th>
+        <th>Activo</th>
+        <th>Acciones</th>
+    </tr>
+</thead>
 
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=sku&order={% if current_sort_by == 'sku' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>SKU</strong>
-                                {% if current_sort_by == 'sku' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
+<tbody>
+    {% for p in page_obj %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.sku }}</td>
+        <td>{{ p.brand|default:"—" }}</td>
+        <td>{{ p.supplier.bussiness_name }}</td>
+        <td>{{ p.category.name }}</td>
+        <td>${{ p.price }}</td>
+        <td>{{ p.iva }}%</td>
+        <td>
+            {% if p.is_active %}
+                <span class="badge bg-success">Sí</span>
+            {% else %}
+                <span class="badge bg-danger">No</span>
+            {% endif %}
+        </td>
+        <td>
+            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <button type="button"
+                class="btn btn-danger btn-sm btn-delete"
+                data-url="{% url 'product_delete' p.id %}"
+                data-item-name="{{ p.name }}">
+                Eliminar
+            </button>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="text-center">No se encontraron productos.</td></tr>
+    {% endfor %}
+</tbody>
 
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=supplier__fantasy_name&order={% if current_sort_by == 'supplier__fantasy_name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Proveedor</strong>
-                                {% if current_sort_by == 'supplier__fantasy_name' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=category__name&order={% if current_sort_by == 'category__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Categoría</strong>
-                                {% if current_sort_by == 'category__name' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-
-                        <th><strong>Medida</strong></th>
-
-                        <th><strong>Perecible</strong></th>
-
-                        <th><strong>Acciones</strong></th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for p in page_obj %}
-                    <tr>
-                        <td>{{ p.name }}</td>
-                        <td>{{ p.sku|default:"Sin SKU" }}</td>
-                        <td>{{ p.supplier.fantasy_name }}</td>
-                        <td>{{ p.category.name }}</td>
-                        {% if p.measurement_unit == 'U' %}
-                        <td>Unidades</td>
-                        {% elif p.measurement_unit == 'KG' %}
-                        <td>Kilogramos</td>
-                        {% elif p.measurement_unit == 'L' %}
-                        <td>Litros</td>
-                        {% else %}
-                        <td>Sin medida</td>
-                        {% endif %}
-                        <td>
-                            {% if p.is_perishable %}
-                                <span class="badge bg-warning text-dark">Sí</span>
-                            {% else %}
-                                <span class="badge bg-success text-white">No</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'raw_material_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center">No se encontraron materias primas que coincidan con los filtros.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
             </table>
         </div>
     </div>

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from Main.CRUD import CRUD
-from .models import Serie, TransactionDetail,Client, Location, Warehouse, WareClient, Transaction, Inventario, Lote
+from .models import Client, Warehouse, WareClient
+from Products.models import Transaction, Inventario, Lote, Serie, TransactionDetail
 from .forms import LoteProductoForm,TransactionForm,ClientForm, WarehouseForm
 from Products.models import RawMaterialClass, Producto
 from Products.services import ProductService,RawMaterialService

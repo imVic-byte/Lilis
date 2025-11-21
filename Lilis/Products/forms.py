@@ -6,16 +6,51 @@ from Main.validators import *
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['name', 'sku', 'description', 'category', 'is_perishable', 'is_active', 'measurement_unit']
+        fields = [
+            'sku', 'ean_upc', 'name', 'model', 'description', 'category', 'brand', 'model_code',
+            'uom_purchase', 'uom_sale', 'conversion_factor', 
+            'cost', 'standard_cost', 'price', 'iva',
+            'min_stock', 'max_stock', 'reordering_level',
+            'serie_control', 'batch_control', 
+            'alerta_bajo_stock', 'alerta_por_vencer',
+            'url_image', 'technical_sheet', 'measurement_unit', 'is_perishable'
+        ]
         labels = {
-            'name': 'Nombre',
-            'sku': 'SKU',
+            'sku': 'SKU (requerido)',
+            'ean_upc': 'EAN/UPC',
+            'name': 'Nombre (requerido)',
+            'model': 'Modelo',
             'description': 'Descripción',
-            'category': 'Categoría',
-            'is_perishable': 'Es perecible',
-            'is_active': 'Está activo',
-            'measurement_unit': 'Unidad de medida',
+            'category': 'Categoría (requerido)',
+            'brand': 'Marca',
+            'model_code': 'Código de modelo',
+            'uom_purchase': 'Unidad de medida compra (requerido)',
+            'uom_sale': 'Unidad de medida venta (requerido)',
+            'conversion_factor': 'Factor de conversión (requerido)',
+            'cost': 'Costo promedio (lectura)',
+            'standard_cost': 'Costo estándar',
+            'price': 'Precio de venta',
+            'iva': 'IVA (%) (requerido)',
+            'min_stock': 'Stock mínimo (requerido)',
+            'max_stock': 'Stock máximo',
+            'reordering_level': 'Punto de reorden (opcional, si no, usar mínimo)',
+            'serie_control': 'Control por serie (opcional, se requiere un tipo de control)',
+            'batch_control': 'Control por lote (opcional, se requiere un tipo de control)',
+            'alerta_bajo_stock': 'Alerta bajo stock (opcional)',
+            'alerta_por_vencer': 'Alerta por vencer (opcional)',
+            'url_image': 'URL de imagen (opcional)',
+            'technical_sheet': 'Ficha técnica (opcional)',
+            'measurement_unit': 'Unidad de medida (requerido)',
+            'is_perishable': 'Es perecible (requerido)'
         }
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'uom_purchase': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'uom_sale': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'measurement_unit': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'is_perishable': forms.CheckboxInput(),
+        }
+
     def clean_name(self):
         return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
@@ -28,15 +63,21 @@ class ProductForm(forms.ModelForm):
     def clean_category(self):
         return self.cleaned_data.get('category')
 
-    def clean_is_perishable(self):
-        return self.cleaned_data.get('is_perishable')
+    def clean_conversion_factor(self):
+        factor = self.cleaned_data.get('conversion_factor')
+        if factor and factor <= 0:
+            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
+        return factor
+
+    def clean_iva(self):
+        iva = self.cleaned_data.get('iva')
+        if iva and (iva < 0 or iva > 100):
+            raise forms.ValidationError('El IVA debe estar entre 0 y 100')
+        return iva
 
     def clean_is_active(self):
         return self.cleaned_data.get('is_active')
 
-    def clean_measurement_unit(self):
-        return self.cleaned_data.get('measurement_unit')
-    
     def save(self, commit=True):
         product = super().save(commit=False)
         if commit:
@@ -68,21 +109,42 @@ class CategoryForm(forms.ModelForm):
 class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
-        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'trade_terms']
+        fields = [
+            'bussiness_name', 'fantasy_name', 'rut', 
+            'email', 'phone', 'address', 'city', 'country', 'web_site',
+            'payment_terms_days', 'currency', 'discount_percentage', 'trade_terms',
+            'is_preferred', 'lead_time_days'
+        ]
         labels = {
-                'bussiness_name': 'Nombre de la empresa',
-                'fantasy_name': 'Nombre de fantasia',
-                'rut': 'RUT',
-                'email': 'Correo electronico',
-                'phone': 'Telefono',
-                'trade_terms': 'Términos de comercio' 
-                }
+            'bussiness_name': 'Razón social (requerido)',
+            'fantasy_name': 'Nombre de fantasía',
+            'rut': 'RUT (requerido)',
+            'email': 'Correo electrónico (requerido)',
+            'phone': 'Teléfono',
+            'address': 'Dirección',
+            'city': 'Ciudad',
+            'country': 'País (requerido)',
+            'web_site': 'Sitio web',
+            'payment_terms_days': 'Plazo de pago (días) (requerido)',
+            'currency': 'Moneda (requerido)',
+            'discount_percentage': 'Descuento (%)',
+            'trade_terms': 'Términos comerciales',
+            'is_preferred': 'Proveedor preferente',
+            'lead_time_days': 'Tiempo de entrega (días)'
+        }
+        widgets = {
+            'trade_terms': forms.Textarea(attrs={'rows': 3}),
+            'currency': forms.Select(choices=[('CLP', 'Peso Chileno'), ('USD', 'Dólar'), ('EUR', 'Euro')]),
+        }
         
     def clean_bussiness_name(self):
         return validate_text_length(self.cleaned_data.get('bussiness_name'), field_name="El nombre de empresa")
 
     def clean_fantasy_name(self):
-        return validate_text_length(self.cleaned_data.get('fantasy_name'), field_name="El nombre de fantasía")
+        fantasy_name = self.cleaned_data.get('fantasy_name')
+        if fantasy_name:
+            return validate_text_length(fantasy_name, field_name="El nombre de fantasía", allow_empty=True)
+        return fantasy_name
     
     def clean_rut(self):
         return validate_rut_format(self.cleaned_data.get('rut'))
@@ -99,6 +161,24 @@ class SupplierForm(forms.ModelForm):
             return validate_phone_format(phone)
         return phone
 
+    def clean_discount_percentage(self):
+        discount = self.cleaned_data.get('discount_percentage')
+        if discount and (discount < 0 or discount > 100):
+            raise forms.ValidationError('El descuento debe estar entre 0 y 100')
+        return discount
+
+    def clean_payment_terms_days(self):
+        days = self.cleaned_data.get('payment_terms_days')
+        if days and days < 0:
+            raise forms.ValidationError('Los días de plazo de pago no pueden ser negativos')
+        return days
+
+    def clean_lead_time_days(self):
+        days = self.cleaned_data.get('lead_time_days')
+        if days and days < 0:
+            raise forms.ValidationError('El tiempo de entrega no puede ser negativo')
+        return days
+
     def save(self, commit=True):
         supplier = super().save(commit=False)
         if commit:
@@ -108,46 +188,89 @@ class SupplierForm(forms.ModelForm):
 class RawMaterialForm(forms.ModelForm):
     class Meta:
         model = RawMaterialClass
-        fields = [ 'name', 'sku', 'description', 'is_perishable', 'measurement_unit', 'category']
+        fields = [
+            'sku', 'ean_upc', 'name', 'model', 'description', 'category', 'brand', 'model_code',
+            'uom_purchase', 'uom_sale', 'conversion_factor', 
+            'cost', 'standard_cost', 'price', 'iva',
+            'min_stock', 'max_stock', 'reordering_level',
+            'serie_control', 'batch_control', 
+            'alerta_bajo_stock', 'alerta_por_vencer',
+            'url_image', 'technical_sheet', 'measurement_unit', 'is_perishable', 'supplier'
+        ]
         labels = {
-            'name': 'Nombre',
-            'sku': 'SKU',
+            'sku': 'SKU (requerido)',
+            'ean_upc': 'EAN/UPC',
+            'name': 'Nombre (requerido)',
+            'model': 'Modelo',
             'description': 'Descripción',
-            'is_perishable' : '',
-            'measurement_unit' : 'Unidad de medida',
-            'category': 'Categoría',
+            'category': 'Categoría (requerido)',
+            'brand': 'Marca',
+            'model_code': 'Código de modelo',
+            'uom_purchase': 'Unidad de medida compra (requerido)',
+            'uom_sale': 'Unidad de medida venta (requerido)',
+            'conversion_factor': 'Factor de conversión (requerido)',
+            'cost': 'Costo promedio (lectura)',
+            'standard_cost': 'Costo estándar',
+            'price': 'Precio de venta',
+            'iva': 'IVA (%) (requerido)',
+            'min_stock': 'Stock mínimo (requerido)',
+            'max_stock': 'Stock máximo',
+            'reordering_level': 'Punto de reorden (opcional, si no, usar mínimo)',
+            'serie_control': 'Control por serie (opcional, se requiere un tipo de control)',
+            'batch_control': 'Control por lote (opcional, se requiere un tipo de control)',
+            'alerta_bajo_stock': 'Alerta bajo stock (opcional)',
+            'alerta_por_vencer': 'Alerta por vencer (opcional)',
+            'url_image': 'URL de imagen (opcional)',
+            'technical_sheet': 'Ficha técnica (opcional)',
+            'measurement_unit': 'Unidad de medida (requerido)',
+            'is_perishable': 'Es perecible (requerido)',
+            'supplier': 'Proveedor (requerido)'
         }
         widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'uom_purchase': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'uom_sale': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
             'measurement_unit': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
+            'is_perishable': forms.CheckboxInput(),
+            'supplier': forms.Select()
         }
 
-        def clean_name(self):
-            return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
+    def __init__(self, *args, supplier=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if supplier:
+            self.fields['supplier'].initial = supplier
+            self.fields['supplier'].widget.attrs['readonly'] = True
 
-        def clean_description(self):
-            return validate_text_length(self.cleaned_data.get('description'), min_length=5, field_name="La descripción", allow_empty=True)
+    def clean_name(self):
+        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
-        def clean_quantity(self):
-            return validate_is_number(self.cleaned_data.get('quantity'), field_name="La cantidad")
+    def clean_sku(self):
+        return validate_text_length(self.cleaned_data.get('sku'), field_name="El SKU")
 
-        def clean_expiration_date(self):
-            is_perishable = self.cleaned_data.get('is_perishable')
-            exp_date = self.cleaned_data.get('expiration_date')
-            if is_perishable and not exp_date:
-                raise forms.ValidationError('Productos perecibles deben tener fecha de vencimiento.')
-            if exp_date:
-                return validate_future_date(exp_date, field_name="La fecha de vencimiento", allow_today=True)
-            return exp_date
+    def clean_description(self):
+        return validate_text_length(self.cleaned_data.get('description'), min_length=5, field_name="La descripción", allow_empty=True)
 
-        def clean_created_at(self):
-            created_at = self.cleaned_data.get('created_at')
-            if created_at:
-                return validate_past_or_today_date(created_at, field_name="La fecha de creación")
-            return created_at
+    def clean_category(self):
+        return self.cleaned_data.get('category')
 
-        def save(self, commit=True):
-            raw_material_class = super().save(commit=False)
-            if commit:
-                raw_material_class.save()
-            return raw_material_class
+    def clean_conversion_factor(self):
+        factor = self.cleaned_data.get('conversion_factor')
+        if factor and factor <= 0:
+            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
+        return factor
 
+    def clean_iva(self):
+        iva = self.cleaned_data.get('iva')
+        if iva and (iva < 0 or iva > 100):
+            raise forms.ValidationError('El IVA debe estar entre 0 y 100')
+        return iva
+
+    def clean_is_active(self):
+        return self.cleaned_data.get('is_active')
+
+    def save(self, commit=True):
+        product = super().save(commit=False)
+        if commit:
+            product.save()
+            return product
+        return product

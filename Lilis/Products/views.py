@@ -557,7 +557,7 @@ def raw_material_view(request, id):
 @permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
 def raw_material_create(request):
     supplier = supplier_service.get(request.GET.get('supplier'))
-    form = raw_material_service.form_class()
+    form = raw_material_service.form_class(supplier=supplier)
     if request.method == 'POST':
         if not supplier:
             success, obj = raw_material_service.save(request.POST)
@@ -566,22 +566,14 @@ def raw_material_create(request):
             else:
                 render(request, 'raw_material/raw_material_create.html', {'form': obj})
         else:
-            data = {
-                'name': request.POST.get('name'),
-                'description': request.POST.get('description'),
-                'sku': request.POST.get('sku'),
-                'expiration_date': request.POST.get('expiration_date'),
-                'is_perishable': request.POST.get('is_perishable'),
-                'supplier': supplier,
-                'category': request.POST.get('category'),
-                'measurement_unit': request.POST.get('measurement_unit'),
-            }
-            success, obj = raw_material_service.save_raw_material_class(data, supplier)
+            form.fields['supplier'].initial = supplier
+            success, obj = raw_material_service.save(request.POST)
             if success:
                 next = request.GET.get('next')
                 return redirect(next)
             else:
-                return render(request, 'raw_material/raw_material_create_class.html', {'form': obj, 'supplier': supplier.id})
+                obj.fields['supplier'].initial = supplier
+                return render(request, 'raw_material/raw_material_create.html', {'form': obj, 'supplier': supplier.id})
     if not supplier:
         return render(request, 'raw_material/raw_material_create.html', {'form': form})
     return render(request, 'raw_material/raw_material_create.html', {'form': form, 'supplier': supplier.id})
