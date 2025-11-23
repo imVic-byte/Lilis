@@ -1,4 +1,4 @@
-from .models import Client, Location, Warehouse, WareClient
+from .models import Client, Warehouse, WareClient
 from Products.models import Producto, Transaction, Lote, Inventario
 from django import forms
 from Main.validators import *
@@ -33,17 +33,28 @@ class LoteProductoForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     class Meta: 
         model = Client
-        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt' ,'is_suspended']
+        fields = [
+            'bussiness_name', 'fantasy_name', 'rut', 
+            'email', 'phone', 'address', 'city', 'country', 'web_site',
+            'payment_terms_days', 'currency', 'discount_percentage', 'trade_terms',
+            'is_preferred', 'lead_time_days'
+        ]
         labels = {
-            'bussiness_name': 'Razon social de la empresa',
-            'fantasy_name': 'Nombre fantasia de la empresa',
-            'rut': 'Rut de la empresa',
-            'email': 'Correo electronico',
-            'phone': 'Telefono',
-            'credit_limit': 'Limite de credito',
-            'debt': 'Deuda',
-            'max_debt': 'Maximo de deuda',
-            'is_suspended': 'Esta suspendido'
+            'bussiness_name': 'Razón social (requerido)',
+            'fantasy_name': 'Nombre de fantasía',
+            'rut': 'RUT (requerido)',
+            'email': 'Correo electrónico (requerido)',
+            'phone': 'Teléfono',
+            'address': 'Dirección',
+            'city': 'Ciudad',
+            'country': 'País (requerido)',
+            'web_site': 'Sitio web',
+            'payment_terms_days': 'Plazo de pago (días) (requerido)',
+            'currency': 'Moneda (requerido)',
+            'discount_percentage': 'Descuento (%)',
+            'trade_terms': 'Términos comerciales',
+            'is_preferred': 'Proveedor preferente',
+            'lead_time_days': 'Tiempo de entrega (días)'
         }
     
     def clean_bussiness_name(self):

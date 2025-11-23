@@ -55,15 +55,15 @@
                             {% for w in warehouses %}
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>{{ w.warehouse.name }}</strong><br>
-                                    <small class="text-muted">{{ w.warehouse.address }} - {{ w.warehouse.location }} - {{ w.association_date }}</small>
-                                    {% if w.status == 'A' %}
+                                    <strong>{{ w.name }}</strong><br>
+                                    <small class="text-muted">{{ w.address }} - {{ w.location }} - {{ w.wareclients.first.association_date }}</small>
+                                    {% if w.wareclients.first.is_active == True %}
                                     <span class="badge bg-success">Activo</span>
                                     {% else %}
                                     <span class="badge bg-secondary">Inactivo</span>
                                     {% endif %}
                                 </div>
-                                <a href="{% url 'warehouse_update' w.warehouse.id %}?next={{ request.path }}&client={{ b.id }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'warehouse_update' w.id %}?next={{ request.path }}&client={{ b.id }}" class="btn btn-sm btn-outline-primary">
                                     Ver / Editar
                                 </a>
                             </div>

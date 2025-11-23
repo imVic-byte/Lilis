@@ -151,10 +151,10 @@
             {% endif %}
         </td>
         <td>
-            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
             <button type="button"
                 class="btn btn-danger btn-sm btn-delete"
-                data-url="{% url 'product_delete' p.id %}"
+                data-url="{% url 'raw_material_delete' p.id %}"
                 data-item-name="{{ p.name }}">
                 Eliminar
             </button>

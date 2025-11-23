@@ -45,10 +45,10 @@ class ClientService(CRUD):
         return False, client
     
     def count_actives(self):
-        return self.model.objects.filter(is_suspended=False).count()
+        return self.model.objects.filter(is_active=False).count()
     
     def count_suspended(self):
-        return self.model.objects.filter(is_suspended=True).count()
+        return self.model.objects.filter(is_active=True).count()
 
 class WarehouseService(CRUD):
     def __init__(self):
@@ -86,7 +86,7 @@ class WarehouseService(CRUD):
     def warehouse_assign(self, client, warehouse_id):
         warehouse = self.model.objects.get(id=warehouse_id)
         if warehouse:
-            wareclient = self.wareclient_model.objects.create(client=client, warehouse=warehouse, status='A', association_date=datetime.datetime.today())
+            wareclient = self.wareclient_model.objects.create(client=client, warehouse=warehouse,is_active=True, association_date=datetime.datetime.today())
             return True, wareclient
         return False, None
     
@@ -169,9 +169,10 @@ class InventarioService(CRUD):
         inventario.save()
         return True, inventario
     
-    def consumir_lotes(self, inventario, cantidad):
+    def consumir_lotes(self, producto, cantidad):
+        inventario = self.model.objects.get(producto=producto)
         lotes = inventario.lotes.order_by('fecha_expiracion', 'fecha_creacion')
-        resta = cantidad
+        resta = Decimal(cantidad)
         for l in lotes:
             if l.cantidad_actual == 0:
                 continue
@@ -280,12 +281,12 @@ class TransactionService(CRUD):
             return None, mp
         if data['product']:
             tipo, id = data['product'].split('-')
-            product = self.inventario.model.objects.get(producto=id)
+            product = self.inventario.product_class.objects.get(id=id)
             data['product'] = product
             data['raw_material'] = None
             return product, None
         tipo, id = data['raw_material'].split('-')
-        mp = self.inventario.get(materia_prima=id)
+        mp = self.inventario.raw_class.objects.get(materia_prima=id)
         data['product'] = None
         data['raw_material'] = mp
         return None, mp
@@ -318,7 +319,7 @@ class TransactionService(CRUD):
             if not ok:
                 return False, None
         if type_ == 'salida':
-            ok = self.inventario.consumir_lotes(producto, cantidad)
+            ok = self.inventario.consumir_lotes(transaction, producto, cantidad)
             if not ok:
                 return False, None
         if type_ == 'devolucion':
@@ -335,6 +336,10 @@ class TransactionService(CRUD):
                 if not ok:
                     return False, None
         return True, transaction
+    
+    def procesar_salida(self, transaction, product, cantidad):
+        code = transaction.batch_code or transaction.serie_code
+
     
     def procesar_ingreso(self, transaction, materia_prima, cantidad):
         inventario = self.inventario.model.objects.get_or_create(materia_prima=materia_prima, producto=None, bodega=transaction.warehouse)[0]
@@ -357,9 +362,12 @@ class TransactionService(CRUD):
             }
             return self.crear_detalle_transaccion(detail_data)
         else:
+            print('TRANSACCIONNNNNNNNNN- ',transaction.serie_code)
             detalles = []
-            for i in range(cantidad):
-                code = f'{transaction.batch_code}-{i}'
+            codigo = transaction.serie_code
+            for i in range(int(cantidad)):
+                code = codigo,'-',i
+                print(code)
                 data_serie = {
                     'codigo': code,
                     'inventario': inventario,
@@ -389,7 +397,13 @@ class TransactionService(CRUD):
         return True, detalle
     
     def procesar_devolucion(self, transaction, product, materia_prima, cantidad):
-        inventario = self.inventario.model.objects.get_or_create(materia_prima=materia_prima, producto=product, bodega=transaction.warehouse)[0]
+        if product:
+            producto = self.inventario.product_class.objects.get(id=product.id)
+            inventario = self.inventario.model.objects.get_or_create(materia_prima=None, producto=producto, bodega=transaction.warehouse)[0]
+        if materia_prima:
+            mat_prima = self.inventario.raw_class.objects.get(materia_prima.id)
+            inventario = self.inventario.model.objects.get_or_create(materia_prima=mat_prima, producto=None, bodega=transaction.warehouse)[0]
+        
         data_lote = {
             'inventario': inventario,
             'cantidad_actual': cantidad,

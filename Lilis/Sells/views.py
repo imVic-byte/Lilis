@@ -1,13 +1,17 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required, permission_required
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .services import ClientService, WarehouseService, TransactionService
 from Main.decorator import permission_or_redirect
 from Main.utils import generate_excel_response
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from Products.services import ProductService, RawMaterialService, SupplierService
 from datetime import date
+from django.views import View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -16,336 +20,322 @@ product_service = ProductService()
 raw_material_service = RawMaterialService()
 supplier_service = SupplierService()
 LILIS_RUT = "2519135-8"
+
 # ===================================
 # VISTAS DE CLIENTES
 # ===================================
 
-@login_required
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def client_list_all(request):
-    q = (request.GET.get("q") or "").strip()
-    allowed_per_page = [5, 25, 50, 100]
-    default_per_page = request.user.profile.per_page
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    if per_page not in allowed_per_page:
-        per_page = default_per_page
-    allowed_sort_fields = ['rut', 'fantasy_name', 'bussiness_name', 'email', 'phone']
-    sort_by = request.GET.get('sort_by', 'fantasy_name')
-    order = request.GET.get('order', 'asc')
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'fantasy_name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = client_service.list_actives()
-    if q:
-        qs = qs.filter(
-            Q(fantasy_name__icontains=q) |
-            Q(bussiness_name__icontains=q) |
-            Q(rut__icontains=q) |
-            Q(email__icontains=q) |
-            Q(phone__icontains=q)
-        )
-    qs = qs.order_by(order_by_field)
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        "querystring": querystring_pagination, 
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc", 
-    }
-    request.user.profile.per_page = per_page
-    return render(request, 'clients/client_list.html', context)
+class ClientListView(ListView):
+    model = client_service.model
+    template_name = 'clients/client_list.html'
+    context_object_name = 'clients'
+    paginate_by = 25
 
-# --- Vistas antiguas de Cliente (Las comentamos para guardarlas) ---
-@login_required
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def client_list_actives(request):
-    clients = client_service.list_actives()
-    # Esta vista antigua usa la variable 'clients', por eso no funciona con el nuevo HTML
-    return render(request, 'clients/client_list.html', {'clients': clients}) 
-
-@login_required
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def client_list_inactives(request):
-    clients = client_service.list_inactives()
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(fantasy_name__icontains=q) |
+                Q(bussiness_name__icontains=q) |
+                Q(rut__icontains=q) |
+                Q(email__icontains=q) |
+                Q(phone__icontains=q)
+            )
+        allowed_sort_fields = ['fantasy_name', 'bussiness_name', 'rut', 'email', 'phone']
+        sort_by = self.request.GET.get('sort_by', 'fantasy_name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'fantasy_name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+            
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
     
-    return render(request, 'clients/client_list.html', {'clients': clients})
-
-@login_required()
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def client_search(request):
-    q = request.GET.get('q', '')
-    clients = client_service.model.objects.filter(is_suspended=False).filter(
-        Q(fantasy_name__icontains=q) |
-        Q(bussiness_name__icontains=q) |
-        Q(rut__icontains=q)
-    ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_suspended', 'credit_limit', 'debt', 'max_debt')
-    return JsonResponse(list(clients), safe=False)
-
-@login_required
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def client_view(request, id):
-    if request.method == 'GET':
-        client = client_service.get(id)
-        warehouses = client.wareclients.all()
-        return render(request, 'clients/client_view.html', {'b': client, 'warehouses': warehouses})
-    else:
-        return redirect('client_list_all')
-
-@login_required
-@permission_or_redirect('Sells.add_client','dashboard', 'No teni permiso')
-def client_create(request):
-    form = client_service.form_class()
-    if request.method == 'POST':
-        success, obj = client_service.save(request.POST)
-        if success:
-            return redirect('client_list_all')
-        else:
-            return render(request, 'clients/client_create.html', {'form': obj})
-    return render(request, 'clients/client_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Sells.change_client','dashboard', 'No teni permiso')
-def client_update(request, id):
-    if request.method == 'POST':
-        success, obj = client_service.update(id, request.POST)
-        if success:
-            return redirect('client_list_all') # ¡Redirect actualizado!
-        else:
-            return render(request, 'clients/client_update.html', {'form': obj})
-    else:
-        client = client_service.get(id)
-        form = client_service.form_class(instance=client)
-    return render(request, 'clients/client_update.html', {'form': form})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'fantasy_name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
     
-@login_required
-@permission_or_redirect('Sells.delete_client','dashboard', 'No teni permiso')
-def client_delete(request, id):
-    if request.method == 'GET':
-        success = client_service.to_suspend(id)
-        if success:
-            return redirect('client_list_all')
-    return redirect('client_list_all')
-
-@login_required
-@permission_or_redirect('Sells.view_client','dashboard', 'No teni permiso')
-def export_clients_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    limit = request.GET.get("limit")
-    qs = client_service.list().order_by('fantasy_name')
-    if q:
-        qs = qs.filter(
-            Q(fantasy_name__icontains=q) |
-            Q(bussiness_name__icontains=q) |
-            Q(rut__icontains=q) |
-            Q(email__icontains=q) |
-            Q(phone__icontains=q)
-        )
-    if limit:
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
         try:
-            limit = int(limit)
-            qs = qs[:limit]
+            per_page = int(per_page) if per_page else default_per_page
         except ValueError:
-            pass
-    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono", "Estado", "Limite de Credito", "Deuda", "Deuda Máxima"]
-    data_rows = []
-    for client in qs:
-        data_rows.append([
-            client.fantasy_name,
-            client.bussiness_name,
-            client.rut,
-            client.email,
-            client.phone,
-            "Inactivo" if client.is_suspended else "Activo",
-            client.credit_limit,
-            client.debt,
-            client.max_debt
-        ])
-    return generate_excel_response(headers, data_rows, "Lilis_Clientes")
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+
+class ClientCreateView(CreateView):
+    model = client_service.model
+    fields = model.get_create_fields()
+    success_url = reverse_lazy('client_list_all')
+    template_name = 'clients/client_create.html'
+
+class ClientUpdateView(UpdateView):
+    model = client_service.model
+    fields = model.get_create_fields()
+    success_url = reverse_lazy('client_list_all')
+    template_name = 'clients/client_update.html'
+
+class ClientDeleteView(DeleteView):
+    model = client_service.model
+    success_url = reverse_lazy('client_list_all')
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
+    
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_suspended = True
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+class ClientExportView(View):
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = client_service.list().order_by('fantasy_name')
+        if q:
+            qs = qs.filter(
+                Q(fantasy_name__icontains=q) |
+                Q(bussiness_name__icontains=q) |
+                Q(rut__icontains=q) |
+                Q(email__icontains=q) |
+                Q(phone__icontains=q)
+            )
+        qs_limit = request.GET.get("limit")
+        if qs_limit:
+            try:
+                limit = int(qs_limit)
+                if limit > 0:
+                    qs = qs[:limit] 
+            except ValueError:
+                pass
+        headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono"]
+        data_rows = []
+        for c in qs:
+            data_rows.append([
+                c.fantasy_name,
+                c.bussiness_name,
+                c.rut,
+                c.email,
+                c.phone,
+            ])
+        return generate_excel_response(headers, data_rows, "Lilis_Clientes")
+
+class ClientSearchView(View):
+    def get(self, *args, **kwargs):
+        q = self.request.GET.get('q', '')
+        clients = client_service.model.objects.filter(is_suspended=False).filter(
+            Q(fantasy_name__icontains=q) |
+            Q(bussiness_name__icontains=q) |
+            Q(rut__icontains=q)
+        ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_suspended', 'credit_limit', 'debt', 'max_debt')
+        return JsonResponse(list(clients), safe=False)
+
+class ClientDetailView(DetailView):
+    model = client_service.model
+    template_name = 'clients/client_view.html'
+    context_object_name = 'b'
+    pk_url_kwarg = 'pk'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplier = self.object
+        warehouses = warehouse_service.filter_by_client(supplier)
+        context['warehouses'] = warehouses
+        print(warehouses)
+        return context
 
 # ===================================
 # VISTAS DE WAREHOUSES (Indentación Corregida)
 # ===================================
-@login_required
-@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
-def warehouse_list(request):
-    q = (request.GET.get("q") or "").strip()
-    allowed_per_page = [5, 25, 50, 100]
-    default_per_page = 25
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    if per_page not in allowed_per_page:
-        per_page = default_per_page
-    allowed_sort_fields = ['name', 'address', 'location__name', 'total_area']
-    sort_by = request.GET.get('sort_by', 'name')
-    order = request.GET.get('order', 'asc')
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = warehouse_service.model.objects.all()
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(address__icontains=q) |
-            Q(location__name__icontains=q)
-        )
-    qs = qs.order_by(order_by_field)
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'warehouses/warehouse_list.html', context)
+class WarehouseListView(ListView):
+    model = warehouse_service.model
+    template_name = 'warehouses/warehouse_list.html'
+    context_object_name = 'warehouses'    
+    paginate_by = 25
 
-@login_required
-@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
-def warehouse_view(request, id):
-    if request.method == 'GET':
-        warehouse = warehouse_service.model.objects.get(id=id)
-        return render(request, 'warehouses/warehouse_view.html', {'w': warehouse})
-    else:
-        return redirect('warehouse_list')
-
-@login_required
-@permission_or_redirect('Sells.add_warehouse','dashboard', 'No teni permiso')
-def warehouse_create(request):
-    form = warehouse_service.form_class()
-    if request.method == 'POST':
-        if request.GET.get('client'):
-            client = client_service.get(request.GET.get('client'))
-            success, warehouse = warehouse_service.save(request.POST)
-            if success:
-                success2, obj2 = warehouse_service.warehouse_assign(client, warehouse.id)
-                if success2:
-                    next = request.GET.get('next')
-                    return redirect(next)
-                else:
-                    return render(request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': 'No se pudo asignar la bodega.'})
-            else:
-                return render(request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': 'No se pudo crear la bodega.'})
-        else:
-            success, obj = warehouse_service.save(request.POST)
-            if success:
-                return redirect('warehouse_list')
-    else:
-        return render(request, 'warehouses/warehouse_create.html', {'form': form})
-    return render(request, 'warehouses/warehouse_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Sells.change_warehouse','dashboard', 'No teni permiso')
-def warehouse_update(request, id):
-    if request.method == 'POST':
-        if request.GET.get('client'):
-            success, obj = warehouse_service.update(id, request.POST)
-            if success:
-                next = request.GET.get('next')
-                return redirect(next)
-            else:
-                return render(request, 'warehouses/warehouse_update.html', {'form': obj})
-        else:
-            success, obj = warehouse_service.update(id, request.POST)
-            if success:
-                return redirect('warehouse_list')
-            else:
-                return render(request, 'warehouses/warehouse_update.html', {'form': obj})
-    else:
-        warehouse = warehouse_service.model.objects.get(id=id)
-        form = warehouse_service.form_class(instance=warehouse)
-    return render(request, 'warehouses/warehouse_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Sells.delete_warehouse','dashboard', 'No teni permiso')
-def warehouse_delete(request, id):
-    if request.method == 'GET':
-        success = warehouse_service.delete(id)
-        if success:
-            if request.GET.get('client'):
-                next = request.GET.get('next')
-                return redirect(next)
-            return redirect('warehouse_list')
-    return redirect('warehouse_list')
-
-@login_required
-@permission_or_redirect('Sells.view_warehouse','dashboard', 'No teni permiso')
-def export_warehouse_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
-    limit = request.GET.get("limit")
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(address__icontains=q) |
-            Q(location__name__icontains=q) # Búsqueda en la FK
-        )
-    if limit:
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(address__icontains=q) |
+                Q(location__name__icontains=q)
+            )
+        allowed_sort_fields = ['name', 'address', 'location__name', 'total_area']
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+            
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
         try:
-            limit = int(limit)
-            qs = qs[:limit]
+            per_page = int(per_page) if per_page else default_per_page
         except ValueError:
-            pass
-    headers = ["Nombre", "Dirección", "Ubicación", "Área Total"]
-    data_rows = []
-    for warehouse in qs:
-        data_rows.append([
-            warehouse.name,
-            warehouse.address,
-            warehouse.location.name if warehouse.location else "N/A",
-            warehouse.total_area,
-        ])
-    return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+        
+class WarehouseDetailView(DetailView):
+    model = warehouse_service.model
+    template_name = 'warehouses/warehouse_view.html'
+
+class WarehouseCreateView(CreateView):
+    model = warehouse_service.model
+    form_class = warehouse_service.form_class
+    success_url = reverse_lazy('warehouse_list')
+    template_name = 'warehouses/warehouse_create.html'
+
+    def get_client_object(self):
+        client_id = self.request.GET.get('client')
+        if client_id:
+            return client_service.get(client_id)
+        else:
+            return None
+        
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        warehouse = self.get_object
+        client = self.get_client_object()
+        if client:
+            try:
+                success, warehouse = warehouse_service.warehouse_assign(client, warehouse.id)
+                if success:
+                    next = self.request.GET.get('next')
+                    if next:
+                        return redirect(next)
+                    else:
+                        return redirect(self.get_success_url())
+                else:
+                    return render(self.request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': 'No se pudo asignar la bodega.'})
+            except Exception as e:
+                return render(self.request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': str(e)})
+        return response
+    
+class WarehouseUpdateView(CreateView):
+    model = warehouse_service.model
+    form_class = warehouse_service.form_class
+    success_url = reverse_lazy('warehouse_list')
+    template_name = 'warehouses/warehouse_update.html'
+
+    def get_client_object(self):
+        client_id = self.request.GET.get('client')
+        if client_id:
+            return client_service.get(client_id)
+        else:
+            return None
+        
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        warehouse = self.get_object
+        client = self.get_client_object()
+        if client:
+            try:
+                success, warehouse = warehouse_service.update(client, warehouse.id)
+                if success:
+                    next = self.request.GET.get('next')
+                    if next:
+                        return redirect(next)
+                    else:
+                        return redirect(self.get_success_url())
+                else:
+                    return render(self.request, 'warehouses/warehouse_update.html', {'form': warehouse, 'error': 'No se pudo asignar la bodega.'})
+            except Exception as e:
+                return render(self.request, 'warehouses/warehouse_update.html', {'form': warehouse, 'error': str(e)})
+        return response
+
+
+class WarehouseDeleteView(DeleteView):
+    model = warehouse_service.model
+    success_url = reverse_lazy('warehouse_list')
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
+    
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+class WarehouseExportView(View):
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
+        limit = request.GET.get("limit")
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(address__icontains=q) |
+                Q(location__name__icontains=q)
+            )
+        if limit:
+            try:
+                limit = int(limit)
+                qs = qs[:limit]
+            except ValueError:
+                pass
+        headers = ["Nombre", "Dirección", "Ubicación", "Área Total"]
+        data_rows = []
+        for warehouse in qs:
+            data_rows.append([
+                warehouse.name,
+                warehouse.address,
+                warehouse.location.name if warehouse.location else "N/A",
+                warehouse.total_area,
+            ])
+        return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
 
 def get_warehouses(request):
     id = request.GET.get('id')

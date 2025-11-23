@@ -2,31 +2,23 @@ from django.urls import path
 from . import views
 
 clients = [
-    # Esta es la vista principal que usaremos, con paginación
-    path('client_list_all/', views.client_list_all, name='client_list_all'),
-    
-    # Comentamos estas líneas para que no den error
-    # path('client_list_actives', views.client_list_actives, name='client_list_actives'),
-    # path('client_list_inactives', views.client_list_inactives, name='client_list_inactives'),
-    
-    # El resto de tus vistas de cliente
-    path('client_create/', views.client_create, name='client_create'),
-    path('client_update/<int:id>/', views.client_update, name='client_update'),
-    path('client_delete/<int:id>/', views.client_delete, name='client_delete'),
-    path('client_view/<int:id>/', views.client_view, name='client_view'),
-    path('export_clients_excel/', views.export_clients_excel, name='export_clients_excel'),
-    path('client_search/', views.client_search, name='client_search'),
+    path('client_list_all/', views.ClientListView.as_view(), name='client_list_all'),
+    path('client_create/', views.ClientCreateView.as_view(), name='client_create'),
+    path('client_update/<int:pk>/', views.ClientUpdateView.as_view(), name='client_update'),
+    path('client_delete/<int:pk>/', views.ClientDeleteView.as_view(), name='client_delete'),
+    path('client_view/<int:pk>/', views.ClientDetailView.as_view(), name='client_view'),
+    path('export_clients_excel/', views.ClientExportView.as_view(), name='export_clients_excel'),
+    path('client_search/', views.ClientSearchView.as_view(), name='client_search'),
 ]
 
 
 warehouses = [
-    path('warehouse_list/', views.warehouse_list, name='warehouse_list'),
-    path('warehouse_create/', views.warehouse_create, name='warehouse_create'),
-    path('warehouse_update/<int:id>/', views.warehouse_update, name='warehouse_update'),
-    path('warehouse_delete/<int:id>/', views.warehouse_delete, name='warehouse_delete'),
-    path('warehouse_view/<int:id>/', views.warehouse_view, name='warehouse_view'),
-    path('export_warehouse_excel/', views.export_warehouse_excel, name='export_warehouse_excel'),
-    path('warehouses_by_client/', views.get_warehouses, name='warehouses_by_client'),
+    path('warehouse_list/', views.WarehouseListView.as_view(), name='warehouse_list'),
+    path('warehouse_create/', views.WarehouseCreateView.as_view(), name='warehouse_create'),
+    path('warehouse_update/<int:pk>/', views.WarehouseUpdateView.as_view(), name='warehouse_update'),
+    path('warehouse_delete/<int:pk>/', views.WarehouseDeleteView.as_view(), name='warehouse_delete'),
+    path('warehouse_view/<int:pk>/', views.WarehouseDetailView.as_view(), name='warehouse_view'),
+    path('export_warehouse_excel/', views.WarehouseExportView.as_view(), name='export_warehouse_excel'),
 ]
 
 batches = [
