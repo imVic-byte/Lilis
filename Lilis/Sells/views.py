@@ -87,13 +87,13 @@ class ClientListView(ListView):
 
 class ClientCreateView(CreateView):
     model = client_service.model
-    fields = model.get_create_fields()
+    form_class = client_service.form_class
     success_url = reverse_lazy('client_list_all')
     template_name = 'clients/client_create.html'
 
 class ClientUpdateView(UpdateView):
     model = client_service.model
-    fields = model.get_create_fields()
+    form_class = client_service.form_class
     success_url = reverse_lazy('client_list_all')
     template_name = 'clients/client_update.html'
 
@@ -176,7 +176,7 @@ class WarehouseListView(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_active=True)
+        qs = super().get_queryset().filter(wareclients__is_active=True)
         q = (self.request.GET.get("q") or "").strip()
         if q:
             qs = qs.filter(
@@ -230,6 +230,7 @@ class WarehouseListView(ListView):
 class WarehouseDetailView(DetailView):
     model = warehouse_service.model
     template_name = 'warehouses/warehouse_view.html'
+    context_object_name = 'w'
 
 class WarehouseCreateView(CreateView):
     model = warehouse_service.model
@@ -316,7 +317,7 @@ class WarehouseExportView(View):
         limit = request.GET.get("limit")
         if q:
             qs = qs.filter(
-                Q(name__icontains=q) |
+                Q(name__icontains=q) |  
                 Q(address__icontains=q) |
                 Q(location__name__icontains=q)
             )
@@ -413,6 +414,10 @@ def get_warehouses_for_client(client):
     warehouses = warehouse_service.filter_by_client(client)
     return [warehouse_to_dict(w) for w in warehouses]
 
+def warehouses_by_client(request):
+    id = request.GET.get('id')
+    warehouses = warehouse_service.filter_by_client(id)
+    return JsonResponse({'warehouses': [warehouse_to_dict(w) for w in warehouses]})
 
 def handle_ingreso():
     l = client_service.search_by_rut(LILIS_RUT)[0]
@@ -431,7 +436,6 @@ def handle_ingreso():
 def handle_salida():
     data = []
     clients = client_service.list_actives().exclude(rut=LILIS_RUT)
-
     for c in clients:
         client_data = {
             'id': c.id,
@@ -490,6 +494,23 @@ def handle_transfer():
         data['warehouses'].append(w)
     return JsonResponse({'data': data})
 
+def handle_produccion():
+    c = client_service.search_by_rut(LILIS_RUT)[0]
+    data = {
+        'clients': [supplier_base_dict(c)],
+        'products': [],
+        'warehouses': [],
+    }
+    products = product_service.list_actives()
+    for p in products:
+        data['products'].append(raw_material_to_dict(p))
+    l = client_service.search_by_rut(LILIS_RUT)[0]
+    warehouses = get_warehouses_for_client(l)
+    for w in warehouses:
+        data['warehouses'].append(w)
+    return JsonResponse({'data': data})
+
+
 def get_raw_materials_by_supplier(request):
     id = request.GET.get('id')
     type = request.GET.get('type')
@@ -516,8 +537,6 @@ def get_raw_materials_by_supplier(request):
             })
         return JsonResponse({'p': p})
 
-
-
 def get_by_type(request):
     tipo = request.GET.get('type')
     match tipo:
@@ -527,131 +546,115 @@ def get_by_type(request):
             return handle_salida()
         case 'devolucion':
             return handle_devolucion()
-        case _:
+        case 'transferencia':
             return handle_transfer()
-    
-def validate_code(request):
-    code = request.GET.get('code')
-    return JsonResponse({'valid': transaction_service.validate_code(code)})
-
-def transaction(request):
-    q = (request.GET.get("q") or "").strip()
+        case 'produccion':
+            return handle_produccion()
+        
+class TransactionView(View):
     allowed_per_page = [5, 25, 50, 100]
     default_per_page = 25
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    if per_page not in allowed_per_page:
-        per_page = default_per_page
     allowed_sort_fields = ['date', 'type', 'client']
-    sort_by = request.GET.get('sort_by', 'date')
-    order = request.GET.get('order', 'desc')
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'date'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = transaction_service.list()
-    if q:
-        qs = qs.filter(
-            Q(type__icontains=q)|
-            Q(client__rut__startswith=q)|
-            Q(client__bussiness_name__icontains=q)
-        )
-    qs = qs.order_by(order_by_field)
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
-    raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
-    clients = client_service.list_actives()
-    transactions = transaction_service.list()
-    today = []
-    for t in transactions:
-        t.date = t.date.date()
-        if t.date == date.today():
-            today.append(t)
-    transactions_today = len(today)
-    if request.method == 'POST':
-        data = {
-            'warehouse':request.POST.get('warehouse'),
-            'client':request.POST.get('client'),
-            'user':request.user.profile,
-            'notes':request.POST.get('observaciones'),
-            'type':request.POST.get('tipo'),
-            'quantity':request.POST.get('cantidad'),
-            'product':request.POST.get('producto'),
-            'batch_code':request.POST.get('lote'),
-            'serie_code':request.POST.get('serie'),
-            'expiration_date':request.POST.get('vencimiento'),
-            'date':request.POST.get('fecha'),
-        }
-        print(data)
-        transaction_service.create_transaction(data)
-        return redirect('transaction_list')
-    return render(request,'transactions/transaction.html',{
-        'products': products, 
-        'raw_materials': raw_materials,
-        'clients': clients, 
-        'transactions': transactions, 
-        'transactions_today': transactions_today,
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        "querystring": querystring_pagination, 
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-        })
 
-def export_transaction_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = transaction_service.list().order_by('date')
-    limit = request.GET.get("limit")
-    if q:
-        qs = qs.filter(
-            Q(product__sku__istartswith=q)|
-            Q(type__icontains=q)|
-            Q(client__rut__startswith=q)
-        )
-    if limit:
+    def get(self, request, *args, **kwargs):
+        q = (request.GET.get("q") or "").strip()
+        sort_by = request.GET.get('sort_by', 'date')
+        order = request.GET.get('order', 'desc')
+        per_page = request.GET.get("per_page", self.default_per_page)
+        if sort_by not in self.allowed_sort_fields:
+            sort_by = 'date'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+        if per_page not in self.allowed_per_page:
+            per_page = self.default_per_page
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = transaction_service.list()
+        if q:
+            qs = qs.filter(
+                Q(type__icontains=q)|
+                Q(client__rut__startswith=q)|
+                Q(client__bussiness_name__icontains=q)
+            )
+        qs = qs.order_by(order_by_field)
+        paginator = Paginator(qs, per_page)
+        page_number = request.GET.get("page")
         try:
-            limit = int(limit)
-            qs = qs[:limit]
-        except ValueError:
-            pass
-    data_rows = []
-    for transaction in qs:
-        data_rows.append([
-            transaction.type,
-            transaction.product.sku,
-            transaction.client.rut,
-            transaction.warehouse.name,
-            transaction.date.strftime("%Y-%m-%d"),
-            transaction.expiration_date.strftime("%Y-%m-%d") if transaction.expiration_date else "",
-            transaction.batch_code,
-            transaction.serie_code,
-            transaction.notes,
-        ])
-    headers = ["Tipo", "SKU", "Cliente", "Bodega", "Fecha", "Vencimiento", "Lote", "Serie", "Observaciones"]
-    return generate_excel_response(headers, data_rows, "Lilis_Transacciones")
+            page_obj = paginator.get_page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+        params_pagination = request.GET.copy()
+        params_pagination.pop("page", None)
+        querystring_pagination = params_pagination.urlencode()
+        params_sorting = request.GET.copy()
+        params_sorting.pop("page", None)
+        params_sorting.pop("sort_by", None)
+        params_sorting.pop("order", None)
+        querystring_sorting = params_sorting.urlencode()
+        products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
+        raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
+        clients = client_service.list_actives()
+        transactions = transaction_service.list()
+        today = []
+        for t in transactions:
+            t.date = t.date.date()
+            if t.date == date.today():
+                today.append(t)
+        transactions_today = len(today)
+        return render(request,'transactions/transaction.html',{
+            'products': products, 
+            'raw_materials': raw_materials,
+            'clients': clients, 
+            'transactions': transactions, 
+            'transactions_today': transactions_today,
+            "page_obj": page_obj,  
+            "q": q,
+            "per_page": per_page,
+            "total": qs.count(),
+            "querystring": querystring_pagination, 
+            "querystring_sorting": querystring_sorting,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            })
+
+    def post(self, request, *args, **kwargs):
+        transaction_service.create_transaction(request)
+        return redirect('transaction_list')
+        
+class TransactionExportView(View):
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = transaction_service.list().order_by('date')
+        limit = request.GET.get("limit")
+        if q:
+            qs = qs.filter(
+                Q(product__sku__istartswith=q)|
+                Q(type__icontains=q)|
+                Q(client__rut__startswith=q)
+            )
+        if limit:
+            try:
+                limit = int(limit)
+                qs = qs[:limit]
+            except ValueError:
+                pass
+        data_rows = []
+        for transaction in qs:
+            data_rows.append([
+                transaction.type,
+                transaction.product.sku,
+                transaction.client.rut,
+                transaction.warehouse.name,
+                transaction.date.strftime("%Y-%m-%d"),
+                transaction.expiration_date.strftime("%Y-%m-%d") if transaction.expiration_date else "",
+                transaction.batch_code,
+                transaction.serie_code,
+                transaction.notes,
+            ])
+        headers = ["Tipo", "SKU", "Cliente", "Bodega", "Fecha", "Vencimiento", "Lote", "Serie", "Observaciones"]
+        return generate_excel_response(headers, data_rows, "Lilis_Transacciones")
 
 @login_required
 @permission_or_redirect('Sells.change_transaction','dashboard', 'No teni permiso')

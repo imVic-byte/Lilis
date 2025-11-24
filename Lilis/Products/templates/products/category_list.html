@@ -63,7 +63,8 @@
                         <div class="col-5 text-end">
                             <td>
                                 <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                <button type="button" class="btn btn-sm btn-delete"
+                                style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'category_delete' p.id %}" data-item-name="{{ p.name }}">
                                     Eliminar
                                 </button>
@@ -122,6 +123,7 @@
                         <td>
                             <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
+                            style = "background-color: #D30A11; color: white;"
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'category_delete' p.id %}"
                                     data-item-name="{{ p.name }}">

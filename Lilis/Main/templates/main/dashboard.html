@@ -73,20 +73,32 @@
                     {% for t in transacciones %}
                     <tr>
                         <td>{{ t.date }}</td>
-                        <td>
-                            {% if t.type == 'ingreso' %}
-                            <span class="badge bg-success text-center">{{ t.type }}</span>
-                            {% elif t.type == 'devolucion' %}
-                            <span class="badge bg-warning text-center">{{ t.type }}</span>
-                            {% elif t.type == 'transferencia' %}
-                            <span class="badge bg-warning text-center">{{ t.type }}</span>
-                            {% elif t.type == 'salida' %}
-                            <span class="badge bg-danger text-center">{{ t.type }}</span>
-                            {% else %}
-                            <span class="badge bg-info text-center">Ajuste</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ t.details.all.first.code }}</td>
+                        {% if t.type == 'ingreso' or t.type == 'I' %}
+                <td><span class="badge bg-success text-center">Ingreso</span></td>
+            {% elif t.type == 'devolucion' %}
+                <td><span class="badge bg-warning text-center">{{ t.type }}</span></td>
+            {% elif t.type == 'transferencia' %}
+                <td><span class="badge bg-warning text-center">{{ t.type }}</span></td>
+            {% elif t.type == 'salida' %}
+                <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
+            {% else %}
+                <td><span class="badge bg-info text-center">{{ t.type }}</span></td>
+            {% endif %}
+                        {% with d=t.details.first %}
+                {% if d.batch %}
+                    {% if d.batch.inventario.producto %}
+                        <td>{{ d.batch.inventario.producto.sku|default_if_none:"No aplica." }}</td>
+                    {% else %}
+                        <td>{{ d.batch.inventario.materia_prima.sku|default_if_none:"No aplica." }}</td>
+                    {% endif %}
+                {% else %}
+                    {% if d.serie.inventario.producto %}
+                        <td>{{ d.serie.inventario.producto.sku|default_if_none:"No aplica." }}</td>
+                    {% else %}
+                        <td>{{ d.serie.inventario.materia_prima.sku|default_if_none:"No aplica." }}</td>
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
                         <td>{{ t.client.rut }}</td>
                     </tr>
                     {% endfor %}

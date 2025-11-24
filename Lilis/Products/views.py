@@ -23,7 +23,7 @@ class CategoryListView(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(is_active=True)
+        qs = super().get_queryset()
         q = (self.request.GET.get("q") or "").strip()
         if q:
             qs = qs.filter(
@@ -73,13 +73,13 @@ class CategoryListView(ListView):
 
 class CategoryCreateView(CreateView):
     model = category_service.model
-    fields = model.get_create_fields()
+    form_class = category_service.form_class
     success_url = reverse_lazy('category_list')
     template_name = 'products/category_create.html'
 
 class CategoryUpdateView(UpdateView):
     model = category_service.model
-    fields = model.get_create_fields()
+    form_class = category_service.form_class
     success_url = reverse_lazy('category_list')
     template_name = 'products/category_update.html'
 
@@ -183,17 +183,18 @@ class ProductListView(ListView):
 
 class ProductView(DetailView):
     model = product_service.model
-    template_name = 'products/product_view.html'
+    template_name = 'products/product.html'
+    context_object_name = 'p'
 
 class ProductCreateView(CreateView):
     model = product_service.model
-    fields = model.get_create_fields()
+    form_class = product_service.form_class
     success_url = reverse_lazy('products_list')
     template_name = 'products/product_create.html'
 
 class ProductUpdateView(UpdateView):
     model = product_service.model
-    fields = model.get_create_fields()
+    form_class = product_service.form_class
     success_url = reverse_lazy('products_list')
     template_name = 'products/product_update.html'
 
@@ -344,13 +345,13 @@ class SupplierListView(ListView):
 
 class SupplierCreateView(CreateView):
     model = supplier_service.model
-    fields = model.get_create_fields()
+    form_class = supplier_service.form_class
     success_url = reverse_lazy('supplier_list')
     template_name = 'suppliers/supplier_create.html'
 
 class SupplierUpdateView(UpdateView):
     model = supplier_service.model
-    fields = model.get_create_fields()
+    form_class = supplier_service.form_class
     success_url = reverse_lazy('supplier_list')
     template_name = 'suppliers/supplier_update.html'
 
@@ -465,13 +466,14 @@ class RawMaterialSearchView(View):
             Q(name__icontains=q) |
             Q(description__icontains=q)
         ).values(
-            'id', 'name', 'description','supplier', 'category__name', 'quantity', 'is_perishable', 'created_at', 'expiration_date', 'category', 'is_active' 
+            'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
             )
         return JsonResponse(list(raw_materials), safe=False)
 
 class RawMaterialView(DetailView):
     model = raw_material_service.model
     template_name = 'raw_material/raw_material_view.html'
+    context_object_name = 'p'
 
 class RawMaterialCreateView(CreateView):
     model = raw_material_service.model

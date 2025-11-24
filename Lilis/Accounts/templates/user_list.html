@@ -142,7 +142,7 @@
                             {% endif %}
                             {% if perms.auth.delete_user %}
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'user_delete' user_obj.id %}"
                                     data-item-name="@{{ user_obj.username }}">
                                 Eliminar

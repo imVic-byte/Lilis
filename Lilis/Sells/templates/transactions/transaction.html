@@ -138,7 +138,7 @@
             {% elif t.type == 'salida' %}
                 <td><span class="badge bg-danger text-center">{{ t.type }}</span></td>
             {% else %}
-                <td><span class="badge bg-info text-center">Ajuste</span></td>
+                <td><span class="badge bg-info text-center">{{ t.type }}</span></td>
             {% endif %}
             {% with d=t.details.first %}
                 {% if d.batch %}

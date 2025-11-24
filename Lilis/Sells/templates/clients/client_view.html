@@ -18,23 +18,63 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <h5 class="mb-2">Información General</h5>
+                        <h5 class="mb-4">Información General</h5>
                         <ul class="list-group mb-4">
-                            <li class="list-group-item"><strong>Razón social:</strong> {{ b.bussiness_name }}</li>
-                            <li class="list-group-item"><strong>RUT:</strong> {{ b.rut }}</li>
-                            <li class="list-group-item"><strong>Email:</strong> {{ b.email|default:"No registrado" }}
+                            <li class="list-group-item"><strong>Razón social:</strong> {{ p.bussiness_name }}</li>
+                            <li class="list-group-item"><strong>RUT:</strong> {{ p.rut }}</li>
+                            <li class="list-group-item"><strong>Email de contacto:</strong> {{ p.email|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Teléfono de contacto:</strong> {{ p.phone|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Terminos de comercio:</strong>{{ p.trade_terms|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Dirección:</strong> {{ p.address|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Ciudad:</strong> {{ p.city|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>País:</strong> {{ p.country|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Sitio web:</strong> {{ p.web_site|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Plazo de pago:</strong> 
+                                {% if p.payments_terms_days %}
+                                    {% if p.payments_terms_days == 30 %}
+                                        <span >30 días</span>
+                                    {% elif p.payments_terms_days == 60 %}
+                                        <span>60 días</span>
+                                    {% elif p.payments_terms_days == 90 %}
+                                        <span >90 días</span>
+                                    {% else %}
+                                        <span >{{ p.payments_terms_days }} días</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span>No registrado</span>
+                                {% endif %}
+                            <li class="list-group-item"><strong>Plazo de entrega:</strong> 
+                            {% if p.lead_time_days %}
+                                    {% if p.lead_time_days == 30 %}
+                                        <span >30 días</span>
+                                    {% elif p.lead_time_days == 60 %}
+                                        <span>60 días</span>
+                                    {% elif p.lead_time_days == 90 %}
+                                        <span >90 días</span>
+                                    {% else %}
+                                        <span >{{ p.lead_time_days }} días</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span>No registrado</span>
+                                {% endif %}
                             </li>
-                            <li class="list-group-item"><strong>Teléfono:</strong> {{ b.phone|default:"No registrado" }}
+                            <li class="list-group-item"><strong>Moneda:</strong> {{ p.currency|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Descuento:</strong> {{ p.discount_percentage|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Preferido:</strong> 
+                                {% if p.is_preferred %}
+                                    <span class="badge bg-success">Sí</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
                             </li>
-                        </ul>
-
-                        <h5 class="mb-2">Crédito</h5>
-                        <ul class="list-group">
-                            <li class="list-group-item"><strong>Límite:</strong> ${{ b.credit_limit }}</li>
-                            <li class="list-group-item"><strong>Deuda actual:</strong> ${{ b.debt }}</li>
-                            <li class="list-group-item"><strong>Deuda máxima:</strong> ${{ b.max_debt }}</li>
-                            <li class="list-group-item"><strong>Suspendido:</strong> {{ b.is_suspended|yesno:"Sí,No" }}
+                            <li class="list-group-item"><strong>Estado:</strong> 
+                                {% if p.is_active %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %} 
                             </li>
+                            
                         </ul>
                     </div>
                     <div class="col-md-6">

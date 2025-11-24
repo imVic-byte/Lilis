@@ -41,68 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const serieInput = document.getElementById('input-serie');
     const vencimientoInput = document.getElementById('input-vencimiento');
 
-    function validateBatchCode() {
-        const code = document.getElementById('input-lote').value;
-        fetch(`/sells/validate_code/?code=${code}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.valid) {
-                    document.getElementById('input-lote').classList.remove('is-invalid');
-                } else {
-                    document.getElementById('input-lote').classList.add('is-invalid');
-                    document.getElementById('input-lote').classList.add('is-invalid');
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Código duplicado',
-                        text: data.message || 'Este código de Lote ya existe en el sistema',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        document.getElementById('input-lote').value = '';
-                        document.getElementById('input-lote').focus();
-                    });
-                }
-            })
-            .catch(error => console.error('Error al validar código:', error));
-    }
-
-    function validateSerieCode() {
-        const code = document.getElementById('input-serie').value;
-
-        if (!code.trim()) {
-            document.getElementById('input-serie').classList.remove('is-invalid');
-            return;
-        }
-
-        fetch(`/sells/validate_code/?code=${encodeURIComponent(code)}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.valid) {
-                    document.getElementById('input-serie').classList.remove('is-invalid');;
-                } else {
-                    document.getElementById('input-serie').classList.add('is-invalid');
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Código duplicado',
-                        text: data.message || 'Este código de serie ya existe en el sistema',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        document.getElementById('input-serie').value = '';
-                        document.getElementById('input-serie').focus();
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error al validar código:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de conexión',
-                    text: 'No se pudo validar el código. Intente nuevamente.',
-                    confirmButtonText: 'Reintentar'
-                }).then(() => {
-                    document.getElementById('input-serie').focus();
-                });
-            });
-}
+    
 
     function updateLoteState() {
         if (loteCheckbox.checked) {

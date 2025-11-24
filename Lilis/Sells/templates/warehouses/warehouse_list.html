@@ -166,7 +166,7 @@
                             <a href="{% url 'warehouse_view' w.id %}" class="btn btn-weno btn-sm">Ver</a>
                             <a href="{% url 'warehouse_update' w.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'warehouse_delete' w.id %}"
                                     data-item-name="{{ w.name }}">
                                 Eliminar

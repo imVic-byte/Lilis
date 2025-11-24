@@ -23,7 +23,7 @@ class ClientService(CRUD):
         return self.model.objects.contains(trade_terms)
     
     def list_actives(self):
-        return self.model.objects.filter(is_suspended=False)
+        return self.model.objects.filter(is_active=True)
     
     def list_suspended(self):
         return self.models.objects.filter(is_suspended=True)
@@ -152,22 +152,23 @@ class InventarioService(CRUD):
         if not data:
             return False, None
         lote = self.lote.objects.create(**data)
-        self.actualizar_stock_total(lote.inventario)
+        self.actualizar_stock_total(lote.inventario, lote=True)
         return True, lote
     
     def crear_serie_entrada(self, data):
         if not data:
             return False, None
         serie = self.serie.objects.create(**data)
+        self.actualizar_stock_total(serie.inventario)
         return True, serie
     
     def actualizar_stock_total(self, inventario):
-        if not inventario.lotes:
-            return False, None
-        total = inventario.lotes.aggregate(total=Sum('cantidad_actual'))['total'] or 0.00
-        inventario.stock_total = total
-        inventario.save()
-        return True, inventario
+            total = inventario.lotes.aggregate(total=Sum('cantidad_actual'))['total'] or 0.00
+            total += inventario.series.filter(estado='A').count()
+            print(inventario.series.filter(estado='A').count())
+            inventario.stock_total = total
+            inventario.save()
+            return True, inventario
     
     def consumir_lotes(self, producto, cantidad):
         inventario = self.model.objects.get(producto=producto)
@@ -291,7 +292,20 @@ class TransactionService(CRUD):
         data['raw_material'] = mp
         return None, mp
 
-    def create_transaction(self, data):
+    def create_transaction(self, request):
+        data = {
+            'warehouse':request.POST.get('warehouse'),
+            'client':request.POST.get('client'),
+            'user':request.user.profile,
+            'notes':request.POST.get('observaciones'),
+            'type':request.POST.get('tipo'),
+            'quantity':request.POST.get('cantidad'),
+            'product':request.POST.get('producto'),
+            'batch_code':request.POST.get('lote'),
+            'serie_code':request.POST.get('serie'),
+            'expiration_date':request.POST.get('vencimiento'),
+            'date':request.POST.get('fecha'),
+        }
         type_ = data['type']
         data['warehouse'] = self.warehouse_service.get(data['warehouse'])
         data['client'] = self.client_service.get(data['client']) if data['client'] else None
@@ -335,7 +349,63 @@ class TransactionService(CRUD):
                 ok = self.inventario.mover_lotes(transaction, materia_prima, cantidad)
                 if not ok:
                     return False, None
+        if type_ == 'produccion':
+            if not producto:
+                return False, None
+            ok = self.procesar_produccion(transaction, producto, cantidad)
+            if not ok:
+                return False, None
         return True, transaction
+    
+    def procesar_produccion(self, transaction, product, cantidad):
+        if product:
+            producto = self.inventario.product_class.objects.get(id=product.id)
+            inventario = self.inventario.model.objects.get_or_create(materia_prima=None, producto=producto, bodega=transaction.warehouse)[0]
+        if transaction.batch_code:
+            data_lote = {
+                'inventario': inventario,
+                'cantidad_actual': cantidad,
+                'fecha_creacion': timezone.localdate(),
+                'fecha_expiracion': transaction.expiration_date,
+                'origen': "devolucion"
+            }
+            ok, lote = self.inventario.crear_lote_entrada(data_lote)
+            if not ok:
+                return False, None
+            detail_data = {
+                'transaction': transaction,
+                'code': transaction.batch_code,
+                'batch': lote,
+                'serie': None
+            }
+            return self.crear_detalle_transaccion(detail_data)
+        else:
+            detalles = []
+            codigo = transaction.serie_code
+            for i in range(int(cantidad)):
+                code = codigo,'-',i+1
+                print(code)
+                data_serie = {
+                    'codigo': code,
+                    'inventario': inventario,
+                    'estado': 'A',
+                    'fecha_creacion': timezone.localdate(),
+                    'fecha_expiracion': transaction.expiration_date,
+                }
+                ok, serie = self.inventario.crear_serie_entrada(data_serie)
+                if not ok:
+                    return False, None
+                detail_data = {
+                    'transaction': transaction,
+                    'code': code,
+                    'batch': None,
+                    'serie': serie
+                }
+                ok, detalle = self.crear_detalle_transaccion(detail_data)
+                if not ok:
+                    return False, None
+                detalles.append(detalle)
+            return True, detalles
     
     def procesar_salida(self, transaction, product, cantidad):
         code = transaction.batch_code or transaction.serie_code

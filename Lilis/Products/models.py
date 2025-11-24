@@ -22,27 +22,6 @@ class Supplier(models.Model):
 
     def __str__(self):
         return f'{self.bussiness_name} - {self.rut}'
-    
-    @classmethod
-    def get_create_fields(cls):
-        return [
-            'bussiness_name',
-            'fantasy_name',
-            'rut',
-            'email',
-            'phone',
-            'address',
-            'city',
-            'country',
-            'web_site',
-            'payment_terms_days',
-            'currency',
-            'discount_percentage',
-            'trade_terms',
-            'is_preferred',
-            'lead_time_days',
-            'is_active',
-        ]
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nombre')
@@ -94,38 +73,6 @@ class RawMaterialClass(models.Model):
     def __str__(self):
         return self.name + " - " + self.sku
 
-    @classmethod
-    def get_create_fields(cls):
-        return [
-            'sku',
-            'ean_upc',
-            'name',
-            'model',
-            'description',
-            'category',
-            'brand',
-            'model_code',
-            'uom_purchase',
-            'uom_sale',
-            'conversion_factor',
-            'cost',
-            'standard_cost',
-            'price',
-            'iva',
-            'is_active',
-            'min_stock',
-            'max_stock',
-            'reordering_level',
-            'serie_control',
-            'batch_control',
-            'alerta_bajo_stock',
-            'alerta_por_vencer',
-            'url_image',
-            'technical_sheet',
-            'measurement_unit',
-            'is_perishable',
-            'supplier',
-        ]
 
 class Producto(models.Model):
     sku = models.CharField(max_length=50, unique=True, verbose_name='SKU')
@@ -158,38 +105,6 @@ class Producto(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.sku}'
-
-    @classmethod
-    def get_create_fields(cls):
-        return [
-            'sku',
-            'ean_upc',
-            'name',
-            'model',
-            'description',
-            'category',
-            'brand',
-            'model_code',
-            'uom_purchase',
-            'uom_sale',
-            'conversion_factor',
-            'cost',
-            'standard_cost',
-            'price',
-            'iva',
-            'is_active',
-            'min_stock',
-            'max_stock',
-            'reordering_level',
-            'serie_control',
-            'batch_control',
-            'alerta_bajo_stock',
-            'alerta_por_vencer',
-            'url_image',
-            'technical_sheet',
-            'measurement_unit',
-            'is_perishable',
-        ]
 
 class Transaction(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)

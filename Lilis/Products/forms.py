@@ -146,6 +146,12 @@ class SupplierForm(forms.ModelForm):
             return validate_text_length(fantasy_name, field_name="El nombre de fantasía", allow_empty=True)
         return fantasy_name
     
+    def clean_fantasy_name(self):
+        fantasy_name = self.cleaned_data.get('fantasy_name')
+        if not fantasy_name:
+            raise forms.ValidationError('El nombre de fantasía es requerido')
+        return fantasy_name
+
     def clean_rut(self):
         return validate_rut_format(self.cleaned_data.get('rut'))
 

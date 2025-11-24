@@ -59,38 +59,60 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ p.fantasy_name }}</h5>
-                    <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>RUT:</strong> {{ p.rut}}</li>
-                        <li class="list-group-item"><strong>Email:</strong> {{ p.email}}</li>
-                        <li class="list-group-item"><strong>Telefono:</strong> {{ p.phone }}</li>
-                        <li class="list-group-item"><strong>Limite de credito:</strong> {{ p.credit_limit }}</li>
-                        <li class="list-group-item"><strong>Deuda:</strong> {{ p.debt }}</li>
-                        <li class="list-group-item"><strong>Deuda máxima:</strong> {{ p.max_debt}}</li>
-                        <li class="list-group-item">
-                            <strong>Estado:</strong>
-                            {% if not p.is_suspended %}
-                                <span class="badge bg-success">Activo</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactivo</span>
-                            {% endif %}
-                    </ul>
-                    <div class="mt-3">
-                        <a href="{% url 'client_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
-                        <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                        <button type="button" 
-                                class="btn btn-danger btn-sm btn-delete" 
-                                data-url="{% url 'client_delete' p.id %}"
-                                data-item-name="{{ p.fantasy_name }}">
-                            Eliminar
-                        </button>
+                    <div class='row'>
+                        <div class="col">
+                            <h5 class="card-title">{{ p.fantasy_name|default:"-" }}</h5>
+                        </div>
+                        <div class="col text-end">
+                            <td>
+                                <a class="btn btn-warning btn-sm" href="{% url 'client_view' p.id %}">Ver</a>
+                                <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-sm btn-delete"
+                                style = "background-color: #D30A11; color: white;"
+                                    data-url="{% url 'client_delete' p.id %}" data-item-name="{{ p.name }}">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </div>
                     </div>
+                    <h6 class="card-text">Razon social: {{ p.bussiness_name|default:"-" }}</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>RUT: </strong> {{ p.rut|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Email: </strong> {{ p.email|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Telefono: </strong> {{ p.phone|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Terminos: </strong>{{ p.trade_terms|default:"-"|truncatechars:40 }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Lead Time: </strong>{{ p.lead_time_days|default:"-" }} días
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Pago: </strong>{{ p.payment_terms_days|default:"-" }} días ({{ p.currency|default:"-" }})
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Descuento: </strong>{{ p.discount_percentage|default:"-" }}%
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Dirección: </strong>{{ p.address|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Ciudad: </strong>{{ p.city|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>País: </strong>{{ p.country|default:"-" }}
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
         {% empty %}
-        <p class="text-center">No se encontraron clientes que coincidan con los filtros.</p>
+        <p class="text-center">No se encontraron proveedores que coincidan con los filtros.</p>
         {% endfor %}
     </div>
 </div>
@@ -141,27 +163,10 @@
                                 {% endif %}
                             </a>
                         </th>
-                        <th>Estado</th>
                         <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=credit_limit&order={% if current_sort_by == 'credit_limit' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Límite de Crédito</strong>
-                                {% if current_sort_by == 'credit_limit' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=debt&order={% if current_sort_by == 'debt' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Deuda</strong>
-                                {% if current_sort_by == 'debt' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=max_debt&order={% if current_sort_by == 'max_debt' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Deuda Máxima</strong>
-                                {% if current_sort_by == 'max_debt' %}
+                            <a href="?{{ querystring_sorting }}&sort_by=trade_terms&order={% if current_sort_by == 'trade_terms' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                                <strong>Términos</strong>
+                                {% if current_sort_by == 'trade_terms' %}
                                     {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
                                 {% endif %}
                             </a>
@@ -172,36 +177,26 @@
                 <tbody>
                     {% for p in page_obj %}
                     <tr>
-                        <td>{{ p.fantasy_name }}</td>
-                        <td>{{ p.bussiness_name }}</td>
-                        <td>{{ p.rut }}</td>
+                        <td>{{ p.fantasy_name|default:"-" }}</td>
+                        <td>{{ p.bussiness_name|default:"-" }}</td>
+                        <td>{{ p.rut|default:"-" }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
+                        <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
                         <td>
-                            {% if not p.is_suspended %}
-                                <span class="badge bg-success">Activo</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Inactivo</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ p.credit_limit }}</td>
-                        <td>{{ p.debt }}</td>
-                        <td>{{ p.max_debt }}</td>
-
-                        <td style="white-space: nowrap;">
-                            <a href="{% url 'client_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
+                            <a class="btn btn-warning btn-sm" href="{% url 'client_view' p.id %}">Ver</a>
                             <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-sm btn-delete" 
+                                    style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'client_delete' p.id %}"
-                                    data-item-name="{{ p.fantasy_name }}">
-                                Eliminar
+                                    data-item-name="{{ p.fantasy_name }}"> Eliminar
                             </button>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="text-center">No se encontraron clientes que coincidan con los filtros.</td>
+                        <td colspan="6" class="text-center">No se encontraron clientes que coincidan con los filtros.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

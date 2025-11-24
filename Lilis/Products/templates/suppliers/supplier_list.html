@@ -60,32 +60,51 @@
                 <div class="card-body">
                     <div class='row'>
                         <div class="col">
-                            <h5 class="card-title">{{ p.fantasy_name }}</h5>
+                            <h5 class="card-title">{{ p.fantasy_name|default:"-" }}</h5>
                         </div>
                         <div class="col text-end">
                             <td>
                                 <a class="btn btn-warning btn-sm" href="{% url 'supplier_view' p.id %}">Ver</a>
                                 <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                <button type="button" class="btn btn-sm btn-delete"
+                                style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'supplier_delete' p.id %}" data-item-name="{{ p.name }}">
                                     Eliminar
                                 </button>
                             </td>
                         </div>
                     </div>
-                    <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
+                    <h6 class="card-text">Razon social: {{ p.bussiness_name|default:"-" }}</h6>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <strong>RUT: </strong> {{ p.rut }}
+                            <strong>RUT: </strong> {{ p.rut|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Email: </strong> {{ p.email }}
+                            <strong>Email: </strong> {{ p.email|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Telefono: </strong> {{ p.phone }}
+                            <strong>Telefono: </strong> {{ p.phone|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40 }}
+                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Lead Time: </strong>{{ p.lead_time_days|default:"-" }} días
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Pago: </strong>{{ p.payment_terms_days|default:"-" }} días ({{ p.currency|default:"-" }})
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Descuento: </strong>{{ p.discount_percentage|default:"-" }}%
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Dirección: </strong>{{ p.address|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Ciudad: </strong>{{ p.city|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>País: </strong>{{ p.country|default:"-" }}
                         </li>
                     </ul>
                 </div>
@@ -157,16 +176,18 @@
                 <tbody>
                     {% for p in page_obj %}
                     <tr>
-                        <td>{{ p.fantasy_name }}</td>
-                        <td>{{ p.bussiness_name }}</td>
-                        <td>{{ p.rut }}</td>
+                        <td>{{ p.fantasy_name|default:"-" }}</td>
+                        <td>{{ p.bussiness_name|default:"-" }}</td>
+                        <td>{{ p.rut|default:"-" }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
                         <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
                         <td>
+                            <a class="btn btn-warning btn-sm" href="{% url 'supplier_view' p.id %}">Ver</a>
                             <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-sm btn-delete" 
+                                    style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'supplier_delete' p.id %}"
                                     data-item-name="{{ p.fantasy_name }}"> Eliminar
                             </button>

@@ -20,29 +20,12 @@
                         <div class="mt-4 text-center">
                             <a href="{% url 'warehouse_update' w.id %}" class="btn btn-primary me-2">Editar</a>
                             <a href="{% url 'warehouse_list' %}" class="btn btn-secondary me-2">Volver</a>
-                            <button type="button" class="btn btn-danger ms-2" data-bs-toggle="modal"
-                                data-bs-target="#confirmDeleteModal{{ w.id }}">Eliminar</button>
-                            <div class="modal fade" id="confirmDeleteModal{{ w.id }}" tabindex="-1"
-                                aria-labelledby="modalLabel{{ w.id }}" aria-hidden="true">
-                                <div class="modal-dialog modal-sm">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white p-2">
-                                            <h6 class="modal-title" id="modalLabel{{ w.id }}">Confirmar eliminación</h6>
-                                            <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
-                                                aria-label="Cerrar"></button>
-                                        </div>
-                                        <div class="modal-body p-2 text-center">
-                                            ¿Eliminar bodega <strong>{{ w.name }}</strong>?
-                                        </div>
-                                        <div class="modal-footer p-2 justify-content-center">
-                                            <button type="button" class="btn btn-secondary btn-sm"
-                                                data-bs-dismiss="modal">Cancelar</button>
-                                            <a href="{% url 'warehouse_delete' w.id %}"
-                                                class="btn btn-danger btn-sm">Eliminar</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <button type="button" 
+                                    class="btn btn-sm btn-delete" 
+                                    style = "background-color: #D30A11; color: white;"
+                                    data-url="{% url 'warehouse_delete' w.id %}"
+                                    data-item-name="{{ w.name }}"> Eliminar
+                            </button>
                         </div>
                     </div>
                 </div>

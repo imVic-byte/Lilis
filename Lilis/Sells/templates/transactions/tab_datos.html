@@ -9,6 +9,7 @@
             <option>Seleccione...</option>
             <option value="ingreso">Ingreso</option>
             <option value="salida">Salida</option>
+            <option value="produccion">Producción</option>
             <option value="devolucion">Devolucion</option>
             <option value="transferencia">Transferencia</option>
         </select>
@@ -188,6 +189,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     return;
                 }
+                if (type === 'produccion') {
+                    resetSelect(clientSelect, 'Seleccione la empresa');
+                    resetSelect(productSelect, 'Seleccione un producto');
+                    resetSelect(warehouseSelect, 'Seleccione una bodega');
+
+                    data.clients.forEach(e => {
+                        const o = document.createElement('option');
+                        o.value = e.id;
+                        o.textContent = e.bussiness_name;
+                        clientSelect.appendChild(o);
+                    });
+                    data.products.forEach(e => {
+                        const o = document.createElement('option');
+                        o.value = `product-${e.id}`;
+                        o.textContent = `${e.sku ?? ''} ${e.name}`.trim();
+                        productSelect.appendChild(o);
+                    });
+                    data.warehouses.forEach(e => {
+                        const o = document.createElement('option');
+                        o.value = e.id;
+                        o.textContent = `${e.name} - ${e.address} - ${e.location}`;
+                        warehouseSelect.appendChild(o);
+                    });
+                    return;
+                }
             })
             .catch(e => console.error("Error al cargar datos:", e));
     });
@@ -286,6 +312,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (type === 'devolucion') {
             cantidadInput.disabled = false;
+            cantidadInput.value = '';
+            stockInput.value = '';
+            return;
+        }
+        if (type === 'produccion') {
+            cantidadInput.disabled = false;
+            cantidadInput.placeholder = 'Ingrese cantidad';
             cantidadInput.value = '';
             stockInput.value = '';
             return;
