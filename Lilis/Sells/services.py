@@ -11,6 +11,7 @@ from django.utils import timezone
 import datetime
 from django.db.models import Q
 LILIS_RUT = "2519135-8"
+
 class ClientService(CRUD):  
     def __init__(self):
         self.model = Client
@@ -94,10 +95,27 @@ class WarehouseService(CRUD):
         wareclient = self.wareclient_model.objects.get(client=client_id, warehouse=warehouse_id)
         if wareclient:
             wareclient.delete()
-            warehouse = self.model.objects.get(id=warehouse_id)
-            warehouse.delete()
-            return True, warehouse
+            return True, None
         return False, None
+
+    def warehouse_list_without_this_client(self, id):
+        warehouses = self.model.objects.filter(is_active=True)
+        w_list = []
+        for w in warehouses:
+            if w.is_active == False:
+                continue
+            if not w.wareclients.exists():
+                w_list.append(w)
+            for wc in w.wareclients.all():
+                if wc.client.id != id:
+                    print(wc.client.id, "-", id)
+                    w_list.append(w)
+        return self.model.objects.exclude(wareclients__client_id=id)
+
+    def delete_warehouse(self, warehouse):
+        warehouse.wareclients.all().delete()
+        warehouse.is_active = False
+        warehouse.save()
 
 class InventarioService(CRUD):
     def __init__(self):

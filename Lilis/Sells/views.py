@@ -176,7 +176,7 @@ class WarehouseListView(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(wareclients__is_active=True)
+        qs = super().get_queryset().filter(is_active=True)
         q = (self.request.GET.get("q") or "").strip()
         if q:
             qs = qs.filter(
@@ -264,7 +264,7 @@ class WarehouseCreateView(CreateView):
                 return render(self.request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': str(e)})
         return response
     
-class WarehouseUpdateView(CreateView):
+class WarehouseUpdateView(UpdateView):
     model = warehouse_service.model
     form_class = warehouse_service.form_class
     success_url = reverse_lazy('warehouse_list')
@@ -279,24 +279,13 @@ class WarehouseUpdateView(CreateView):
         
     def form_valid(self, form):
         response = super().form_valid(form)
-        warehouse = self.get_object
         client = self.get_client_object()
-        if client:
-            try:
-                success, warehouse = warehouse_service.update(client, warehouse.id)
-                if success:
-                    next = self.request.GET.get('next')
-                    if next:
-                        return redirect(next)
-                    else:
-                        return redirect(self.get_success_url())
-                else:
-                    return render(self.request, 'warehouses/warehouse_update.html', {'form': warehouse, 'error': 'No se pudo asignar la bodega.'})
-            except Exception as e:
-                return render(self.request, 'warehouses/warehouse_update.html', {'form': warehouse, 'error': str(e)})
+        next_url = self.request.GET.get('next')
+        if client and next_url:
+            return redirect(next_url)
         return response
-
-
+                    
+    
 class WarehouseDeleteView(DeleteView):
     model = warehouse_service.model
     success_url = reverse_lazy('warehouse_list')
@@ -305,10 +294,61 @@ class WarehouseDeleteView(DeleteView):
         return HttpResponse('Metodo no permitido')
     
     def form_valid(self, form):
-        self.object = self.get_object()
-        self.object.is_active = False
-        self.object.save()
+        w = self.get_object()
+        warehouse_service.delete_warehouse(w)
         return HttpResponseRedirect(self.get_success_url())
+
+class WarehouseUnassignView(View):
+    wareclient_service = warehouse_service
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            next = request.GET.get('next')
+            client_id = request.GET.get('client')
+            warehouse_id = request.GET.get('warehouse')
+            success, obj = self.wareclient_service.warehouse_unassign(client_id, warehouse_id)
+            if success:
+                return redirect(next)
+            else:
+                return HttpResponse(f'No se pudo asignar la bodega: {obj}')
+        except Exception as e:
+            return HttpResponse(str(e))
+
+class WarehouseAssignView(View):
+    wareclient_service = warehouse_service
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            next = request.GET.get('next')
+            client_id = request.GET.get('client')
+            client = client_service.get(client_id)
+            warehouse_id = request.GET.get('warehouse')
+            success, obj = self.wareclient_service.warehouse_assign(client, warehouse_id)
+            if success:
+                return redirect(next)
+            else:
+                return HttpResponse(f'No se pudo asignar la bodega: {obj}')
+        except Exception as e:
+            return HttpResponse(str(e))
+        
+class WarehouseListWithoutThisClientView(View):
+    def get(self, request, *args, **kwargs):
+        try:
+            client_id = request.GET.get('client')
+            warehouses = warehouse_service.warehouse_list_without_this_client(client_id)
+            warehouses_list = []
+            for w in warehouses:
+                if w.is_active:
+                    warehouses_list.append({
+                        'id': w.id,
+                        'name': w.name,
+                        'address': w.address,
+                        'location': w.location,
+                        'is_active': w.is_active,
+                    })
+            return JsonResponse({'warehouses': warehouses_list})
+        except Exception as e:
+            return HttpResponse(str(e))
 
 class WarehouseExportView(View):
     def get(self, request):

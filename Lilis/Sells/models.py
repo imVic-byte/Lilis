@@ -48,6 +48,7 @@ class Warehouse(models.Model):
     address = models.CharField(max_length=200, verbose_name='Dirección')
     total_area = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Área total')
     location = models.CharField(max_length=200, verbose_name='Ubicación')
+    is_active = models.BooleanField(default=True, verbose_name='Activo')
 
     def __str__(self):
         return f'{self.name} - {self.location}'

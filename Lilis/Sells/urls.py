@@ -19,6 +19,9 @@ warehouses = [
     path('warehouse_delete/<int:pk>/', views.WarehouseDeleteView.as_view(), name='warehouse_delete'),
     path('warehouse_view/<int:pk>/', views.WarehouseDetailView.as_view(), name='warehouse_view'),
     path('export_warehouse_excel/', views.WarehouseExportView.as_view(), name='export_warehouse_excel'),
+    path('warehouse_unnasign/', views.WarehouseUnassignView.as_view(), name='warehouse_unnasign'),
+    path('warehouse_list_without_this_client/', views.WarehouseListWithoutThisClientView.as_view(), name='warehouse_list_without_this_client'),
+    path('warehouse_assign/', views.WarehouseAssignView.as_view(), name='warehouse_assign'),
 ]
 
 batches = [
