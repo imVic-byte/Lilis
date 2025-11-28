@@ -35,9 +35,11 @@
                         {% endif %}
                     </ul>
                 </li>
+                {% if perms.Products.view_product %}
                 <li class="nav-item">
                     <a class="nav-link text-warning" href="{% url 'inventory_list' %}">Inventario</a>
                 </li>
+                {% endif %}
                 {% if perms.Products.view_batch %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
