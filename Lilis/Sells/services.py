@@ -10,7 +10,9 @@ from django.db.models import Sum
 from django.utils import timezone
 import datetime
 from django.db.models import Q
+
 LILIS_RUT = "2519135-8"
+
 
 class ClientService(CRUD):  
     def __init__(self):
@@ -125,7 +127,7 @@ class InventarioService(CRUD):
         self.raw_class = RawMaterialClass
         self.product_class = Producto
         self.serie = Serie
-        self.bodegas = WarehouseService().filter_by_rut(LILIS_RUT)
+        self.bodegas = WarehouseService
 
     def agregar_lote_producto(self, data):
         data2 = data.copy()
@@ -143,7 +145,7 @@ class InventarioService(CRUD):
             print("producto inválido.")
             return False, "Producto inválido."
         
-        bodega = next((b for b in self.bodegas if str(b.id) == str(bodega_id)), None)
+        bodega = next((b for b in self.bodegas.filter_by_rut(LILIS_RUT) if str(b.id) == str(bodega_id)), None)
         if not bodega:
             print("bodega inválida.")
             return False, "Bodega inválida."
@@ -170,7 +172,7 @@ class InventarioService(CRUD):
         if not data:
             return False, None
         lote = self.lote.objects.create(**data)
-        self.actualizar_stock_total(lote.inventario, lote=True)
+        self.actualizar_stock_total(lote.inventario)
         return True, lote
     
     def crear_serie_entrada(self, data):
