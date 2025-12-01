@@ -44,13 +44,22 @@ def validate_phone_format(value):
     if not isinstance(value, str):
         value = str(value)
 
-    if not value.isdigit():
-        raise forms.ValidationError('El teléfono debe contener solo números.')
-    
-    if len(value) != 9:
-        raise forms.ValidationError('El teléfono debe tener exactamente 9 dígitos.')
-    
-    return value
+    # 1. Limpieza de la cadena: Quitamos espacios, guiones, paréntesis y el '+'
+    # Solo dejamos los dígitos.
+    numero_limpio = re.sub(r'\D', '', value) 
+    numero_final = numero_limpio
+    if numero_limpio.startswith('56'):
+        parte_local = numero_limpio[2:]
+        if len(parte_local) != 9:
+            raise forms.ValidationError('El número de teléfono chileno (con código +56) debe tener 9 dígitos locales.')
+        numero_final = parte_local
+    elif len(numero_limpio) != 9:
+        if len(numero_limpio) < 10 or len(numero_limpio) > 15:
+             raise forms.ValidationError('El formato de número telefónico no es estándar (mínimo 10, máximo 15 dígitos internacionales).')
+        numero_final = numero_limpio
+    if len(numero_final) == 9 and not numero_final.startswith('9'):
+        pass
+    return numero_final
 
 def validate_password(password):
     if len(password) < 8:

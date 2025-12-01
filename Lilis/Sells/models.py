@@ -1,5 +1,4 @@
 from django.db import models
-from Accounts.models import Profile
 
 class Client(models.Model):
     bussiness_name = models.CharField(max_length=100, verbose_name='Nombre')
@@ -49,7 +48,8 @@ class Warehouse(models.Model):
     total_area = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Área total')
     location = models.CharField(max_length=200, verbose_name='Ubicación')
     is_active = models.BooleanField(default=True, verbose_name='Activo')
-
+    lilis = models.BooleanField(default=False, verbose_name='Lilis')
+    
     def __str__(self):
         return f'{self.name} - {self.location}'
     

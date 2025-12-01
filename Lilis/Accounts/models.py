@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
+from Sells.models import Warehouse
 
 
 class Module(models.Model):
@@ -55,3 +56,14 @@ class password_reset_token(models.Model):
     def __str__(self):
         return f"Token for {self.user.username} - Used: {self.is_used}"
 
+class Lilis(models.Model):
+    rut = models.CharField(max_length=12)
+    bussiness_name = models.CharField(max_length=100, verbose_name='Nombre')
+    fantasy_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Nombre fantasía')
+    email = models.EmailField(null=True, blank=True, verbose_name='Email')
+    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Teléfono')
+    address = models.CharField(max_length=200, blank=True, null=True, verbose_name='Dirección')
+    web_site = models.URLField(blank=True, null=True, verbose_name='Página web')
+
+    def __str__(self):
+        return f"{self.bussiness_name} - {self.rut}"

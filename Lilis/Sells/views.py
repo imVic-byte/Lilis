@@ -281,7 +281,7 @@ class WarehouseUpdateView(UpdateView):
         response = super().form_valid(form)
         client = self.get_client_object()
         next_url = self.request.GET.get('next')
-        if client and next_url:
+        if client or next_url:
             return redirect(next_url)
         return response
                     
