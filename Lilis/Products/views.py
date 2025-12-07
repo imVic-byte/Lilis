@@ -9,6 +9,7 @@ from Sells.services import InventarioService
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from Main.mixins import GroupRequiredMixin, StaffRequiredMixin
 
 inventory_service = InventarioService()
 category_service = CategoryService()
@@ -16,11 +17,18 @@ product_service = ProductService()
 supplier_service = SupplierService()
 raw_material_service = RawMaterialService()
 
-class CategoryListView(ListView):
+class CategoryListView(GroupRequiredMixin, ListView):
     model = category_service.model
     template_name = 'products/category_list.html'
     context_object_name = 'categories'
     paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -71,21 +79,24 @@ class CategoryListView(ListView):
         else:
             return default_per_page
 
-class CategoryCreateView(CreateView):
+class CategoryCreateView(GroupRequiredMixin, CreateView):
     model = category_service.model
     form_class = category_service.form_class
     success_url = reverse_lazy('category_list')
     template_name = 'products/category_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-class CategoryUpdateView(UpdateView):
+class CategoryUpdateView(GroupRequiredMixin, UpdateView):
     model = category_service.model
     form_class = category_service.form_class
     success_url = reverse_lazy('category_list')
     template_name = 'products/category_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', 'Acceso limitado a Produccion')
 
-class CategoryDeleteView(DeleteView):
+class CategoryDeleteView(GroupRequiredMixin, DeleteView):
     model = category_service.model
     success_url = reverse_lazy('category_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
     def get(self, request, *args, **kwargs):
         return HttpResponse('Metodo no permitido')
@@ -96,7 +107,14 @@ class CategoryDeleteView(DeleteView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
         
-class CategoryExportView(View):
+class CategoryExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = category_service.list().order_by('name')
@@ -126,11 +144,18 @@ class CategoryExportView(View):
 
         return generate_excel_response(headers, data_rows, "Lilis_Categorias")
 
-class ProductListView(ListView):
+class ProductListView(GroupRequiredMixin, ListView):
     model = product_service.model
     template_name = 'products/products_list.html'
     context_object_name = 'products'
     paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
 
     def get_queryset(self):
         qs = super().get_queryset().filter(is_active=True)
@@ -181,27 +206,37 @@ class ProductListView(ListView):
         else:
             return default_per_page
 
-class ProductView(DetailView):
+class ProductView(GroupRequiredMixin, DetailView):
     model = product_service.model
     template_name = 'products/product.html'
     context_object_name = 'p'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
 
-class ProductCreateView(CreateView):
+class ProductCreateView(GroupRequiredMixin, CreateView):
     model = product_service.model
     form_class = product_service.form_class
     success_url = reverse_lazy('products_list')
     template_name = 'products/product_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-class ProductUpdateView(UpdateView):
+class ProductUpdateView(GroupRequiredMixin, UpdateView):
     model = product_service.model
     form_class = product_service.form_class
     success_url = reverse_lazy('products_list')
     template_name = 'products/product_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
 
-class ProductDeleteView(DeleteView):
+class ProductDeleteView(GroupRequiredMixin, DeleteView):
     model = product_service.model    
     success_url = reverse_lazy('products_list')
-
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
+    
     def get(self, request, *args, **kwargs):
         return HttpResponse('Metodo no permitido')
     
@@ -211,7 +246,14 @@ class ProductDeleteView(DeleteView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
     
-class ProductSearchView(View):
+class ProductSearchView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, *args, **kwargs):
         q = self.request.GET.get('q', '')
         products = product_service.model.objects.filter(is_active=True).filter(
@@ -219,7 +261,14 @@ class ProductSearchView(View):
         ).values('id', 'name', 'description', 'category__name', 'is_perishable')    
         return JsonResponse(list(products), safe=False)
 
-class ProductExportView(View):
+class ProductExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
@@ -258,7 +307,14 @@ class ProductExportView(View):
 
         return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
-class SupplierSearchView(View):
+class SupplierSearchView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, *args, **kwargs):
         q = self.request.GET.get('q', '')
         suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
@@ -268,11 +324,18 @@ class SupplierSearchView(View):
         ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
         return JsonResponse(list(suppliers), safe=False)
 
-class SupplierDetailView(DetailView):
+class SupplierDetailView(GroupRequiredMixin, DetailView):
     model = supplier_service.model
     template_name = 'suppliers/supplier_view.html'
     context_object_name = 'p'
     pk_url_kwarg = 'pk'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -282,11 +345,18 @@ class SupplierDetailView(DetailView):
         return context
         
 
-class SupplierListView(ListView):
+class SupplierListView(GroupRequiredMixin, ListView):
     model = supplier_service.model
     template_name = 'suppliers/supplier_list.html'
     context_object_name = 'suppliers'
     paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
 
     def get_queryset(self):
         qs = super().get_queryset().filter(is_active=True)
@@ -343,21 +413,24 @@ class SupplierListView(ListView):
         else:
             return default_per_page
 
-class SupplierCreateView(CreateView):
+class SupplierCreateView(GroupRequiredMixin, CreateView):
     model = supplier_service.model
     form_class = supplier_service.form_class
     success_url = reverse_lazy('supplier_list')
     template_name = 'suppliers/supplier_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-class SupplierUpdateView(UpdateView):
+class SupplierUpdateView(GroupRequiredMixin, UpdateView):
     model = supplier_service.model
     form_class = supplier_service.form_class
     success_url = reverse_lazy('supplier_list')
     template_name = 'suppliers/supplier_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
 
-class SupplierDeleteView(DeleteView):
+class SupplierDeleteView(GroupRequiredMixin, DeleteView):
     model = supplier_service.model
     success_url = reverse_lazy('supplier_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
     def get(self, request, *args, **kwargs):
         return HttpResponse('Metodo no permitido')
@@ -368,7 +441,14 @@ class SupplierDeleteView(DeleteView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
     
-class SupplierExportView(View):
+class SupplierExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = supplier_service.list().order_by('fantasy_name')
@@ -402,11 +482,18 @@ class SupplierExportView(View):
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
 
-class RawMaterialListView(ListView):
+class RawMaterialListView(GroupRequiredMixin, ListView):
     model = raw_material_service.model
     template_name = 'raw_material/raw_material_list.html'
     context_object_name = 'raw_materials'
     paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
 
     def get_queryset(self):
         qs = super().get_queryset().filter(is_active=True)
@@ -459,7 +546,14 @@ class RawMaterialListView(ListView):
         else:
             return default_per_page
 
-class RawMaterialSearchView(View):
+class RawMaterialSearchView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, *args, **kwargs):
         q = self.request.GET.get('q', '')
         raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
@@ -470,16 +564,24 @@ class RawMaterialSearchView(View):
             )
         return JsonResponse(list(raw_materials), safe=False)
 
-class RawMaterialView(DetailView):
+class RawMaterialView(GroupRequiredMixin, DetailView):
     model = raw_material_service.model
     template_name = 'raw_material/raw_material_view.html'
     context_object_name = 'p'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
 
-class RawMaterialCreateView(CreateView):
+class RawMaterialCreateView(GroupRequiredMixin, CreateView):
     model = raw_material_service.model
     form_class = raw_material_service.form_class
     success_url = reverse_lazy('raw_material_list')
     template_name = 'raw_material/raw_material_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
     def get_supplier_object(self):
         supplier_id = self.request.GET.get('supplier')
@@ -510,11 +612,12 @@ class RawMaterialCreateView(CreateView):
             return redirect(next_url)
         return response
     
-class RawMaterialUpdateView(UpdateView):
+class RawMaterialUpdateView(GroupRequiredMixin, UpdateView):
     model = raw_material_service.model
     form_class = raw_material_service.form_class
     success_url = reverse_lazy('raw_material_list')
     template_name = 'raw_material/raw_material_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
 
     def get_supplier_object(self):
         supplier_id = self.request.POST.get('supplier')
@@ -545,9 +648,10 @@ class RawMaterialUpdateView(UpdateView):
             return redirect(next_url)
         return response
 
-class RawMaterialDeleteView(DeleteView):
+class RawMaterialDeleteView(GroupRequiredMixin, DeleteView):
     model = raw_material_service.model
     success_url = reverse_lazy('raw_material_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
     def get(self, request, *args, **kwargs):
         return HttpResponse('Metodo no permitido')
@@ -558,7 +662,14 @@ class RawMaterialDeleteView(DeleteView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
     
-class RawMaterialExportView(View):
+class RawMaterialExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = raw_material_service.list_actives().select_related(
@@ -595,11 +706,18 @@ class RawMaterialExportView(View):
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
 
-class InventoryListView(ListView):
+class InventoryListView(GroupRequiredMixin, ListView):
     model = inventory_service.model
     template_name = 'inventory/inventory_list.html'
     context_object_name = 'inventory'
     paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
 
     def get_queryset(self):
         qs = super().get_queryset()

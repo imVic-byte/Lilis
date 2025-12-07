@@ -10,8 +10,8 @@ from datetime import date
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from Main.mixins import GroupRequiredMixin
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -25,7 +25,14 @@ LILIS_RUT = "2519135-8"
 # VISTAS DE CLIENTES
 # ===================================
 
-class ClientListView(ListView):
+class ClientListView(GroupRequiredMixin, ListView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     model = client_service.model
     template_name = 'clients/client_list.html'
     context_object_name = 'clients'
@@ -85,19 +92,37 @@ class ClientListView(ListView):
         else:
             return default_per_page
 
-class ClientCreateView(CreateView):
+class ClientCreateView(GroupRequiredMixin, CreateView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion"
+    )
     model = client_service.model
     form_class = client_service.form_class
     success_url = reverse_lazy('client_list_all')
     template_name = 'clients/client_create.html'
 
-class ClientUpdateView(UpdateView):
+class ClientUpdateView(GroupRequiredMixin, UpdateView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion"
+    )
     model = client_service.model
     form_class = client_service.form_class
     success_url = reverse_lazy('client_list_all')
     template_name = 'clients/client_update.html'
 
-class ClientDeleteView(DeleteView):
+class ClientDeleteView(GroupRequiredMixin, DeleteView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion"
+    )
     model = client_service.model
     success_url = reverse_lazy('client_list_all')
 
@@ -110,7 +135,14 @@ class ClientDeleteView(DeleteView):
         self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
-class ClientExportView(View):
+class ClientExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = client_service.list().order_by('fantasy_name')
@@ -142,7 +174,14 @@ class ClientExportView(View):
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Clientes")
 
-class ClientSearchView(View):
+class ClientSearchView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, *args, **kwargs):
         q = self.request.GET.get('q', '')
         clients = client_service.model.objects.filter(is_suspended=False).filter(
@@ -152,7 +191,14 @@ class ClientSearchView(View):
         ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_suspended', 'credit_limit', 'debt', 'max_debt')
         return JsonResponse(list(clients), safe=False)
 
-class ClientDetailView(DetailView):
+class ClientDetailView(GroupRequiredMixin, DetailView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     model = client_service.model
     template_name = 'clients/client_view.html'
     context_object_name = 'b'
@@ -169,7 +215,14 @@ class ClientDetailView(DetailView):
 # ===================================
 # VISTAS DE WAREHOUSES (Indentación Corregida)
 # ===================================
-class WarehouseListView(ListView):
+class WarehouseListView(GroupRequiredMixin, ListView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     model = warehouse_service.model
     template_name = 'warehouses/warehouse_list.html'
     context_object_name = 'warehouses'    
@@ -227,12 +280,25 @@ class WarehouseListView(ListView):
         else:
             return default_per_page
         
-class WarehouseDetailView(DetailView):
+class WarehouseDetailView(GroupRequiredMixin, DetailView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     model = warehouse_service.model
     template_name = 'warehouses/warehouse_view.html'
     context_object_name = 'w'
 
-class WarehouseCreateView(CreateView):
+class WarehouseCreateView(GroupRequiredMixin, CreateView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+    )
     model = warehouse_service.model
     form_class = warehouse_service.form_class
     success_url = reverse_lazy('warehouse_list')
@@ -264,7 +330,13 @@ class WarehouseCreateView(CreateView):
                 return render(self.request, 'warehouses/warehouse_create.html', {'form': warehouse, 'error': str(e)})
         return response
     
-class WarehouseUpdateView(UpdateView):
+class WarehouseUpdateView(GroupRequiredMixin, UpdateView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+    )
     model = warehouse_service.model
     form_class = warehouse_service.form_class
     success_url = reverse_lazy('warehouse_list')
@@ -286,7 +358,13 @@ class WarehouseUpdateView(UpdateView):
         return response
                     
     
-class WarehouseDeleteView(DeleteView):
+class WarehouseDeleteView(GroupRequiredMixin, DeleteView):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+    )
     model = warehouse_service.model
     success_url = reverse_lazy('warehouse_list')
 
@@ -298,7 +376,13 @@ class WarehouseDeleteView(DeleteView):
         warehouse_service.delete_warehouse(w)
         return HttpResponseRedirect(self.get_success_url())
 
-class WarehouseUnassignView(View):
+class WarehouseUnassignView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+    )
     wareclient_service = warehouse_service
     
     def get(self, request, *args, **kwargs):
@@ -314,7 +398,13 @@ class WarehouseUnassignView(View):
         except Exception as e:
             return HttpResponse(str(e))
 
-class WarehouseAssignView(View):
+class WarehouseAssignView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+    )
     wareclient_service = warehouse_service
     
     def get(self, request, *args, **kwargs):
@@ -331,7 +421,14 @@ class WarehouseAssignView(View):
         except Exception as e:
             return HttpResponse(str(e))
         
-class WarehouseListWithoutThisClientView(View):
+class WarehouseListWithoutThisClientView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request, *args, **kwargs):
         try:
             client_id = request.GET.get('client')
@@ -350,7 +447,14 @@ class WarehouseListWithoutThisClientView(View):
         except Exception as e:
             return HttpResponse(str(e))
 
-class WarehouseExportView(View):
+class WarehouseExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
@@ -378,7 +482,7 @@ class WarehouseExportView(View):
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
 
-def get_warehouses(request):
+def get_warehouses(request): 
     id = request.GET.get('id')
     type = request.GET.get('type')
     if type == 'salida':
@@ -591,7 +695,13 @@ def get_by_type(request):
         case 'produccion':
             return handle_produccion()
         
-class TransactionView(View):
+class TransactionView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     allowed_per_page = [5, 25, 50, 100]
     default_per_page = 25
     allowed_sort_fields = ['date', 'type', 'client']
@@ -660,10 +770,25 @@ class TransactionView(View):
             })
 
     def post(self, request, *args, **kwargs):
+        required_group =(
+            'Acceso Completo',
+            'Acceso limitado a Ventas',
+            "Acceso limitado a Produccion",
+        )
+        user = request.user
+        if not user.groups.filter(name__in=required_group).exists():
+            return redirect('transaction_list')
         transaction_service.create_transaction(request)
         return redirect('transaction_list')
         
-class TransactionExportView(View):
+class TransactionExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
         qs = transaction_service.list().order_by('date')

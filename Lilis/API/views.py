@@ -9,6 +9,7 @@ from .serializers import ProductSerializer, SupplierSerializer, LilisSerializer
 from rest_framework.permissions import IsAuthenticated
 from .forms import LilisForm
 import requests
+from Main.mixins import StaffRequiredMixin
 
 from API import serializers
 
@@ -34,7 +35,7 @@ class LilisViewSet(viewsets.ModelViewSet):
     queryset = LilisSerializer.Meta.model.objects.all()
     serializer_class = LilisSerializer
 
-class LilisDetailView(View):
+class LilisDetailView(StaffRequiredMixin, View):
     warehouse_service = WarehouseService()
 
     def get(self, request):

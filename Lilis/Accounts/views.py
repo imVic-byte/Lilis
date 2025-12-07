@@ -6,14 +6,17 @@ from Main.decorator import permission_or_redirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from Main.utils import generate_excel_response
+from Main.mixins import GroupRequiredMixin
+from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 
 user_service = UserService()
 
-@login_required
-@permission_or_redirect('Accounts.view_user','dashboard', 'No teni permiso')
-def user_list(request):
-    users = user_service.list()
-    return render(request, "user_list.html", {"users": users})
+class UserListView(GroupRequiredMixin, ListView):
+        model = user_service.model
+        template_name = 'user_list.html'
+        context_object_name = 'users'
+        required_group =('Acceso Completo',)
 
 def password_reset(request):
     if request.method == 'POST':
@@ -41,35 +44,39 @@ def password_change(request):
         return redirect('dashboard')
     return render(request, 'password_change.html')
 
+class RegisterView(GroupRequiredMixin, CreateView):
+    model = user_service.model
+    form_class = user_service.form_class
+    template_name = 'registro.html'
+    success_url = reverse_lazy('user_list')
+    required_group =('Acceso Completo',)
 
-@login_required
-@permission_or_redirect('Accounts.add_user','dashboard', 'No teni permiso')
-def registro(request):
-    if request.method == 'POST':
-        form = user_service.form_class(request.POST)
-        if form.is_valid():
-            success = user_service.save_user(request.POST)
-            if success:
-                return redirect('user_list')
-        else:
-            return render(request, 'registro.html', {'form': form})
-    else:
-        form = user_service.form_class()
-    return render(request, 'registro.html', {'form': form})
 
-@login_required
-@permission_or_redirect('Accounts.delete_user','dashboard', 'No teni permiso')
-def user_delete(request, id):
-    if request.method == "GET":
-        success = user_service.delete_user(id)
+class UserDeleteView(GroupRequiredMixin, DeleteView):
+    model = user_service.model
+    success_url = reverse_lazy('user_list')
+    required_group =('Acceso Completo',)
+    
+    def get(self, request, *args, **kwargs):
+        success = user_service.delete_user(self.kwargs['id'])
         if success:
             return redirect('user_list')
-    return redirect("user_list")
+        messages.error(request, "No se pudo eliminar el usuario")
+        return redirect('user_list')
 
-@login_required
-def user_view(request, id):
-    user = user_service.model.objects.select_related('profile').get(id=id)
-    return render(request, "user_view.html", {"user": user})
+class UserView(GroupRequiredMixin, DetailView):
+    model = user_service.model
+    template_name = 'user_view.html'
+    context_object_name = 'user'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas",
+        "Acceso limitado a Compras"
+    )
+    
 
 @login_required
 @permission_or_redirect('Accounts.view_profile','dashboard', 'No tienes permiso')
@@ -140,50 +147,52 @@ def user_list(request):
     }
     return render(request, "user_list.html", context)
 
-@login_required
-@permission_or_redirect('Accounts.view_profile','dashboard', 'No teni permiso')
-def export_users_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    limit = request.GET.get("limit")
-    qs = user_service.list().select_related("profile", "profile__role").order_by("username")
-    if q:
-        qs = qs.filter(
+
+class export_users_excel(GroupRequiredMixin, View):
+    required_group =('Acceso Completo',)
+    
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        limit = request.GET.get("limit")
+        qs = user_service.list().select_related("profile", "profile__role").order_by("username")
+        if q:
+            qs = qs.filter(
             Q(first_name__icontains=q) |
             Q(last_name__icontains=q) |
             Q(username__icontains=q) |
             Q(profile__run__icontains=q) | 
             Q(profile__role__group__name__icontains=q)
         )
-    if limit:
-        try:
-            limit = int(limit)
-            qs = qs[:limit]
-        except ValueError:
-            pass
-    headers = [
-        "Nombre de Usuario",
-        "Nombre",
-        "Apellido",
-        "Email",
-        "Run",
-        "Rol",
-        "¿Activo?",
-        "Fecha de Creación",
-    ]
-    data_rows = []
-    for user in qs:
-        data_rows.append([
-            user.username,
-            user.first_name,
-            user.last_name,
-            user.email,
-            user.profile.run if hasattr(user, 'profile') else '',
-            user.profile.role.group.name if hasattr(user, 'profile') and user.profile.role else '',
-            "Si" if user.is_active else "No",
-            user.date_joined.strftime("%Y-%m-%d"),
-        ])
+        if limit:
+            try:
+                limit = int(limit)
+                qs = qs[:limit]
+            except ValueError:
+                pass
+        headers = [
+            "Nombre de Usuario",
+            "Nombre",
+            "Apellido",
+            "Email",
+            "Run",
+            "Rol",
+            "¿Activo?",
+            "Fecha de Creación",
+        ]
+        data_rows = []
+        for user in qs:
+            data_rows.append([
+                user.username,
+                user.first_name,
+                user.last_name,
+                user.email,
+                user.profile.run if hasattr(user, 'profile') else '',
+                user.profile.role.group.name if hasattr(user, 'profile') and user.profile.role else '',
+                "Si" if user.is_active else "No",
+                user.date_joined.strftime("%Y-%m-%d"),
+            ])
 
-    return generate_excel_response(headers, data_rows, "Lilis_Usuarios")
+        return generate_excel_response(headers, data_rows, "Lilis_Usuarios")
 
 def token_verify(request):
     if request.method == 'POST':
@@ -218,22 +227,32 @@ def password_recover(request):
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
 
-@login_required
-@permission_or_redirect('Accounts.change_user','dashboard', 'No teni permiso')
-def role_changer(request):
-    user_id = request.GET.get("user_id")
-    field_name = request.GET.get("field_name")
-    previous_data = request.GET.get("previous_data")
-    if request.method == "POST":
+class RoleChanger(GroupRequiredMixin, View):
+    template_name = 'role_changer.html'
+    form_class = user_service.role_form_class
+    required_group = (
+        "Acceso Completo",
+    )
+
+    def get(self, request):
+        user_id = request.GET.get("user_id")
+        field_name = request.GET.get("field_name")
+        previous_data = request.GET.get("previous_data")
+        form = self.form_class(initial={'role': previous_data})
+        return render(request, self.template_name, {"form": form, "field_name": field_name, "previous_data": previous_data})
+
+    def post(self, request):
+        user_id = request.GET.get("user_id")
+        field_name = request.GET.get("field_name")
+        previous_data = request.GET.get("previous_data")
+        form = self.form_class(request.POST)
         role = user_service.roles.objects.get(id=request.POST.get("groups"))
         success = user_service.edit_field(user_id, field_name, role)
         if success:
-            return redirect('user_view', id=user_id)
+            return redirect('user_view', pk=user_id)
         else:
             render(request, "role_changer.html", {'form':form, "error": "No se pudo cambiar el rol."})
-    else:
-        form = user_service.role_form_class(initial={'role': previous_data})
-    return render(request, "role_changer.html", {"form": form, "field_name": field_name, "previous_data": previous_data})
+
 
 def edit_field(request):
     user_id = request.GET.get("user_id")
@@ -244,7 +263,7 @@ def edit_field(request):
         if form.is_valid():
             success = user_service.edit_field(user_id, form.cleaned_data["field_name"], form.cleaned_data["new_data"])
             if success:
-                return redirect('user_view', id=user_id)
+                return redirect('user_view', pk=user_id)
     else:
         form = user_service.update_field_form_class(
             initial={'field_name': field_name, 'new_data': previous_data}
@@ -261,7 +280,7 @@ def user_picture(request, id):
         if photo:
             print(request.FILES)
             user_service.change_user_picture(id, photo)
-            return redirect('user_view', id=id)
+            return redirect('user_view', pk=id)
         else:
             return render(request, "user_picture.html", {"error": "No se pudo cargar la foto."})
     else:
