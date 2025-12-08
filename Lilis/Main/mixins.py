@@ -33,3 +33,7 @@ class StaffRequiredMixin(UserPassesTestMixin):
     def handle_no_permission(self):
         messages.error(self.request, self.permission_denied_message)
         return redirect(self.permission_denied_url)
+
+class IsNewUserMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.profile.is_new

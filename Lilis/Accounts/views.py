@@ -9,6 +9,7 @@ from Main.utils import generate_excel_response
 from Main.mixins import GroupRequiredMixin
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from .forms import RegistrarUsuarioForm
 
 user_service = UserService()
 
@@ -39,12 +40,24 @@ def password_change(request):
         return redirect('dashboard')
     return render(request, 'password_change.html')
 
-class RegisterView(GroupRequiredMixin, CreateView):
+class RegisterView(GroupRequiredMixin, View):
     model = user_service.model
-    form_class = user_service.form_class
+    form_class = RegistrarUsuarioForm
     template_name = 'registro.html'
     success_url = reverse_lazy('user_list')
     required_group =('Acceso Completo',)
+
+    def get(self, request):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            user, contraseña = form.save()
+            user_service.send_email_new_user(user, contraseña)
+            return redirect(self.success_url)
+        return render(request, self.template_name, {'form': form})
 
 
 class UserDeleteView(GroupRequiredMixin, DeleteView):
@@ -125,76 +138,6 @@ class UserListView(GroupRequiredMixin, ListView):
             per_page = default_per_page
         return per_page
 
-@login_required
-@permission_or_redirect('Accounts.view_profile','dashboard', 'No tienes permiso')
-def user_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25  
-    allowed_per_page = [5,25,50,100]
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    if per_page not in allowed_per_page:
-        per_page = default_per_page
-    allowed_sort_fields = ['username', 'first_name', 'profile__run', 'profile__role__group__name']
-    sort_by = request.GET.get('sort_by', 'username') 
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'username'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = user_service.list().select_related("profile", "profile__role")
-
-    if q:
-        qs = qs.filter(
-            Q(first_name__icontains=q) |
-            Q(last_name__icontains=q) |
-            Q(username__icontains=q) |
-            Q(profile__run__icontains=q) | 
-            Q(profile__role__group__name__icontains=q)
-        )
-        
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page) 
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number) 
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        "querystring": querystring_pagination, 
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, "user_list.html", context)
-
-
 class export_users_excel(GroupRequiredMixin, View):
     required_group =('Acceso Completo',)
     
@@ -273,6 +216,23 @@ def password_recover(request):
         else:
             return render(request, 'password_recover.html', {'error': 'Sesión expirada. Por favor, inicia el proceso nuevamente.'})
     return render(request, 'password_recover.html')
+
+@login_required
+def nueva_contraseña(request):
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        user = request.user
+        if new_password != confirm_password:
+            return render(request, 'nueva_contraseña.html', {'error': 'Las contraseñas no coinciden.'})
+        if not user_service.validar_password(new_password):
+            return render(request, 'nueva_contraseña.html', {'error': 'La nueva contraseña no cumple con los requisitos de seguridad.'})    
+        user.set_password(new_password)
+        user.save()
+        user.profile.is_new = False
+        user.profile.save()
+        return redirect('dashboard')
+    return render(request, 'nueva_contraseña.html')
 
 class RoleChanger(GroupRequiredMixin, View):
     template_name = 'role_changer.html'

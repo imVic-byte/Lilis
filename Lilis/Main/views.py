@@ -1,9 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from Accounts.services import UserService
 from Products.services import SupplierService, ProductService
 from Sells.services import ClientService, TransactionService
 from .mixins import GroupRequiredMixin
 from django.views import View
+from django.urls import reverse_lazy
 
 user_service = UserService()
 supplier_service = SupplierService()
@@ -18,12 +19,14 @@ class DashboardView(GroupRequiredMixin, View):
         'Acceso Completo',
         'Acceso limitado a Ventas',
         'Acceso limitado a Inventario',
-        "Acceso limitado a Produccion",
-        "Acceso limitado a Finanzas",
-        "Acceso limitado a Compras"
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas',
+        'Acceso limitado a Compras'
     )
     
     def get(self, request):
+        if self.request.user.profile.is_new:
+            return redirect('nueva_contraseña')
         usuarios = user_service.count()
         proveedores_activos = supplier_service.count_actives()
         proveedores = supplier_service.count()

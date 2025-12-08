@@ -17,4 +17,5 @@ urlpatterns = [
     path('password_recover/', views.password_recover, name='password_recover'),
     path('role_changer/', views.RoleChanger.as_view(), name='role_changer'),
     path('user_picture/<int:id>', views.user_picture, name='user_picture'),
+    path('nueva_contraseña/', views.nueva_contraseña, name='nueva_contraseña')
 ]

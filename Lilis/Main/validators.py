@@ -5,6 +5,12 @@ import re
 
 def validate_rut_format(rut_numero):
 
+    blacklist = [
+        '00000000', '11111111', '22222222', '33333333', 
+        '44444444', '55555555', '66666666', '77777777', 
+        '88888888', '99999999'
+    ]
+
     rut = rut_numero.upper().replace("-", "").replace(".", "").replace(" ", "")
     
     if len(rut_numero) < 9 or len(rut_numero) > 12:
@@ -12,6 +18,9 @@ def validate_rut_format(rut_numero):
     
     rut_aux = rut[:-1]
     dv = rut[-1:]
+
+    if rut_aux in blacklist:
+        raise forms.ValidationError('El RUT no es válido.')
 
     if not rut_aux.isdigit():
         raise forms.ValidationError('El formato del RUT es incorrecto.')
