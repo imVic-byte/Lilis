@@ -12,9 +12,9 @@
     <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
 </head>
 
-<body class="bg-light">
+<body class="bg-light d-flex flex-column min-vh-100">
     {% include 'main/navbar.html' %}
-    <main class="container pt-5">
+    <main class="container pt-5 flex-grow-1">
         {% block content %}
         {% endblock %}
     </main>

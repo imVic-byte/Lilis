@@ -9,7 +9,7 @@ from .serializers import ProductSerializer, SupplierSerializer, LilisSerializer
 from rest_framework.permissions import IsAuthenticated
 from .forms import LilisForm
 import requests
-from Main.mixins import StaffRequiredMixin
+from Main.mixins import StaffRequiredMixin, GroupRequiredMixin
 
 from API import serializers
 
@@ -35,7 +35,15 @@ class LilisViewSet(viewsets.ModelViewSet):
     queryset = LilisSerializer.Meta.model.objects.all()
     serializer_class = LilisSerializer
 
-class LilisDetailView(StaffRequiredMixin, View):
+class LilisDetailView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Ventas',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas",
+        "Acceso limitado a Compras"
+    )
     warehouse_service = WarehouseService()
 
     def get(self, request):
@@ -61,7 +69,7 @@ class LilisDetailView(StaffRequiredMixin, View):
             print("Request Exception:", e)
             return render(request, 'lilis_detail.html', {'error': 'Error connecting to API.'})
     
-class LilisCreateView(View):
+class LilisCreateView(StaffRequiredMixin, View):
     form_class = LilisForm
     template_name = 'lilis_create.html'
 
@@ -91,7 +99,10 @@ class LilisCreateView(View):
             context = {'form': form}
             return render(request, self.template_name, context)
         
-class LilisUpdateView(View):
+class LilisUpdateView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+    )
     form_class = LilisForm
     template_name = 'lilis_update.html'
 
@@ -148,7 +159,11 @@ class WarehouseListForLilisView(View):
             })
         return JsonResponse({'warehouses': warehouses_list})
     
-class WarehouseAssignView(View):
+class WarehouseAssignView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        "Acceso limitado a Produccion",
+    )
     warehouse_service = WarehouseService()
 
     def get(self, request):
@@ -161,7 +176,11 @@ class WarehouseAssignView(View):
         else:
             return redirect('lilis_detail')
         
-class WarehouseUnassignView(View):
+class WarehouseUnassignView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        "Acceso limitado a Produccion",
+    )
     warehouse_service = WarehouseService()
 
     def get(self, request):

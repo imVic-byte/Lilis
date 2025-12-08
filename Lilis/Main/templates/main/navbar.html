@@ -2,8 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #d20a10;">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard' %}">
-            <img src="{% static 'img/logo.png' %}" height="75px"
-            width="80px" alt="Lilis Logo">
+            <img src="{% static 'img/logo.png' %}" height="75px" width="80px" alt="Lilis Logo">
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
@@ -13,34 +12,21 @@
 
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {% if perms.Products.view_product or perms.Products.view_category or perms.Products.view_rawmaterial or perms.Products.view_supplier%}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         Catálogo
                     </a>
-                {% endif %}    
                     <ul class="dropdown-menu">
-                        {% if perms.Products.view_product %}
                         <li><a class="dropdown-item" href="{% url 'products_list' %}">Productos</a></li>
-                        {% endif %}
-                        {% if perms.Products.view_category %}
                         <li><a class="dropdown-item" href="{% url 'category_list' %}">Categorías</a></li>
-                        {% endif %}
-                        {% if perms.Products.view_rawmaterial %}
                         <li><a class="dropdown-item" href="{% url 'raw_material_list' %}">Materia Prima</a></li>
-                        {% endif %}
-                        {% if perms.Products.view_supplier %}
                         <li><a class="dropdown-item" href="{% url 'supplier_list' %}">Proveedores</a></li>
-                        {% endif %}
                     </ul>
                 </li>
-                {% if perms.Products.view_product %}
                 <li class="nav-item">
                     <a class="nav-link text-warning" href="{% url 'inventory_list' %}">Inventario</a>
                 </li>
-                {% endif %}
-                {% if perms.Products.view_batch %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
@@ -52,59 +38,49 @@
                         <li><a class="dropdown-item" href="{% url 'transaction_list' %}">Transacciones</a></li>
                     </ul>
                 </li>
-                {% endif %}
-                {% if perms.Sells.view_client or perms.Sells.view_location or perms.Sells.view_warehouse %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         Ventas
                     </a>
-                {% endif %}
                     <ul class="dropdown-menu">
-                        {% if perms.Sells.view_client %}
                         <li><a class="dropdown-item" href="{% url 'client_list_all' %}">Clientes</a></li>
-                        {% endif %}
-                        {% if perms.Sells.view_warehouse %}
                         <li><a class="dropdown-item" href="{% url 'warehouse_list' %}">Bodegas</a></li>
-                        {% endif %}
                     </ul>
                 </li>
-                
-                {% if perms.auth.view_user %}
                 <li class="nav-item">
                     <a class="nav-link text-warning" href="{% url 'user_list' %}">Usuarios</a>
                 </li>
-                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link text-warning" href="{% url 'lilis_detail' %}">Lilis</a>
                 </li>
 
             </ul>
-
+            {% if request.user.is_authenticated %}
             <ul class="navbar-nav mb-2 mb-lg-0">
-                {% if user.is_authenticated %}
                 <li class="nav-item me-2">
                     {% if request.user.profile.profile_picture %}
-                    <img src="{{ request.user.profile.profile_picture.url }}" class="rounded-circle" width="50px" height="50px">
+                    <img src="{{ request.user.profile.profile_picture.url }}" class="rounded-circle" width="50px"
+                        height="50px">
                     {% else %}
                     <img src="{% static 'img/user.png' %}" class="rounded-circle" width="50px" height="50px">
                     {% endif %}
                 </li>
                 <li class="nav-item me-2">
+                    {% if request.user %}
                     <a class="nav-link text-warning text-decoration-underline" href="{% url 'user_view' user.id %}">{{ request.user.username }}</a>
+                    {% endif %}
                 </li>
                 <li class="nav-item">
+                    {% if request.user %}
                     <form method="POST" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-link nav-link text-warning">Cerrar sesión</button>
                     </form>
+                    {% endif %}
                 </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link text-warning" href="{% url 'login' %}">Iniciar Sesión</a>
-                </li>
-                {% endif %}
             </ul>
+            {% endif %}
         </div>
     </div>
 </nav>

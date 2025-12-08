@@ -12,11 +12,6 @@ from django.urls import reverse_lazy
 
 user_service = UserService()
 
-class UserListView(GroupRequiredMixin, ListView):
-        model = user_service.model
-        template_name = 'user_list.html'
-        context_object_name = 'users'
-        required_group =('Acceso Completo',)
 
 def password_reset(request):
     if request.method == 'POST':
@@ -76,7 +71,59 @@ class UserView(GroupRequiredMixin, DetailView):
         "Acceso limitado a Finanzas",
         "Acceso limitado a Compras"
     )
+
+
+class UserListView(GroupRequiredMixin, ListView):
+    required_group =('Acceso Completo',)
+    model = user_service.model
+    template_name = 'user_list.html'
+    context_object_name = 'users'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = self.request.GET.get("q")
+        if q:
+            qs = qs.filter(Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q))
+        allowed_sort_fields = ['username', 'first_name', 'profile__run', 'profile__role__group__name']
+        sort_by = self.request.GET.get('sort_by', 'username') 
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'username'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            del query['page']
+        context['query_string'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'username')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            'q': q,
+            'sort_by': sort_by,
+            'order': order,
+            'per_page': per_page,
+        })
+        return context
     
+    def get_paginated_by(self):
+        default_per_page = 25  
+        allowed_per_page = [5,25,50,100]
+        try:
+            per_page = int(self.request.GET.get("per_page", default_per_page))
+        except ValueError:
+            per_page = default_per_page
+        if per_page not in allowed_per_page:
+            per_page = default_per_page
+        return per_page
 
 @login_required
 @permission_or_redirect('Accounts.view_profile','dashboard', 'No tienes permiso')
