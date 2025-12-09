@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     data.products.forEach(e => {
                         const o = document.createElement('option');
-                        o.value = `product-${e.id}`;
+                        o.value = `producto-${e.id}`;
                         o.textContent = `${e.sku ?? ''} ${e.name}`.trim();
                         productSelect.appendChild(o);
                     });

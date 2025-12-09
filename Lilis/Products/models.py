@@ -69,7 +69,8 @@ class RawMaterialClass(models.Model):
     measurement_unit = models.CharField(max_length=100, choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')], default='U', verbose_name='Unidad de medida')
     is_perishable = models.BooleanField(default=False, verbose_name='Perecedero')
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="raw_materials", verbose_name='Proveedor')
-
+    deficit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Deficit')
+    
     def __str__(self):
         return self.name + " - " + self.sku
 
@@ -127,12 +128,11 @@ class Transaction(models.Model):
     notes = models.TextField(blank=True, null=True)
     type = models.CharField(max_length=20, choices=[('I', 'Ingreso'), ('S', 'Salida'), ('D', 'Devolucion'), ('T', 'Transferencia'), ('A', 'Ajuste')], default='I')
     quantity = models.IntegerField(default=1)
-    batch_code = models.CharField(max_length=100, blank=True, null=True)
-    serie_code = models.CharField(max_length=100, null=True, blank=True)
     expiration_date = models.DateField(null=True, blank=True)
+    code = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f'{self.type}: Lote: {self.batch_code} - Bodega: {self.warehouse.name} - {self.date}'
+        return f'{self.type}: Bodega: {self.warehouse.name} - {self.date}'
 
 class Inventario(models.Model):
     materia_prima = models.ForeignKey(RawMaterialClass, on_delete=models.PROTECT, related_name="inventario", blank=True, null=True )
@@ -144,7 +144,6 @@ class Inventario(models.Model):
         if self.producto:
             return f'{self.producto.name} - {self.producto.sku}'
         return f'{self.materia_prima.name} - {self.materia_prima.sku}'
-
 
 class Lote(models.Model):
     codigo = models.CharField(max_length=100)

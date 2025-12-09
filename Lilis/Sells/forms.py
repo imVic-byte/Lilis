@@ -144,7 +144,7 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = [
             'warehouse', 'client', 'user', 'notes', 'quantity',
-             'batch_code', 'serie_code', 'expiration_date'
+             'code', 'expiration_date'
         ]
         labels = {
             'warehouse': 'Almacén',
@@ -152,8 +152,7 @@ class TransactionForm(forms.ModelForm):
             'user': 'Usuario',
             'notes': 'Observaciones',
             'quantity': 'Cantidad',
-            'batch_code': 'Lote',
-            'serie_code': 'Serie',
+            'code': 'Código',
             'expiration_date': 'Vencimiento'
         }
         widgets = {

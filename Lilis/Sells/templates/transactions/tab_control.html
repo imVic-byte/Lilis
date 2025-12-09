@@ -1,108 +1,15 @@
 <div class="row mb-3">
-    <div class="col-md-3">
-        <label class="form-label">Manejo por lotes</label>
-        <input type="checkbox" class="form-check-input ms-2" id="control-lotes">
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label">Manejo por series</label>
-        <input type="checkbox" class="form-check-input ms-2" id="control-series">
-    </div>
-
-    <div class="col-md-3">
-        <label class="form-label">Perecible (vencimiento)</label>
-        <input type="checkbox" class="form-check-input ms-2" id="control-vencimiento">
-    </div>
-</div>
-
-<div class="row mb-3">
     <div class="col-md-4">
-        <label class="form-label">Lote</label>
-        <input name="lote"type="text" class="form-control" id="input-lote" value="" disabled>
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label">Serie</label>
-        <input name="serie"type="text" class="form-control" id="input-serie" value="" disabled>
+        <label class="form-label">Código</label>
+        <input name="codigo"type="text" class="form-control" id="codigo" value="" required>
     </div>
 
     <div class="col-md-4">
         <label class="form-label">Fecha vencimiento</label>
-        <input name="vencimiento" type="date" class="form-control" id="input-vencimiento" disabled>
+        <input name="vencimiento" type="date" class="form-control" id="input-vencimiento">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Observaciones / Referencias</label>
+        <textarea class="form-control" rows="3" name="observaciones" id="observaciones"></textarea>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loteCheckbox = document.getElementById('control-lotes');
-    const serieCheckbox = document.getElementById('control-series');
-    const vencimientoCheckbox = document.getElementById('control-vencimiento');
-    const loteInput = document.getElementById('input-lote');
-    const serieInput = document.getElementById('input-serie');
-    const vencimientoInput = document.getElementById('input-vencimiento');
-
-    
-
-    function updateLoteState() {
-        if (loteCheckbox.checked) {
-            serieCheckbox.checked = false;
-            serieCheckbox.disabled = true;
-            serieInput.disabled = true;
-
-            loteInput.disabled = false;
-            loteInput.required = true;
-            vencimientoCheckbox.checked = false;
-            vencimientoCheckbox.disabled = false;
-            vencimientoInput.required = true;
-
-        } else {
-            serieCheckbox.disabled = false;
-            loteInput.disabled = true;
-            loteInput.required = false;
-
-            vencimientoCheckbox.checked = false;
-            vencimientoCheckbox.disabled = true;
-            vencimientoInput.disabled = true;
-            vencimientoInput.required = false;
-        }
-    }
-
-    function updateSerieState() {
-        if (serieCheckbox.checked) {
-            loteCheckbox.checked = false;
-            loteCheckbox.disabled = true;
-            loteInput.disabled = true;
-            loteInput.required = false;
-
-            serieInput.disabled = false;
-            serieInput.required = true;
-            vencimientoCheckbox.checked = false;
-            vencimientoCheckbox.disabled = false;
-            vencimientoInput.required = true;
-        } else {
-            loteCheckbox.disabled = false;
-            serieInput.disabled = true;
-            serieInput.required = false;
-        }
-    }
-
-    function updateVencimientoState() {
-        if (vencimientoCheckbox.checked) {
-            vencimientoInput.disabled = false;
-            vencimientoInput.required = true;
-        } else {
-            vencimientoInput.disabled = true;
-            vencimientoInput.required = false;
-        }
-    }
-
-    loteCheckbox.addEventListener('change', updateLoteState);
-    serieCheckbox.addEventListener('change', updateSerieState);
-    vencimientoCheckbox.addEventListener('change', updateVencimientoState);
-    document.getElementById('input-lote').addEventListener('input', validateBatchCode);
-    document.getElementById('input-serie').addEventListener('input', validateSerieCode);
-    updateLoteState();
-    updateSerieState();
-    updateVencimientoState();
-});
-</script>
