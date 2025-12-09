@@ -37,7 +37,7 @@ class ProductService(CRUD):
     
     def get_stock_by_product(self, product_id):
         product = self.get(id=product_id)
-        quantity = product.quantity
+        quantity = product.stock_total()
         return quantity
     
 class SupplierService(CRUD):
@@ -112,3 +112,8 @@ class RawMaterialService(CRUD):
             raw_material_class.save()
             return True, raw_material_class
         return False, form
+    
+    def get_stock_by_raw_material(self, product_id):
+        product = self.get(id=product_id)
+        quantity = product.stock_total()
+        return quantity

@@ -11,7 +11,6 @@ class GroupRequiredMixin(AccessMixin):
     permission_denied_url = reverse_lazy('dashboard')
 
     def dispatch(self, request, *args, **kwargs):
-        print(request.user.groups.all())
         if not request.user.is_authenticated:
             return self.handle_no_permission()
         if self.required_group is None:

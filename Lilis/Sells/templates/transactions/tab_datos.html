@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 if (type === 'transferencia') {
                     resetSelect(clientSelect);
-                    clientSelect.innerHTML += `<option value="">Lilis</option>`; // tu modo
+                    clientSelect.innerHTML += `<option value="">Lilis</option>`;
 
                     data.clients.forEach(e => {
                         const o = document.createElement('option');
@@ -225,12 +225,12 @@ document.addEventListener('DOMContentLoaded', function () {
             resetSelect(productSelect, 'Seleccione un cliente/proveedor');
             return;
         }
-
-        fetch(`/sells/get_raw_materials_by_supplier/?id=${client}&type=${type}`)
-            .then(r => r.json())
-            .then(res => {
-                const data = res.p || [];
-                if (type === 'ingreso') {
+        if (type === 'ingreso' || type === 'salida') {
+            fetch(`/sells/get_raw_materials_by_supplier/?id=${client}&type=${type}`)
+                .then(r => r.json())
+                .then(res => {
+                    const data = res.p || [];
+                    if (type === 'ingreso') {
                     resetSelect(productSelect, 'Seleccione una materia prima');
 
                     if (data.length === 0) {
@@ -270,7 +270,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
             .catch(e => console.error("Error al cargar datos:", e));
+        }
     });
+    
     productSelect.addEventListener('change', function () {
         const product = this.value;
         const type = typeSelect.value;

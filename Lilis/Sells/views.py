@@ -12,6 +12,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from Main.mixins import GroupRequiredMixin
+import requests
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -19,7 +20,8 @@ transaction_service = TransactionService()
 product_service = ProductService()
 raw_material_service = RawMaterialService()
 supplier_service = SupplierService()
-LILIS_RUT = "2519135-8"
+
+API_ENDPOINT = 'http://127.0.0.1:8000/api/lilis/'
 
 # ===================================
 # VISTAS DE CLIENTES
@@ -564,11 +566,15 @@ def warehouses_by_client(request):
     return JsonResponse({'warehouses': [warehouse_to_dict(w) for w in warehouses]})
 
 def handle_ingreso():
-    l = client_service.search_by_rut(LILIS_RUT)[0]
     data = {
-        'warehouses': get_warehouses_for_client(l),
+        'warehouses': [],
         'suppliers': [],
     }
+    warehouses = warehouse_service.list().filter(lilis=True).filter(is_active=True)
+    for w in warehouses:
+        warehouse_data = warehouse_to_dict(w)
+        data['warehouses'].append(warehouse_data)
+    print(data)
     suppliers = supplier_service.list_actives()
     for s in suppliers:
         supplier_data = supplier_base_dict(s)
@@ -579,7 +585,7 @@ def handle_ingreso():
 
 def handle_salida():
     data = []
-    clients = client_service.list_actives().exclude(rut=LILIS_RUT)
+    clients = client_service.list_actives()
     for c in clients:
         client_data = {
             'id': c.id,
@@ -599,10 +605,10 @@ def handle_devolucion():
         'raw_materials': [],
         'warehouses': [],
     }
-    clients = client_service.list_actives().exclude(rut=LILIS_RUT)
+    clients = client_service.list_actives()
     for c in clients:
         data['clients'].append(supplier_base_dict(c))
-    suppliers = supplier_service.list_actives().exclude(rut=LILIS_RUT)
+    suppliers = supplier_service.list_actives()
     for s in suppliers:
         data['clients'].append(supplier_base_dict(s))
     products = transaction_service.inventario.product_class.objects.all().filter(is_active=True)
@@ -611,17 +617,16 @@ def handle_devolucion():
     raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
     for rm in raw_materials:
         data['raw_materials'].append(raw_material_to_dict(rm))
-    l = client_service.search_by_rut(LILIS_RUT)[0]
-    warehouses = get_warehouses_for_client(l)
+    warehouses = warehouse_service.list().filter(is_active=True).filter(lilis=True)
     for w in warehouses:
-        data['warehouses'].append(w)
+        data['warehouses'].append(warehouse_to_dict(w))
     return JsonResponse({'data': data})
 
 
 def handle_transfer():
-    c = client_service.search_by_rut(LILIS_RUT)[0]
+    c = requests.get(API_ENDPOINT).json()[0]
     data = {
-        'clients': [supplier_base_dict(c)],
+        'clients': [c],
         'products': [],
         'raw_materials': [],
         'warehouses': [],
@@ -632,26 +637,24 @@ def handle_transfer():
     raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
     for rm in raw_materials:
         data['raw_materials'].append(raw_material_to_dict(rm))
-    l = client_service.search_by_rut(LILIS_RUT)[0]
-    warehouses = get_warehouses_for_client(l)
+    warehouses = warehouse_service.list().filter(is_active=True).filter(lilis=True)
     for w in warehouses:
-        data['warehouses'].append(w)
+        data['warehouses'].append(warehouse_to_dict(w))
     return JsonResponse({'data': data})
 
 def handle_produccion():
-    c = client_service.search_by_rut(LILIS_RUT)[0]
+    lilis = requests.get(API_ENDPOINT).json()[0]
     data = {
-        'clients': [supplier_base_dict(c)],
+        'clients': [lilis],
         'products': [],
         'warehouses': [],
     }
     products = product_service.list_actives()
     for p in products:
         data['products'].append(raw_material_to_dict(p))
-    l = client_service.search_by_rut(LILIS_RUT)[0]
-    warehouses = get_warehouses_for_client(l)
+    warehouses = warehouse_service.list().filter(lilis=True).filter(is_active=True)
     for w in warehouses:
-        data['warehouses'].append(w)
+        data['warehouses'].append(warehouse_to_dict(w))
     return JsonResponse({'data': data})
 
 

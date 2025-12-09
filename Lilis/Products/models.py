@@ -73,6 +73,12 @@ class RawMaterialClass(models.Model):
     def __str__(self):
         return self.name + " - " + self.sku
 
+    def stock_total(self):
+        total = 0
+        for inv in self.inventario.all():
+            total += inv.stock_total
+        return total
+
 
 class Producto(models.Model):
     sku = models.CharField(max_length=50, unique=True, verbose_name='SKU')
@@ -105,6 +111,12 @@ class Producto(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.sku}'
+
+    def stock_total(self):
+        total = 0
+        for inv in self.inventario.all():
+            total += inv.stock_total
+        return total
 
 class Transaction(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name="transactions", null=True, blank=True)
