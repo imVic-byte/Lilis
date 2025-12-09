@@ -39,4 +39,6 @@ urlpatterns = [
     path('get_by_type/', views.get_by_type, name='get_by_type'),
     path('get_raw_materials_by_supplier/', views.get_raw_materials_by_supplier, name='get_raw_materials_by_supplier'),
     path('warehouses_by_client/', views.warehouses_by_client, name='warehouses_by_client'),
+    path('warehouses_by_inventory/', views.warehouses_by_inventory, name='warehouses_by_inventory'),
+    path('get_stock_by_inventory/', views.get_stock_by_inventory, name='get_stock_by_inventory'),
 ]

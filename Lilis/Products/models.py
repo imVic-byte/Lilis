@@ -108,6 +108,7 @@ class Producto(models.Model):
     technical_sheet = models.FileField(upload_to='technical_sheets', blank=True, null=True, verbose_name='Ficha técnica')
     measurement_unit = models.CharField(max_length=100, choices = [('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')], default='U', verbose_name='Unidad de medida')
     is_perishable = models.BooleanField(default=False, verbose_name='Perecedero')
+    deficit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name='Deficit')
 
     def __str__(self):
         return f'{self.name} - {self.sku}'

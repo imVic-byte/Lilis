@@ -622,24 +622,44 @@ def handle_devolucion():
         data['warehouses'].append(warehouse_to_dict(w))
     return JsonResponse({'data': data})
 
+def inventario_to_dict(i):
+    if i.producto:
+        return {
+            'id': i.id,
+            'name': i.producto.name,
+            'sku': i.producto.sku,
+            'measurement_unit': i.producto.measurement_unit
+        }
+    if i.materia_prima:
+        return {
+            'id': i.id,
+            'name': i.materia_prima.name,
+            'sku': i.materia_prima.sku,
+            'measurement_unit': i.materia_prima.measurement_unit
+        }
+
+def warehouses_by_inventory(request):
+    id_ = request.GET.get('id')
+    p,id = id_.split('-')
+    warehouses = warehouse_service.list().filter(is_active=True).filter(lilis=True).exclude(inventario=id)
+    return JsonResponse({'warehouses': [warehouse_to_dict(w) for w in warehouses]})
+
+def get_stock_by_inventory(request):
+    id_ = request.GET.get('id')
+    p,id = id_.split('-')
+    i = transaction_service.inventario.get(id=id)
+    stock = i.stock_total
+    return JsonResponse({'stock': stock})
 
 def handle_transfer():
     c = requests.get(API_ENDPOINT).json()[0]
     data = {
         'clients': [c],
-        'products': [],
-        'raw_materials': [],
-        'warehouses': [],
+        'inventory': [],
     }
-    products = product_service.list_actives()
-    for p in products:
-        data['products'].append(raw_material_to_dict(p))
-    raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
-    for rm in raw_materials:
-        data['raw_materials'].append(raw_material_to_dict(rm))
-    warehouses = warehouse_service.list().filter(is_active=True).filter(lilis=True)
-    for w in warehouses:
-        data['warehouses'].append(warehouse_to_dict(w))
+    inventarios = transaction_service.inventario.list().filter(stock_total__gt=0)
+    for i in inventarios:
+        data['inventory'].append(inventario_to_dict(i))
     return JsonResponse({'data': data})
 
 def handle_produccion():

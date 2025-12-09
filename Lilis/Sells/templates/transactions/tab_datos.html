@@ -150,9 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
                 if (type === 'transferencia') {
-                    resetSelect(clientSelect);
-                    clientSelect.innerHTML += `<option value="">Lilis</option>`;
-
+                    resetSelect(clientSelect, "Seleccione a Lilis");
                     data.clients.forEach(e => {
                         const o = document.createElement('option');
                         o.value = e.id;
@@ -163,30 +161,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     resetSelect(productSelect, 'Seleccione un producto o materia prima');
 
                     const gP = document.createElement('optgroup');
-                    gP.label = 'Productos';
-                    fillSelect(gP, data.products, e => ({
+                    fillSelect(gP, data.inventory, e => ({
                         value: `product-${e.id}`,
                         text: `${e.sku ?? ''} ${e.name}`.trim()
                     }));
-
-                    const gR = document.createElement('optgroup');
-                    gR.label = 'Materias primas';
-                    fillSelect(gR, data.raw_materials, e => ({
-                        value: `raw_material-${e.id}`,
-                        text: `${e.sku ?? ''} ${e.name}`.trim()
-                    }));
-
                     productSelect.appendChild(gP);
-                    productSelect.appendChild(gR);
-
-                    resetSelect(warehouseSelect, 'Seleccione una bodega');
-                    data.warehouses.forEach(e => {
-                        const o = document.createElement('option');
-                        o.value = e.id;
-                        o.textContent = `${e.name} - ${e.address} - ${e.location}`;
-                        warehouseSelect.appendChild(o);
-                    });
-
                     return;
                 }
                 if (type === 'produccion') {
@@ -302,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (type === 'transferencia') {
             cantidadInput.disabled = false;
-            fetch(`/sells/get_stock_by_product/?product_id=${product}`)
+            fetch(`/sells/get_stock_by_inventory/?id=${product}`)
                 .then(r => r.json())
                 .then(res => {
                     cantidadInput.disabled = false;
@@ -310,6 +289,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     cantidadInput.value = res.stock ?? 0;
                 })
                 .catch(e => console.error("Error al cargar stock:", e));
+            fetch(`/sells/warehouses_by_inventory/?id=${product}`)
+                .then(r => r.json())
+                .then(res => {
+                    const ws = res.warehouses || [];
+                    resetSelect(warehouseSelect, 'Seleccione una bodega');
+
+                    ws.forEach(w => {
+                        const o = document.createElement('option');
+                        o.value = w.id;
+                        o.textContent = `${w.name} - ${w.location}`;
+                        warehouseSelect.appendChild(o);
+                    });
+                })
+                .catch(e => console.error("Error al cargar bodegas:", e));
             return;
         }
         if (type === 'devolucion') {
