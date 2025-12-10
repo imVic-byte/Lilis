@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const gP = document.createElement('optgroup');
                     fillSelect(gP, data.inventory, e => ({
-                        value: `product-${e.id}`,
+                        value: `inventory-${e.id}`,
                         text: `${e.sku ?? ''} ${e.name}`.trim()
                     }));
                     productSelect.appendChild(gP);

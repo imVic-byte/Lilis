@@ -243,9 +243,11 @@ class InventarioService(CRUD):
     
     def consumir_sin_ese_inventario_p(self, inventario, cantidad):
         resta = Decimal(cantidad)
-        inventarios = self.inventarios_por_producto(inventario.producto).exclude(inventario.id)
+        inventarios = self.inventarios_por_producto(inventario.producto)
         lotes = []
         for i in inventarios:
+            if inventario.id == i.id:
+                continue
             for l in i.lotes.all().order_by('-fecha_expiracion'):
                 lotes.append(l)
         for l in lotes:
@@ -269,9 +271,11 @@ class InventarioService(CRUD):
     
     def consumir_sin_ese_inventario_m(self, inventario, cantidad):
         resta = Decimal(cantidad)
-        inventarios = self.inventarios_por_materia_prima(inventario.materia_prima).exclude(inventario.id)
+        inventarios = self.inventarios_por_materia_prima(inventario.materia_prima)  
         lotes = []
         for i in inventarios:
+            if inventario.id == i.id:
+                continue
             for l in i.lotes.all().order_by('-fecha_expiracion'):
                 lotes.append(l)
         for l in lotes:
@@ -295,7 +299,7 @@ class InventarioService(CRUD):
 
     def transferir_lote_p(self, transaction, producto, cantidad):
         cantidad = Decimal(cantidad)
-        inventario = self.inventario.model.objects.get_or_create(producto=producto, materia_prima=None, bodega=transaction.warehouse)[0]
+        inventario = self.model.objects.get_or_create(producto=producto, materia_prima=None, bodega=transaction.warehouse)[0]
         self.consumir_sin_ese_inventario_p(inventario, cantidad)
         data_lote = {
             'codigo': transaction.code,
@@ -309,7 +313,7 @@ class InventarioService(CRUD):
     
     def transferir_serie_p(self, transaction, producto, cantidad):
         cantidad = Decimal(cantidad)
-        inventario = self.inventario.model.objects.get_or_create(producto=producto, materia_prima=None, bodega=transaction.warehouse)[0]
+        inventario = self.model.objects.get_or_create(producto=producto, materia_prima=None, bodega=transaction.warehouse)[0]
         self.consumir_sin_ese_inventario_p(inventario, cantidad)
         series = []
         for i in range(int(cantidad)):
@@ -320,13 +324,13 @@ class InventarioService(CRUD):
                 'fecha_creacion':transaction.date,
                 'fecha_expiracion': transaction.expiration_date
             }
-            self.inventario.model.objects.create(**data_serie)
-            series.append(data_serie)
+            serie = self.crear_serie(data_serie)
+            series.append(serie)
         return True, series
     
     def transferir_lote_m(self, transaction, materia_prima, cantidad):
         cantidad = Decimal(cantidad)
-        inventario = self.inventario.model.objects.get_or_create(materia_prima=materia_prima, bodega=transaction.warehouse)[0]
+        inventario = self.model.objects.get_or_create(materia_prima=materia_prima, bodega=transaction.warehouse)[0]
         self.consumir_sin_ese_inventario_m(inventario, cantidad)
         data_lote = {
             'codigo': transaction.code,
@@ -340,7 +344,7 @@ class InventarioService(CRUD):
 
     def transferir_serie_m(self, transaction, materia_prima, cantidad):
         cantidad = Decimal(cantidad)
-        inventario = self.inventario.model.objects.get_or_create(materia_prima=materia_prima, bodega=transaction.warehouse)[0]
+        inventario = self.model.objects.get_or_create(materia_prima=materia_prima, bodega=transaction.warehouse)[0]
         self.consumir_sin_ese_inventario_m(inventario, cantidad)
         series = [] 
         for i in range(int(cantidad)):
@@ -351,15 +355,15 @@ class InventarioService(CRUD):
                 'fecha_creacion':transaction.date,
                 'fecha_expiracion': transaction.expiration_date
             }
-            self.inventario.model.objects.create(**data_serie)
-            series.append(data_serie)
+            serie = self.crear_serie_entrada(data_serie)
+            series.append(serie)
         return True, series
             
     def inventarios_por_producto(self, producto):
-        return self.inventario.model.objects.all().filter(producto=producto)
+        return self.model.objects.all().filter(producto=producto)
             
     def inventarios_por_materia_prima(self, materia_prima):
-        return self.inventario.model.objects.all().filter(materia_prima=materia_prima)
+        return self.model.objects.all().filter(materia_prima=materia_prima)
                 
     def list_actives(self):
         return (
@@ -386,21 +390,25 @@ class TransactionService(CRUD):
             mp = self.inventario.raw_class.objects.get(id=data['product'])
             data['product'] = None
             data['raw_material'] = mp
-            return None, mp
+            return None, mp, None
         if data['product']:
             tipo, id = data['product'].split('-')
-            if tipo == 'producto':
+            if tipo == 'producto' or tipo =='product':
                 product = self.inventario.product_class.objects.get(id=id)
                 data['product'] = product
                 data['raw_material'] = None
-                print(product)
-                return product, None
-            else:
+                return product, None, None
+            elif tipo == 'materia_prima' or tipo =='raw_material':
                 raw_material = self.inventario.raw_class.objects.get(id=id)
                 data['product'] = None
                 data['raw_material'] = raw_material
-                print(raw_material)
-                return None, raw_material
+                return None, raw_material, None
+            else:
+                inventory = self.inventario.model.objects.get(id=id)
+                data['product'] = None
+                data['raw_material'] = None
+                data['inventory'] = inventory
+                return None, None, inventory
 
     def create_transaction(self, request):
         data = {
@@ -427,7 +435,7 @@ class TransactionService(CRUD):
             cantidad = float(data['quantity'])
         except (ValueError, TypeError):
             return False, None
-        producto, materia_prima = self.resolver(data)
+        producto, materia_prima, inventario = self.resolver(data)
         transaction_data = {
             'warehouse': data['warehouse'],
             'client': data['client'],
@@ -455,7 +463,7 @@ class TransactionService(CRUD):
             if not ok:
                 return False, None
         if type_ == 'transferencia':
-            ok = self.procesar_transferencia(transaction, producto, materia_prima, cantidad)
+            ok = self.procesar_transferencia(transaction, inventario, cantidad)
             if not ok:
                 return False, None
         if type_ == 'produccion':
@@ -466,39 +474,50 @@ class TransactionService(CRUD):
                 return False, None
         return True, transaction
 
-    def procesar_transferencia(self, transaction, producto, materia_prima, cantidad):
-        if producto:
-            if producto.batch_control:
-                ok, lote = self.inventario.transferir_lote_p(transaction, producto, cantidad)
-            elif producto.serie_control:
-                ok, series = self.inventario.transferir_serie_p(transaction, producto, cantidad)
-            else:
-                ok, lote = self.inventario.transferir_lote_p(transaction, producto, cantidad)
-        if materia_prima:
-            if materia_prima.batch_control:
-                ok, lote = self.inventario.transferir_lote_m(transaction, materia_prima, cantidad)
-            elif materia_prima.serie_control:
-                ok, series = self.inventario.transferir_serie_m(transaction, materia_prima, cantidad)
-            else:
-                ok, lote = self.inventario.transferir_lote_m(transaction, materia_prima, cantidad)
-        if lote:
-            detail_data = {
-                'transaction': transaction,
-                'code': transaction.code,
-                'batch': lote,
-                'serie': None
-            }
-            self.crear_detalle_transaccion(detail_data)
-        if series:
-            for s in series:
+    def procesar_transferencia(self, transaction, inventario, cantidad):
+        if inventario.producto:
+            if inventario.producto.batch_control:
+                ok, lote = self.inventario.transferir_lote_p(transaction, inventario.producto, cantidad)
+                ok2, l = self.inventario.crear_lote_entrada(lote)
                 detail_data = {
                     'transaction': transaction,
-                    'code': f'{transaction.code}-{s.codigo}',
-                    'batch': None,
-                    'serie': s
+                    'code': transaction.code,
+                    'batch': l,
+                    'serie': None
                 }
                 self.crear_detalle_transaccion(detail_data)
-        return True, None
+            else:
+                ok, series = self.inventario.transferir_serie_p(transaction, inventario.producto, cantidad)
+                for s in series:
+                    detail_data = {
+                        'transaction': transaction,
+                        'code': transaction.code,
+                        'batch': None,
+                        'serie': s
+                    }
+                    self.crear_detalle_transaccion(detail_data)
+        if inventario.materia_prima:
+            if inventario.materia_prima.batch_control:
+                ok, lote = self.inventario.transferir_lote_m(transaction, inventario.materia_prima, cantidad)
+                ok2, l = self.inventario.crear_lote_entrada(lote)
+                detail_data = {
+                    'transaction': transaction,
+                    'code': transaction.code,
+                    'batch': l,
+                    'serie': None
+                }
+                self.crear_detalle_transaccion(detail_data)
+            else:
+                ok, series = self.inventario.transferir_serie_m(transaction, inventario.materia_prima, cantidad)
+                for s in series:
+                    detail_data = {
+                        'transaction': transaction,
+                        'code': transaction.code,
+                        'batch': None,
+                        'serie': s
+                    }
+                    self.crear_detalle_transaccion(detail_data)
+        return True
 
     def procesar_salida(self, transaction, producto, cantidad):
         if producto.batch_control:
