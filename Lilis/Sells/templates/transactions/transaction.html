@@ -18,15 +18,15 @@
 
     <div class="col-md-4">
         <div class="card text-center p-3 shadow-sm">
-            <h5 class="mb-1">Stock total demo</h5>
-            <h2 class="fw-bold">8</h2>
+            <h5 class="mb-1">Stock total</h5>
+            <h2 class="fw-bold">{{ stock }}</h2>
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="card text-center p-3 shadow-sm">
             <h5 class="mb-1">Productos únicos</h5>
-            <h2 class="fw-bold">1</h2>
+            <h2 class="fw-bold">{{ productos_unicos }}</h2>
         </div>
     </div>
 </div>
@@ -108,7 +108,7 @@
             <th>Fecha</th>
             <th>Tipo</th>
             <th>SKU</th>
-            <th>Proveedor</th>
+            <th>Proveedor/Cliente</th>
             <th>Bodega</th>
             <th>Cantidad</th>
             <th>Código</th>
@@ -148,7 +148,13 @@
                     {% endif %}
                 {% endif %}
             {% endwith %}
-            <td>{{ t.client.rut }}</td>
+            <td class="text-center">
+                {% if t.client %}
+                {{ t.client.rut }}
+                {% else %}
+                Lilis
+                {% endif %}
+            </td>
             <td>{{ t.warehouse.name }}</td>
 
             {% if t.type == 'ingreso' or t.type == 'I' %}

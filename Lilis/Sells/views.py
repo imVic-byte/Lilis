@@ -769,6 +769,11 @@ class TransactionView(GroupRequiredMixin, View):
         raw_materials = transaction_service.inventario.raw_class.objects.all().filter(is_active=True)
         clients = client_service.list_actives()
         transactions = transaction_service.list()
+        productos_unicos = len(products)
+        stock = 0
+        inventarios = transaction_service.inventario.list()
+        for i in inventarios:
+            stock += i.stock_total
         today = []
         for t in transactions:
             t.date = t.date.date()
@@ -781,6 +786,8 @@ class TransactionView(GroupRequiredMixin, View):
             'clients': clients, 
             'transactions': transactions, 
             'transactions_today': transactions_today,
+            'stock': stock,
+            'productos_unicos': productos_unicos,
             "page_obj": page_obj,  
             "q": q,
             "per_page": per_page,
