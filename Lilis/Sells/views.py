@@ -1023,9 +1023,26 @@ def post_process_transaction_results(qs_values):
         
     return list(resultados_finales.values())
 
+
+def obtener_info_producto_material(t):
+    item = None
+    details = transaction_service.transaction_detail.objects.filter(transaction=t).select_related('batch', 'serie').first()
+    if details:
+        if details.batch:
+            item = details.batch.inventario
+        if details.serie:
+            item = details.serie.inventario
+    else:
+        return None
+    if item:
+        try:
+            return item.producto.sku
+        except:
+            return item.materia_prima.sku
+    return None
+
 def transaction_search(request):
     q = (request.GET.get("q") or "").strip()
-    
     qs = transaction_service.model.objects.filter(
         Q(client__fantasy_name__icontains=q) |
         Q(client__bussiness_name__icontains=q) |
@@ -1040,47 +1057,45 @@ def transaction_search(request):
         Q(details__serie__inventario__producto__name__icontains=q)|
         Q(details__serie__inventario__materia_prima__sku__icontains=q)|
         Q(details__serie__inventario__materia_prima__name__icontains=q)
-    ).values(
-        'id',
-        'date',
-        'type',
-        'code',
-        'client__fantasy_name',
-        'client__bussiness_name',
-        'client__rut',
-        'details__batch__inventario__producto__sku',
-        'details__batch__inventario__producto__name',
-        'details__batch__inventario__materia_prima__sku',
-        'details__batch__inventario__materia_prima__name',
-        'details__serie__inventario__producto__sku',
-        'details__serie__inventario__producto__name',
-        'details__serie__inventario__materia_prima__sku',
-        'details__serie__inventario__materia_prima__name',
-    )
-    
-    final_results = post_process_transaction_results(qs)
-    
-    return JsonResponse({'data': final_results}, safe=False)
-
-def obtener_info_producto_material(t):
-    for d in t.details:
-        if d.batch:
-            if
-            return f"{d.batch.inventario.producto.name} - {d.batch.inventario.producto.sku}"
-        else:
-            return f"{d.serie.inventario.producto.name} - {d.serie.inventario.producto.sku}"
-
-def transaction_all(request):
+    ).order_by('-date').distinct()
     data = []
-    transactions = transaction_service.list()
-    for t in transactions:
+    for t in qs:
+        if t in data:
+            continue
+        try:
+            rut = t.client.rut
+        except:
+            rut = "Lilis"
         data.append({
             'id': t.id,
             'fecha': t.date,
             'tipo': t.type,
             'codigo': t.code,
-            'cliente': t.client.fantasy_name,
-            'producto_info': obtener_info_producto_material(t),
+            'cliente': rut,
+            'sku': obtener_info_producto_material(t),
+            'bodega': t.warehouse.name,
+            'cantidad' : t.quantity,
+            'vencimiento': t.expiration_date
         })
-    
+    return JsonResponse({'data': data}, safe=False)
+
+def transaction_all(request):
+    data = []
+    transactions = transaction_service.list().order_by('-date')
+    for t in transactions:
+        try:
+            rut = t.client.rut
+        except:
+            rut = "Lilis"
+        data.append({
+            'id': t.id,
+            'fecha': t.date,
+            'tipo': t.type,
+            'codigo': t.code,
+            'cliente': rut,
+            'sku': obtener_info_producto_material(t),
+            'bodega': t.warehouse.name,
+            'cantidad' : t.quantity,
+            'vencimiento': t.expiration_date
+        })
     return JsonResponse({'data': data}, safe=False)
