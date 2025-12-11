@@ -140,10 +140,12 @@ class InventarioService(CRUD):
             inventario.save()
             print("nuevo stock", inventario.stock_total)
         else:
+            print("actualizando stock, series")
             series = inventario.series.all().filter(estado='A')
             stock_total = series.count()
             inventario.stock_total = stock_total
             inventario.save()
+            print("nuevo stock ", inventario.stock_total)
         try:
             deficit = Decimal(inventario.producto.deficit)
             if inventario.stock_total > deficit:
@@ -168,6 +170,7 @@ class InventarioService(CRUD):
         if not data:
             return False, None
         serie = self.serie.objects.create(**data)
+        print("serie creada ",serie)
         self.actualizar_stock(serie.inventario)
         return True, serie
 
@@ -284,26 +287,31 @@ class InventarioService(CRUD):
         print("consumiendo series")
         series = self.serie.objects.filter(inventario=inventario).order_by('-fecha_expiracion')
         print(series)
+        i = 0
         for s in series:
-            print("serie",s)
+            if cantidad == 0:
+                break
+            i += 1
+            print(i,"- serie ",s.id)
             if s.estado == 'I':
                 print("serie inactiva")
                 continue
             s.estado = 'I'
             s.save()
             cantidad -= 1
+            print('serie activa ',s.id)
             self.actualizar_stock(s.inventario)
             print("cantidad restante ",cantidad)
         if cantidad > 0:
             try:
                 inventario.producto.deficit += cantidad
                 inventario.producto.save()
-                print("deficit actualizado",inventario.deficit)
+                print("deficit actualizado",inventario.producto.deficit)
                 return True
             except:
                 inventario.materia_prima.deficit += cantidad
                 inventario.materia_prima.save()
-                print("deficit actualizado",inventario.deficit)
+                print("deficit actualizado",inventario.materia_prima.deficit)
                 return True
         return False
   
@@ -329,7 +337,7 @@ class InventarioService(CRUD):
                     print("es un producto con control de lotes")
                     control = "lotes"
                     self.consumir_lotes_inventario(inventario, cantidad)
-                case item if item.series_control:
+                case item if item.serie_control:
                     print("es un producto con control de series")
                     control = "series"
                     self.consumir_series_inventario(inventario, cantidad)
@@ -337,6 +345,7 @@ class InventarioService(CRUD):
         print("creando control")
         match control:
             case "lotes":
+                print("creando lote")
                 data = {
                     "codigo": transaction.code,
                     "inventario":nuevo_inventario,
@@ -350,10 +359,10 @@ class InventarioService(CRUD):
                 batch = True
             case "series":
                 for i in range(int(cantidad)):
+                    print("creando serie", i+1)
                     data = {
-                        "codigo": transaction.code + "-" + str(i),
+                        "codigo": transaction.code + "-" + str(i+1),
                         "inventario":nuevo_inventario,
-                        "cantidad_actual": 1,
                         "fecha_expiracion": transaction.expiration_date,
                         "fecha_creacion": transaction.date,
                         "estado": "A"

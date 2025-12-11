@@ -18,4 +18,5 @@ urlpatterns = [
     path('warehouse_list_for_lilis/', views.WarehouseListForLilisView.as_view(), name='warehouse_list_for_lilis'),
     path('lilis_warehouse_assign/', views.WarehouseAssignView.as_view(), name='lilis_warehouse_assign'),
     path('lilis_warehouse_unassign/', views.WarehouseUnassignView.as_view(), name='lilis_warehouse_unassign'),
+    path('lilis_create/', views.LilisCreateView.as_view(), name='lilis_create')
 ]

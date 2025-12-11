@@ -16,6 +16,7 @@ class GroupRequiredMixin(AccessMixin):
         if self.required_group is None:
             raise ValueError('Debe especificar un grupo')
         user_groups = [group.name for group in request.user.groups.all()]
+        print(user_groups)
         is_member = any(group in user_groups for group in self.required_group)
         if not is_member:
             messages.error(request, self.permission_denied_message)
