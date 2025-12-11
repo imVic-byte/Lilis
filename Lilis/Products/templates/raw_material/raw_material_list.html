@@ -63,15 +63,16 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
     <div class="row">
-        <div class="col-7">
+        <div class="col-6">
             <h5 class="card-title">{{ p.name|default:"—" }}</h5>
             <h6 class="card-subtitle text-muted">SKU: {{ p.sku|default:"—" }}</h6>
         </div>
-        <div class="col-5 text-end">
-            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+        <div class="col-6 text-end">
+            <a href="{% url 'raw_material_view' p.id %}" class="btn btn-warning btn-sm">Ver</a>
+            <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
             <button type="button" class="btn btn-sm btn-delete"
             style = "background-color: #D30A11; color: white;"
-                data-url="{% url 'product_delete' p.id %}"
+                data-url="{% url 'raw_material_delete' p.id %}"
                 data-item-name="{{ p.name }}">
                 Eliminar
             </button>
@@ -87,6 +88,9 @@
 
     <ul class="list-group list-group-flush mt-2">
         <li class="list-group-item">
+            <p class="card-text">Descripcion: {{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+            <p class="card-text">Productos: {{ p.count_products }}</p>
+            <p class="card-text">Materias Primarias: {{ p.count_raw_materials }}</p>
             <strong>Controles:</strong>
             {% if p.serie_control %}Serie {% endif %}
             {% if p.batch_control %}Lote{% endif %}

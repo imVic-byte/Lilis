@@ -205,6 +205,24 @@ class ProductListView(GroupRequiredMixin, ListView):
             return per_page
         else:
             return default_per_page
+        
+def product_search(request):
+    print("buscando producto")
+    q = request.GET.get('q', '')
+    products = product_service.model.objects.filter( is_active=True ).filter(
+        Q(name__icontains=q) |
+        Q(description__icontains=q)
+    ).values(
+        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
+        )
+    return JsonResponse({'data':list(products)}, safe=False)
+
+def product_all(request):
+    print("buscando todos los productos")
+    products = product_service.model.objects.filter(is_active=True).values(
+        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
+    )
+    return JsonResponse({'data':list(products)}, safe=False)
 
 class ProductView(GroupRequiredMixin, DetailView):
     model = product_service.model
