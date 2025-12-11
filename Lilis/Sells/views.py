@@ -13,6 +13,8 @@ from django.urls import reverse_lazy
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from Main.mixins import GroupRequiredMixin
 import requests
+from django.core.serializers import serialize
+from django.db.models.functions import Coalesce
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -953,3 +955,147 @@ def product_batch_create(request):
         'warehouses': warehouses,
         'products': products,
     })
+
+def transaction_search(request):
+    q = (request.GET.get("q") or "").strip()
+    filtros = Q(client__fantasy_name__icontains=q) | \
+              Q(client__bussiness_name__icontains=q) | \
+              Q(client__rut__icontains=q) | \
+              Q(type__icontains=q) | \
+              Q(code__icontains=q) | \
+              Q(details__batch__inventario__producto__sku__icontains=q) | \
+              Q(details__batch__inventario__producto__name__icontains=q) | \
+              Q(details__batch__inventario__material__sku__icontains=q) | \
+              Q(details__batch__inventario__material__name__icontains=q) | \
+              Q(details__serie__inventario__producto__sku__icontains=q) | \
+              Q(details__serie__inventario__producto__name__icontains=q) | \
+              Q(details__serie__inventario__material__sku__icontains=q) | \
+              Q(details__serie__inventario__material__name__icontains=q)
+    
+    qs_ids = transaction_service.model.objects.filter(filtros).values_list('id', flat=True).distinct()
+    
+    transactions = transaction_service.model.objects.filter(id__in=qs_ids)
+    data = []
+    for t in transactions:
+        data.append({
+            'id': t.id,
+            'fecha': t.date.strftime("%Y-%m-%d") if hasattr(t, 'date') else 'N/A',
+            'tipo': t.type,
+            'codigo': t.code,
+            'cliente': t.client.fantasy_name,
+            'producto_info': obtener_info_producto_material(t),
+        })
+        
+    return JsonResponse({'data': data}, safe=False)
+
+def post_process_transaction_results(qs_values):
+    resultados_finales = {}
+    
+    for row in qs_values:
+        t_id = row['id']
+        
+        if t_id not in resultados_finales:
+            resultados_finales[t_id] = {
+                'id': t_id,
+                'type': row.get('type'),
+                'code': row.get('code'),
+                'client': row.get('client__fantasy_name') or row.get('client__bussiness_name'),
+                'producto': '',
+                'vencimiento': 'N/A',
+                'stock': 'N/A',
+            }
+        
+        prod_sku = row.get('details__batch__inventario__producto__sku')
+        if prod_sku and not resultados_finales[t_id]['producto']:
+            resultados_finales[t_id]['producto'] = row.get('details__batch__inventario__producto__name')
+        
+        mat_sku = row.get('details__batch__inventario__materia_prima__sku')
+        if mat_sku and not resultados_finales[t_id]['producto']:
+            resultados_finales[t_id]['producto'] = row.get('details__batch__inventario__materia_prima__name')
+            
+        prod_sku = row.get('details__serie__inventario__producto__sku')
+        if prod_sku and not resultados_finales[t_id]['producto']:
+            resultados_finales[t_id]['producto'] = row.get('details__serie__inventario__producto__name')
+        
+        mat_sku = row.get('details__serie__inventario__materia_prima__sku')
+        if mat_sku and not resultados_finales[t_id]['producto']:
+            resultados_finales[t_id]['producto'] = row.get('details__serie__inventario__materia_prima__name')
+        
+    return list(resultados_finales.values())
+
+
+def obtener_info_producto_material(t):
+    item = None
+    details = transaction_service.transaction_detail.objects.filter(transaction=t).select_related('batch', 'serie').first()
+    if details:
+        if details.batch:
+            item = details.batch.inventario
+        if details.serie:
+            item = details.serie.inventario
+    else:
+        return None
+    if item:
+        try:
+            return item.producto.sku
+        except:
+            return item.materia_prima.sku
+    return None
+
+def transaction_search(request):
+    q = (request.GET.get("q") or "").strip()
+    qs = transaction_service.model.objects.filter(
+        Q(client__fantasy_name__icontains=q) |
+        Q(client__bussiness_name__icontains=q) |
+        Q(client__rut__icontains=q)|
+        Q(type__icontains=q)|
+        Q(code__icontains=q)|
+        Q(details__batch__inventario__producto__sku__icontains=q)|
+        Q(details__batch__inventario__producto__name__icontains=q)|
+        Q(details__batch__inventario__materia_prima__sku__icontains=q)|
+        Q(details__batch__inventario__materia_prima__name__icontains=q)|
+        Q(details__serie__inventario__producto__sku__icontains=q)|
+        Q(details__serie__inventario__producto__name__icontains=q)|
+        Q(details__serie__inventario__materia_prima__sku__icontains=q)|
+        Q(details__serie__inventario__materia_prima__name__icontains=q)
+    ).order_by('-date').distinct()
+    data = []
+    for t in qs:
+        if t in data:
+            continue
+        try:
+            rut = t.client.rut
+        except:
+            rut = "Lilis"
+        data.append({
+            'id': t.id,
+            'fecha': t.date,
+            'tipo': t.type,
+            'codigo': t.code,
+            'cliente': rut,
+            'sku': obtener_info_producto_material(t),
+            'bodega': t.warehouse.name,
+            'cantidad' : t.quantity,
+            'vencimiento': t.expiration_date
+        })
+    return JsonResponse({'data': data}, safe=False)
+
+def transaction_all(request):
+    data = []
+    transactions = transaction_service.list().order_by('-date')
+    for t in transactions:
+        try:
+            rut = t.client.rut
+        except:
+            rut = "Lilis"
+        data.append({
+            'id': t.id,
+            'fecha': t.date,
+            'tipo': t.type,
+            'codigo': t.code,
+            'cliente': rut,
+            'sku': obtener_info_producto_material(t),
+            'bodega': t.warehouse.name,
+            'cantidad' : t.quantity,
+            'vencimiento': t.expiration_date
+        })
+    return JsonResponse({'data': data}, safe=False)

@@ -23,7 +23,7 @@
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
 
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, username, RUN, rol...">
+                <input type="text" class="form-control" name="q" id="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, username, RUN, rol...">
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
         </form>
@@ -127,7 +127,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="user-table-body">
                     
                     {% for user_obj in page_obj %}
                     <tr>
@@ -251,7 +251,7 @@
         const toggleBtn = document.getElementById('toggle-view-btn');
         const cardsView = document.getElementById('user-cards-view');
         const tableView = document.getElementById('user-table-view');
-        const savedView = localStorage.getItem('userView') || 'cards'; // 'cards' es el default
+        const savedView = localStorage.getItem('userView') || 'cards';
 
         if (savedView === 'table') {
             cardsView.style.display = 'none';
@@ -274,7 +274,137 @@
                 toggleBtn.textContent = 'Ver Tarjetas';
                 localStorage.setItem('userView', 'table');
             }
+            const searchInput = document.getElementById('q');
+            if (searchInput.value.trim().length > 0) {
+                 searchInput.dispatchEvent(new Event('input'));
+            } else {
+                searchInput.dispatchEvent(new Event('input')); 
+            }
         });
     });
-    </script>
+</script>
+<script>
+    const VIEW_URL = "{% url 'user_view' 0 %}".replace('0', '__ID__');
+    const DELETE_URL = "{% url 'user_delete' 0 %}".replace('0', '__ID__');
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        const cardView = document.getElementById('user-cards-view');
+        const tableView = document.getElementById('user-table-body');
+        const searchInput = document.getElementById('q');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        
+        function buildCard(item) {
+            const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || '—';
+            const userRole = item.groups || '—';
+            const userPhone = item.phone || 'No especificado';
+
+            return `
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-7">
+                                <h5 class="card-title">${fullName}</h5>
+                            </div>
+                            <div class="col-5 text-end">
+                                {% if perms.auth.change_user %}
+                                <a href="${VIEW_URL.replace('__ID__', item.id)}" class="mt text-end btn btn-primary">Editar</a>
+                                {% endif %}
+                                {% if perms.auth.delete_user %}
+                                <button type="button" 
+                                        class="mt text-end btn btn-danger btn-delete" 
+                                        data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                                        data-item-name="@${item.username}">
+                                    Eliminar
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h6 class="card-subtitle mb-2 text-muted">@${item.username || '—'}</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><strong>Email:</strong> ${item.email || 'No especificado'}</li>
+                            <li class="list-group-item"><strong>Teléfono:</strong> ${userPhone}</li>
+                            <li class="list-group-item"><strong>Rol:</strong> ${userRole}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+        
+        function buildRow(item) {
+            const fullName = `${item.first_name || ''} ${item.last_name || ''}`.trim() || '—';
+            const userRole = item.groups_name || '—';
+            const userPhone = item.phone || '—';
+
+            return `
+            <tr>
+                <td>${fullName}</td>
+                <td>@${item.username || '—'}</td>
+                <td>${item.email || '—'}</td>
+                <td>${userPhone}</td>
+                <td>${userRole}</td>
+                <td>
+                    {% if perms.auth.change_user %}
+                    <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                    {% endif %}
+                    {% if perms.auth.delete_user %}
+                    <button type="button" 
+                            class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
+                            data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                            data-item-name="@${item.username}">
+                        Eliminar
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            `;
+        }
+
+        function fetchDataAndRender(url, renderFunction, container) {
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = '';
+                    let htmlContent = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            htmlContent += renderFunction(item);
+                        });
+                    } else {
+                        htmlContent = '<p class="col-12 text-center mt-3">No se encontraron resultados para su búsqueda.</p>';
+                    }
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud AJAX:', error);
+                    container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
+                });
+        }
+
+        searchInput.addEventListener('input', function () {
+            const q = searchInput.value.trim();
+
+
+            const url = q.length === 0 
+                ? '/Accounts/all_users/' 
+                : `/Accounts/user_search/?q=${q}`;
+            if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
+                fetchDataAndRender(url, buildRow, tableView);
+            } 
+
+            else if (toggleViewBtn.textContent === 'Ver Tabla') { 
+                fetchDataAndRender(url, buildCard, cardView);
+            }
+        });
+    });
+</script>
 {% endblock %}

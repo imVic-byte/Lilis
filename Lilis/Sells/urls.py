@@ -42,4 +42,6 @@ urlpatterns = [
     path('warehouses_by_client/', views.warehouses_by_client, name='warehouses_by_client'),
     path('warehouses_by_inventory/', views.warehouses_by_inventory, name='warehouses_by_inventory'),
     path('get_stock_by_inventory/', views.get_stock_by_inventory, name='get_stock_by_inventory'),
+    path('transaction_search/', views.transaction_search, name='transaction_search'),
+    path('transaction_all/', views.transaction_all, name='transaction_all'),
 ]

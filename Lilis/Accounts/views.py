@@ -10,6 +10,7 @@ from Main.mixins import GroupRequiredMixin
 from django.views.generic import View, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from .forms import RegistrarUsuarioForm
+from django.http import JsonResponse
 
 user_service = UserService()
 
@@ -293,3 +294,30 @@ def user_picture(request, id):
     else:
         photo = user_service.obtain_user_picture(id)
     return render(request, "user_picture.html", {"photo": photo, "id": id})
+
+def user_search(request):
+    q = request.GET.get("q")
+    users = user_service.model.objects.filter(
+        Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+    ).values(
+        "id",
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "groups__name",
+        "profile__run",
+    )
+    return JsonResponse({'data': list(users)}, safe=False)
+    
+def all_users(request):
+    users = user_service.model.objects.all().values(
+        "id",
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "groups__name",
+        "profile__run",
+    )
+    return JsonResponse({'data': list(users)}, safe=False)
