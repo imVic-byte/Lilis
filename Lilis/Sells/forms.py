@@ -167,6 +167,12 @@ class TransactionForm(forms.ModelForm):
             for field in self.fields:
                 self.fields[field].initial = getattr(base_transaction, field)
 
+    def clean_quantity(self):
+        quantity = self.cleaned_data.get('quantity')
+        if quantity and quantity <= 0:
+            raise forms.ValidationError('La cantidad debe ser mayor a 0')
+        return quantity
+
     def save(self, commit=True):
         transaction = Transaction()
         transaction.type = 'A'

@@ -194,8 +194,8 @@
     {% if page_obj.has_previous %}
       <li class="page-item">
         <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Previous">
-          &laquo; Anterior
-        </a>
+            &laquo; Anterior
+        </a>    
       </li>
     {% else %}
       <li class="page-item disabled">
@@ -294,8 +294,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const stockInput = document.getElementById('stock');
         const stock = stockInput ? Number(stockInput.value) : 0;
         const cantidadNum = Number(cantidad);
+        const fechaHoyISO = new Date().toISOString().split('T')[0];
+        console.log(fechaHoyISO);
         let errores = [];
-        if (!fecha) errores.push("Debe seleccionar una fecha.");
+
+        if (!fecha) {
+            errores.push("Debe seleccionar una fecha.");
+        }
+        if (vencimientoInput && vencimientoInput.value < fechaHoyISO) {
+            errores.push("La fecha de vencimiento no puede ser una fecha pasada.");
+        }
         if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
         if (!cantidad || cantidadNum === 0) errores.push("La cantidad no debe ser 0");
         if (!producto) errores.push("Debe seleccionar un producto.");
@@ -307,6 +315,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (tipo === "ingreso" && cantidadNum < 0) {
             errores.push("La cantidad de entrada no puede ser menor que 0");
+        }
+        if (tipo == 'produccion' && cantidadNum <= 0) {
+            errores.push("La cantidad de producción no puede ser menor que 0");
         }
         if (!codigo) errores.push("Debe ingresar un código.");
         if (errores.length > 0) {
