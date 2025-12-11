@@ -9,7 +9,7 @@
 </div>
 
 <div class="row mb-3 justify-content-center">
-    <div class="col-md-10">
+    <div class="col-md-10 position-relative"> 
         <form method="GET" action="{% url 'products_list' %}" class="form">
             <div class="input-group">
                 <label class="input-group-text" for="per_page_select">Mostrar:</label>
@@ -17,21 +17,26 @@
                     <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
                     <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option> 
                     <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
                 </select>
-
+                
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
+                <input type="hidden" name="page" value="1"> 
                 
-                <div class="position-relative flex-grow-1">
-                    <input type="text" class="form-control" id="search-input" name="q" value="{{ q|default:'' }}"
-                        placeholder="Buscar por nombre, descripción, categoría..." autocomplete="off">
-                    <div id="search-results" class="position-absolute w-100 bg-white shadow-sm rounded mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
-                </div>
+                <input type="text" class="form-control" id="q" name="q" value="{{ q|default:'' }}"
+                    placeholder="Buscar por nombre, descripción, categoría..." autocomplete="off">
                 
                 <button class="btn btn-primary" type="submit">Buscar</button>
+            </div> 
+            
+            <div id="search-results" class="position-absolute w-100 bg-white shadow-sm rounded top-100" 
+                 style="z-index: 1000; display: none; max-height: 300px; max-width: 90%; overflow-y: auto;">
+                 
+                 <p class="p-2 text-muted">Aquí irán los resultados de tu búsqueda...</p>
             </div>
+            
         </form>
     </div>
 </div>
@@ -41,9 +46,10 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'export_product_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+        <a href="{% url 'export_product_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}"
+            class="btn btn-success mt-2">
             Exportar Todo
-        </a>   
+        </a>
         <a href="{% url 'export_product_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
             class="btn btn-info mt-2">
             Exportar Vista
@@ -60,59 +66,64 @@
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <div class='row'>
-                        <div class="col-7">
-                            <h5 class="card-title">{{ p.name }}</h5>
-                        </div>
-                        <div class="col-5 text-end">
-                            <td>
-                                <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                    data-url="{% url 'product_delete' p.id %}" data-item-name="{{ p.name }}">
-                                    Eliminar
-                                </button>
-                            </td>
-                        </div>
+    <div class="row">
+        <div class="col-6">
+            <h5 class="card-title">{{ p.name|default:"—" }}</h5>
+            <h6 class="card-subtitle text-muted">SKU: {{ p.sku|default:"—" }}</h6>
+        </div>
+        <div class="col-6 text-end">
+            <a href="{% url 'product_view' p.id %}" class="btn btn-warning btn-sm">Ver</a>
+            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <button type="button" class="btn btn-sm btn-delete"
+                style = "background-color: #D30A11; color: white;"
+                data-url="{% url 'product_delete' p.id %}"
+                data-item-name="{{ p.name }}">
+                Eliminar
+            </button>
+        </div>
+    </div>
 
-                    </div>
-                    <p class="card-text">{{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <strong>Categoría:</strong> {{ p.category.name }}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Stock Actual:</strong> {{ p.quantity }}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Perecible:</strong>
-                            {% if p.is_perishable %}
-                            Sí
-                            {% else %}
-                            No
-                            {% endif %}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Creado el:</strong>
-                            {% if p.created_at %}
-                            {{ p.created_at|date:"d-m-Y" }}
-                            {% else %}
-                            No aplica
-                            {% endif %}
-                        </li>
-                        <li class="list-group-item">
-                            <strong>Vence el:</strong>
-                            {% if p.expiration_date %}
-                            {{ p.expiration_date|date:"d-m-Y" }}
-                            {% else %}
-                            No aplica
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
+    {% if p.url_image %}
+        <div class="text-center mt-2">
+            <img src="{{ p.url_image }}" alt="Imagen" class="img-fluid rounded"
+                 style="max-height:120px; object-fit:contain;">
+        </div>
+    {% endif %}
+
+    <ul class="list-group list-group-flush mt-2">
+        <li class="list-group-item"><strong>EAN/UPC:</strong> {{ p.ean_upc|default:"—" }}</li>
+        <li class="list-group-item"><strong>Modelo:</strong> {{ p.model|default:"—" }}</li>
+        <li class="list-group-item"><strong>Marca:</strong> {{ p.brand|default:"—" }}</li>
+        <li class="list-group-item"><strong>Categoría:</strong> {{ p.category.name }}</li>
+        <li class="list-group-item">
+            <strong>U. Compra:</strong> {{ p.get_uom_purchase_display }} |
+            <strong>U. Venta:</strong> {{ p.get_uom_sale_display }}
+        </li>
+        <li class="list-group-item">
+            <strong>Precio:</strong> ${{ p.price }} |
+            <strong>IVA:</strong> {{ p.iva }}%
+        </li>
+        <li class="list-group-item">
+            <strong>Stock Min:</strong> {{ p.min_stock }} |
+            <strong>Stock Max:</strong> {{ p.max_stock }}
+        </li>
+        <li class="list-group-item">
+            <strong>Activo:</strong>
+            {% if p.is_active %}Sí{% else %}No{% endif %}
+        </li>
+        <li class="list-group-item">
+            <strong>Controles:</strong>
+            {% if p.serie_control %}Serie {% endif %}
+            {% if p.batch_control %}Lote{% endif %}
+            {% if not p.serie_control and not p.batch_control %}—{% endif %}
+        </li>
+    </ul>
+</div>
+
             </div>
         </div>
         {% empty %}
-        <p class="text-center">No se encontraron productos que coincidan con los filtros.</p>
+        <p class="text-center">No se encontraron productos.</p>
         {% endfor %}
     </div>
 </div>
@@ -122,84 +133,51 @@
         <div class="card-body">
             <table class="table table-hover align-middle">
                 <thead>
-                    <tr>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=name&order={% if current_sort_by == 'name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Nombre</strong>
-                                {% if current_sort_by == 'name' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=category__name&order={% if current_sort_by == 'category__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Categoría</strong>
-                                {% if current_sort_by == 'category__name' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=quantity&order={% if current_sort_by == 'quantity' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Stock</strong>
-                                {% if current_sort_by == 'quantity' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>Perecible</th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=created_at&order={% if current_sort_by == 'created_at' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Creación</strong>
-                                {% if current_sort_by == 'created_at' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=expiration_date&order={% if current_sort_by == 'expiration_date' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
-                                <strong>Vencimiento</strong>
-                                {% if current_sort_by == 'expiration_date' %}
-                                    {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
-                                {% endif %}
-                            </a>
-                        </th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in page_obj %}
-                    <tr>
-                        <td>{{ p.name }}</td>
-                        <td>{{ p.category.name }}</td>
-                        <td>{{ p.quantity }}</td>
-                        <td>
-                            {% if p.is_perishable %}
-                            <span class="badge bg-warning text-dark">Sí</span>
-                            {% else %}
-                            <span class="badge bg-secondary">No</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ p.created_at|date:"d-m-Y"|default:"N/A" }}</td>
-                        <td>{{ p.expiration_date|date:"d-m-Y"|default:"N/A" }}</td>
-                        <td>
-                            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                            <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'product_delete' p.id %}"
-                                    data-item-name="{{ p.name }}">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center">No se encontraron productos que coincidan con los filtros.
-                        </td>
-                    </tr>
-                    {% endfor %}
+    <tr>
+        <th>Nombre</th>
+        <th>SKU</th>
+        <th>Marca</th>
+        <th>Categoría</th>
+        <th>Precio</th>
+        <th>IVA</th>
+        <th>Activo</th>
+        <th>Acciones</th>
+    </tr>
+</thead>
 
-                </tbody>
+<tbody id="product-table-body">
+    {% for p in page_obj %}
+    <tr>
+        <td>{{ p.name|default:"—" }}</td>
+        <td>{{ p.sku|default:"—" }}</td>
+        <td>{{ p.brand|default:"—" }}</td>
+        <td>{{ p.category.name|default:"—" }}</td>
+        <td>${{ p.price|default:"0" }}</td>
+        <td>{{ p.iva|default:"0" }}%</td>
+        <td>
+            {% if p.is_active %}
+                <span class="badge bg-success">Sí</span>
+            {% else %}
+                <span class="badge bg-danger">No</span>
+            {% endif %}
+        </td>
+        <td>    
+            <a href="{% url 'product_view' p.id %}" class="btn btn-warning btn-sm">Ver</a>
+            <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+            <button type="button"
+                class="btn btn-sm btn-delete"
+                style = "background-color: #D30A11; color: white;"
+                data-url="{% url 'product_delete' p.id %}"
+                data-item-name="{{ p.name }}">
+                Eliminar
+            </button>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="text-center">No se encontraron productos.</td></tr>
+    {% endfor %}
+</tbody>
+
             </table>
         </div>
     </div>
@@ -221,32 +199,57 @@
             <span class="page-link">&laquo; Anterior</span>
         </li>
         {% endif %}
-
         {% for i in page_obj.paginator.page_range %}
-        {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-            <span class="page-link">{{ i }}</span>
-        </li>
-        {% else %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-        {% endif %}
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-        <li class="page-item">
-            <a class="page-link"
-                href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
-                aria-label="Next">
-                Siguiente &raquo;
+        {% if page_obj.paginator.num_pages <= 10 %} <li
+            class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
             </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <span class="page-link">Siguiente &raquo;</span>
-        </li>
-        {% endif %}
+            </li>
+            {% else %}
+            {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endif %}
+            {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %} {% if i !=1 and i
+                !=page_obj.paginator.num_pages %} <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i
+                    }}</a>
+                </li>
+                {% endif %}
+                {% endif %}
+                {% if i == page_obj.paginator.num_pages %}
+                {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %} <li class="page-item disabled"><span
+                        class="page-link">...</span></li>
+                    {% endif %}
+
+                    <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                        <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                            {{ i }}
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}"
+                            aria-label="Next">
+                            Siguiente &raquo;
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente &raquo;</span>
+                    </li>
+                    {% endif %}
 
     </ul>
 </nav>
@@ -260,23 +263,25 @@
 
 {% block scripts %}
 {{ block.super }}
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
         const cardsView = document.getElementById('product-cards-view');
         const tableView = document.getElementById('product-table-view');
-        const searchInput = document.getElementById('search-input');
+        const searchInput = document.getElementById('q');
         const searchResults = document.getElementById('search-results');
 
         const savedView = localStorage.getItem('productView') || 'cards';
         updateView(savedView);
 
-        toggleBtn.addEventListener('click', function() {
+        toggleBtn.addEventListener('click', function () {
             const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
             const newView = currentView === 'cards' ? 'table' : 'cards';
             localStorage.setItem('productView', newView);
             updateView(newView);
+            if (searchInput.value.length > 0) {
+                 searchInput.dispatchEvent(new Event('input'));
+            }
         });
 
         function updateView(view) {
@@ -290,75 +295,156 @@
                 toggleBtn.textContent = 'Ver Tabla';
             }
         }
+    });
+</script>
 
-        let timeout = null;
+<script>
+    const VIEW_URL = "{% url 'product_view' 0 %}".replace('0', '__ID__');
+    const UPDATE_URL = "{% url 'product_update' 0 %}".replace('0', '__ID__');
+    const DELETE_URL = "{% url 'product_delete' 0 %}".replace('0', '__ID__');
 
-        searchInput.addEventListener('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                const query = this.value.trim();
-                
-                if (query.length < 2) {
-                    hideResults();
-                    return;
-                }
-                
-                fetch(`/products/product_search/?q=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        displayResults(data);
-                    })
-                    .catch(err => {
-                        hideResults();
-                    });
-            }, 300);
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        const cardView = document.getElementById('product-cards-view');
+        const tableView = document.getElementById('product-table-body');
+        const searchInput = document.getElementById('q');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        function buildCard(item) {
+            const isActiveBadge = item.is_active ? 'Sí' : 'No';
+            const controls = `${item.serie_control ? 'Serie ' : ''}${item.batch_control ? 'Lote' : ''}` || '—';
+            const imageUrl = item.url_image || '';
 
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                hideResults();
-            }
-        });
-
-        function displayResults(products) {
-            if (!products || products.length === 0) {
-                searchResults.innerHTML = '<div class="p-3 text-muted text-center">No se encontraron productos</div>';
-                searchResults.style.display = 'block';
-                return;
-            }
-            
-            const resultsHTML = products.map(product => {
-                if (!product.id) {
-                    console.warn('Producto sin ID:', product);
-                    return '';
-                }
-                
-                return `
-                    <a href="/products/product_view/${product.id}/" class="dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <div>
-                            <div class="fw-bold">${product.name || 'Sin nombre'}</div>
-                            <small class="text-muted">${product.category__name || 'Sin categoría'} • Stock: ${product.quantity || 0}</small>
+            return `
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="card-title">${item.name || '—'}</h5>
+                                <h6 class="card-subtitle text-muted">SKU: ${item.sku || '—'}</h6>
+                            </div>
+                            <div class="col-6 text-end">
+                                <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-warning btn-sm">Ver</a>
+                                <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-sm btn-delete"
+                                    style="background-color: #D30A11; color: white;"
+                                    data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                                    data-item-name="${item.name}">
+                                    Eliminar
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            ${product.is_perishable ? 
-                                '<span class="badge bg-warning text-dark">Perecible</span>' : 
-                                '<span class="badge bg-secondary">No perecible</span>'}
-                        </div>
-                    </a>
-                `;
-            }).join('');
-            
-            searchResults.innerHTML = resultsHTML;
-            searchResults.style.display = 'block';
+        
+                        ${imageUrl ? 
+                            `<div class="text-center mt-2">
+                                <img src="${imageUrl}" alt="Imagen" class="img-fluid rounded"
+                                    style="max-height:120px; object-fit:contain;">
+                            </div>` : ''}
+        
+                        <ul class="list-group list-group-flush mt-2">
+                            <li class="list-group-item"><strong>EAN/UPC:</strong> ${item.ean_upc || '—'}</li>
+                            <li class="list-group-item"><strong>Modelo:</strong> ${item.model || '—'}</li>
+                            <li class="list-group-item"><strong>Marca:</strong> ${item.brand || '—'}</li>
+                            <li class="list-group-item"><strong>Categoría:</strong> ${item.category__name || item.category || '—'}</li>
+                            <li class="list-group-item">
+                                <strong>U. Compra:</strong> ${item.get_uom_purchase_display || '—'} |
+                                <strong>U. Venta:</strong> ${item.get_uom_sale_display || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Precio:</strong> $${item.price || '0'} |
+                                <strong>IVA:</strong> ${item.iva || '0'}%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Stock Min:</strong> ${item.min_stock || '—'} |
+                                <strong>Stock Max:</strong> ${item.max_stock || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Activo:</strong> ${isActiveBadge}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Controles:</strong> ${controls}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            `;
         }
 
-        function hideResults() {
-            searchResults.style.display = 'none';
+        function buildRow(item) {
+
+            const isActiveBadge = item.is_active 
+                ? '<span class="badge bg-success">Sí</span>' 
+                : '<span class="badge bg-danger">No</span>';
+
+            return `
+            <tr>
+                <td>${item.name || '—'}</td>
+                <td>${item.sku || '—'}</td>
+                <td>${item.brand || '—'}</td>
+                <td>${item.category__name || item.category || '—'}</td>
+                <td>$${item.price || '0'}</td>
+                <td>${item.iva || '0'}%</td>
+                <td>${isActiveBadge}</td>
+                <td>
+                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                    <button type="button"
+                        class="btn btn-sm btn-delete"
+                        style="background-color: #D30A11; color: white;"
+                        data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                        data-item-name="${item.name}">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+            `;
         }
 
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
-                e.preventDefault();
+        function fetchDataAndRender(url, renderFunction, container) {
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = '';
+                    let htmlContent = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            htmlContent += renderFunction(item);
+                        });
+                    } else {
+                        htmlContent = '<p class="col-12 text-center mt-3">No se encontraron resultados para su búsqueda.</p>';
+                    }
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud AJAX:', error);
+                    container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
+                });
+        }
+
+        searchInput.addEventListener('input', function () {
+            const q = searchInput.value.trim();
+
+
+            const url = q.length === 0 
+                ? '/products/product_all/' 
+                : `/products/product_search/?q=${q}`;
+
+
+            
+
+            if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
+                fetchDataAndRender(url, buildRow, tableView);
+            } 
+
+            else if (toggleViewBtn.textContent === 'Ver Tabla') { 
+                fetchDataAndRender(url, buildCard, cardView);
             }
         });
     });
@@ -368,11 +454,11 @@
         border: 1px solid #dee2e6;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     }
-    
+
     #search-results .dropdown-item {
         transition: background-color 0.15s ease-in-out;
     }
-    
+
     #search-results .dropdown-item:hover {
         background-color: #f8f9fa;
         text-decoration: none;

@@ -36,10 +36,10 @@
         <button id="toggle-view-btn" class="btn btn-outline-primary mt-2">
             Ver Tabla
         </button>
-        <a href="{% url 'export_product_batches_excel' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="btn btn-success mt-2">
+        <a href="#" class="btn btn-success mt-2">
             Exportar Todo
         </a>
-        <a href="{% url 'export_product_batches_excel' %}?limit={{ per_page }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}"
+        <a href="#"
             class="btn btn-info mt-2">
             Exportar Vista
         </a>
@@ -57,27 +57,26 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-6">
-                    <h5 class="card-title">Lote de: {{ p.product.name }}</h5>
+                    <h5 class="card-title">Lote de: {{ p.inventario.producto.name }}</h5>
                         </div>
                         <div class="col-6 text-end">
-                            <a href="{% url 'product_batch_update' p.id %}" class="mt-2 text-end btn btn-primary">
+                            <a href="#" class="mt-2 text-end btn btn-primary">
                             Editar
                         </a>
-                        <a href="{% url 'product_batch_view' p.id %}" class="mt-2 text-end btn btn-weno">
+                        <a href="#" class="mt-2 text-end btn btn-weno">
                             Ver
                         </a>
                         <button type="button" 
                                     class="mt-2 btn-danger btn btn-delete" 
-                                    data-url="{% url 'raw_batch_delete' p.id %}"
+                                    data-url="#"
                                     data-item-name="{{ p.name }}">
                             Eliminar
                             </button>
                         </div>
                     </div>
-                    <h6 class="card-text text-muted">Código: {{ p.batch_code }}</h6>
+                    <h6 class="card-text text-muted">Código: {{ p.codigo }}</h6>
                     <ul class="list-group list-group-flush mt-3">
-                        <li class="list-group-item"><strong>Cant. Actual:</strong> {{ p.current_quantity }} / {{ p.max_quantity }}</li>
-                        <li class="list-group-item"><strong>Cant. Mínima:</strong> {{ p.min_quantity }}</li>
+                        <li class="list-group-item"><strong>Cantidad:</strong> {{ p.cantidad_actual }}</li>
                     </ul>
                     
                 </div>
@@ -111,9 +110,7 @@
                                 {% endif %}
                             </a>
                         </th>
-                        <th>Cant. Actual</th>
-                        <th>Cant. Máxima</th>
-                        <th>Cant. Mínima</th>
+                        <th>Cantidad Actual</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -123,14 +120,12 @@
                         <td><strong>{{ p.batch_code }}</strong></td>
                         <td>{{ p.product.name }}</td>
                         <td>{{ p.current_quantity }}</td>
-                        <td>{{ p.max_quantity }}</td>
-                        <td>{{ p.min_quantity }}</td>
                         <td>
-                            <a href="{% url 'product_batch_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
-                            <a href="{% url 'product_batch_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            <a href="#" class="btn btn-weno btn-sm">Ver</a>
+                            <a href="#" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
-                                    data-url="{% url 'product_batch_delete' p.id %}"
+                                    class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
+                                    data-url="#"
                                     data-item-name="{{ p.batch_code }}">
                                 Eliminar
                             </button>
@@ -163,16 +158,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">

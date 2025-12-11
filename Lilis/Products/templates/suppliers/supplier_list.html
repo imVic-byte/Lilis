@@ -59,32 +59,52 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class='row'>
-                        <div class="col-7">
-                            <h5 class="card-title">{{ p.fantasy_name }}</h5>
+                        <div class="col">
+                            <h5 class="card-title">{{ p.fantasy_name|default:"-" }}</h5>
                         </div>
-                        <div class="col-5 text-end">
+                        <div class="col text-end">
                             <td>
+                                <a class="btn btn-warning btn-sm" href="{% url 'supplier_view' p.id %}">Ver</a>
                                 <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                <button type="button" class="btn btn-sm btn-delete"
+                                style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'supplier_delete' p.id %}" data-item-name="{{ p.name }}">
                                     Eliminar
                                 </button>
                             </td>
                         </div>
                     </div>
-                    <h6 class="card-text">Razon social: {{ p.bussiness_name }}</h6>
+                    <h6 class="card-text">Razon social: {{ p.bussiness_name|default:"-" }}</h6>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <strong>RUT: </strong> {{ p.rut }}
+                            <strong>RUT: </strong> {{ p.rut|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Email: </strong> {{ p.email }}
+                            <strong>Email: </strong> {{ p.email|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Telefono: </strong> {{ p.phone }}
+                            <strong>Telefono: </strong> {{ p.phone|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40 }}
+                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Lead Time: </strong>{{ p.lead_time_days|default:"-" }} días
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Pago: </strong>{{ p.payment_terms_days|default:"-" }} días ({{ p.currency|default:"-" }})
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Descuento: </strong>{{ p.discount_percentage|default:"-" }}%
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Dirección: </strong>{{ p.address|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Ciudad: </strong>{{ p.city|default:"-" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>País: </strong>{{ p.country|default:"-" }}
                         </li>
                     </ul>
                 </div>
@@ -153,19 +173,21 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="supplier-table-body">
                     {% for p in page_obj %}
                     <tr>
-                        <td>{{ p.fantasy_name }}</td>
-                        <td>{{ p.bussiness_name }}</td>
-                        <td>{{ p.rut }}</td>
+                        <td>{{ p.fantasy_name|default:"-" }}</td>
+                        <td>{{ p.bussiness_name|default:"-" }}</td>
+                        <td>{{ p.rut|default:"-" }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
                         <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
                         <td>
+                            <a class="btn btn-warning btn-sm" href="{% url 'supplier_view' p.id %}">Ver</a>
                             <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-sm btn-delete" 
+                                    style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'supplier_delete' p.id %}"
                                     data-item-name="{{ p.fantasy_name }}"> Eliminar
                             </button>
@@ -198,17 +220,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
-        </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
 
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
+        </li>
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
     {% if page_obj.has_next %}
       <li class="page-item">
         <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}" aria-label="Next">
@@ -262,73 +318,161 @@
                 toggleBtn.textContent = 'Ver Tabla';
             }
         }
+    });
+</script>
+
+<script>
+    const VIEW_URL = "{% url 'supplier_view' 0 %}".replace('0', '__ID__');
+    const UPDATE_URL = "{% url 'supplier_update' 0 %}".replace('0', '__ID__');
+    const DELETE_URL = "{% url 'supplier_delete' 0 %}".replace('0', '__ID__');
+    const ALL_URL = "/products/supplier_all/";
+    const SEARCH_URL = "/products/supplier_search/";
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        const cardsView = document.getElementById('supplier-cards-view');
+        const tableViewBody = document.getElementById('supplier-table-body');
+        const searchInput = document.getElementById('search-input'); 
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        
+        function buildCard(item) {
+            const truncatedTerms = item.trade_terms ? item.trade_terms.substring(0, 40) + (item.trade_terms.length > 40 ? '...' : '') : '-';
+
+            return `
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class='row'>
+                            <div class="col">
+                                <h5 class="card-title">${item.fantasy_name || '—'}</h5>
+                            </div>
+                            <div class="col text-end">
+                                <td>
+                                    <a class="btn btn-warning btn-sm" href="${VIEW_URL.replace('__ID__', item.id)}">Ver</a>
+                                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                                    <button type="button" class="btn btn-sm btn-delete"
+                                    style = "background-color: #D30A11; color: white;"
+                                        data-url="${DELETE_URL.replace('__ID__', item.id)}" data-item-name="${item.fantasy_name}">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </div>
+                        </div>
+                        <h6 class="card-text">Razon social: ${item.bussiness_name || '—'}</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>RUT: </strong> ${item.rut || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Email: </strong> ${item.email || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Telefono: </strong> ${item.phone || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Terminos: </strong>${truncatedTerms}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Lead Time: </strong>${item.lead_time_days || '—'} días
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Pago: </strong>${item.payment_terms_days || '—'} días (${item.currency || '—'})
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Descuento: </strong>${item.discount_percentage || '—'}%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Dirección: </strong>${item.address || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Ciudad: </strong>${item.city || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>País: </strong>${item.country || '—'}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function buildRow(item) {
+            const truncatedTerms = item.trade_terms ? item.trade_terms.substring(0, 40) + (item.trade_terms.length > 40 ? '...' : '') : '-';
+
+            return `
+            <tr>
+                <td>${item.fantasy_name || '—'}</td>
+                <td>${item.bussiness_name || '—'}</td>
+                <td>${item.rut || '—'}</td>
+                <td>${item.email || '—'}</td>
+                <td>${item.phone || '—'}</td>
+                <td>${truncatedTerms}</td>
+                <td>
+                    <a class="btn btn-warning btn-sm" href="${VIEW_URL.replace('__ID__', item.id)}">Ver</a>
+                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                    <button type="button" 
+                            class="btn btn-sm btn-delete" 
+                            style="background-color: #D30A11; color: white;"
+                            data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                            data-item-name="${item.fantasy_name}"> Eliminar
+                    </button>
+                </td>
+            </tr>
+            `;
+        }
+
+        function fetchDataAndRender(url, renderFunction, container) {
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = '';
+                    let htmlContent = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            htmlContent += renderFunction(item);
+                        });
+                        
+                        if (container.id === 'supplier-cards-view') {
+                             container.innerHTML = `<div class="row">${htmlContent}</div>`;
+                        } else {
+                            container.innerHTML = htmlContent;
+                        }
+
+                    } else {
+                        container.innerHTML = `<p class="col-12 text-center mt-3">No se encontraron proveedores que coincidan con los filtros.</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud AJAX:', error);
+                    container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
+                });
+        }
 
         let timeout = null;
-
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(timeout);
+            const q = this.value.trim();
+
             timeout = setTimeout(() => {
-                const query = this.value.trim();
-                
-                if (query.length < 2) {
-                    hideResults();
-                    return;
+                const url = q.length === 0 
+                    ? ALL_URL 
+                    : `${SEARCH_URL}?q=${encodeURIComponent(q)}`;
+
+                if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
+                    fetchDataAndRender(url, buildRow, tableViewBody); 
+                } 
+                else if (toggleViewBtn.textContent === 'Ver Tabla') { 
+                    fetchDataAndRender(url, buildCard, cardsView); 
                 }
-                
-                fetch(`/products/supplier_search/?q=${encodeURIComponent(query)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        displayResults(data);
-                        console.log('Datos recibidos:', data);
-                    })
-                    .catch(err => {
-                        hideResults();
-                        console.error('Error:', err);
-                    });
-            }, 300);
-        });
-
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                hideResults();
-            }
-        });
-
-        function displayResults(suppliers) {
-            if (!suppliers || suppliers.length === 0) {
-                searchResults.innerHTML = '<div class="p-3 text-muted text-center">No se encontraron proveedores</div>';
-                searchResults.style.display = 'block';
-                return;
-            }
-            
-            const resultsHTML = suppliers.map(supplier => {
-                if (!supplier.id) {
-                    console.warn('Producto sin ID:', supplier);
-                    return '';
-                }
-                
-                return `
-                    <a href="/products/supplier_view/${supplier.id}/" class="dropdown-item d-flex justify-content-between align-items-center py-2 border-bottom p-3">
-                        <div class="pl-5">
-                            <div class="fw-bold">${supplier.bussiness_name || 'Sin nombre'}</div>
-                            <small class="text-muted">${supplier.fantasy_name || 'Sin categoría'} • RUT: ${supplier.rut || 0}</small>
-                        </div>
-                    </a>
-                `;
-            }).join('');
-            
-            searchResults.innerHTML = resultsHTML;
-            searchResults.style.display = 'block';
-        }
-
-        function hideResults() {
-            searchResults.style.display = 'none';
-        }
-
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
-                e.preventDefault();
-            }
+            }, 300);    
         });
     });
 </script>

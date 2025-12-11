@@ -1,7 +1,107 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .models import Profile, Role
 from Main.validators import *
+import random
+
+class RegistrarUsuarioForm(forms.Form):
+    username = forms.CharField(
+        label="Nombre de usuario",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: juanperez'
+        })
+    )
+    first_name = forms.CharField(
+        label="Nombre",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Juan'
+        })
+    )
+    last_name = forms.CharField(
+        label="Apellido",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Pérez'
+        })
+    )
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'ejemplo@correo.cl'
+        })
+    )
+    run = forms.CharField(
+        label="RUT",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: 12345678-9'
+        })
+    )
+    phone = forms.CharField(
+        label="Teléfono",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: 987654321'
+        })
+    )
+    role = forms.ModelChoiceField(
+        label="Rol",
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Vendedor'
+        }),
+        queryset=Group.objects.all()
+    )
+
+    def clean_run(self):
+        run = self.cleaned_data.get("run")
+        if Profile.objects.filter(run=run).exists():
+            raise forms.ValidationError("El RUT ya está en uso.")
+        if validate_rut_format(run):
+            return run
+        raise forms.ValidationError("El RUT no es válido.")
+
+    def clean_phone(self):
+        return validate_phone_format(self.cleaned_data.get("phone"))
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        validate_email(email)
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("El correo electrónico ya está en uso.")
+        return email
+    
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("El nombre de usuario ya está en uso.")
+        return username
+    
+    def save(self):
+        contraseña = str(random.randint(100000, 999999))
+        user_data = {
+            "username": self.cleaned_data.get("username"),
+            "first_name": self.cleaned_data.get("first_name"),
+            "last_name": self.cleaned_data.get("last_name"),
+            "email": self.cleaned_data.get("email"),
+            "password": contraseña
+        }
+        user = User.objects.create_user(**user_data)
+        user.groups.add(self.cleaned_data.get("role"))
+        user.save()
+        profile_data = {
+            "user": user,
+            "run": self.cleaned_data.get("run"),
+            "phone": self.cleaned_data.get("phone"),
+            "role": None,
+            "is_new": True,
+        }
+        profile = Profile.objects.create(**profile_data)
+        profile.save()
+        return user, contraseña
 
 class RegistroForm(forms.ModelForm):
 

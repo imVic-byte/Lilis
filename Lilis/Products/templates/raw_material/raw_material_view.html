@@ -1,53 +1,145 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Materia prima{% endblock title %}
+{% block title %} Detalle Materia Prima: {{ p.name }} {% endblock title %}
 {% block content %}
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">Detalle de la materia prima</h4>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title text-center mb-3">
-                            {{ p.name }}
-                        </h5>
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Ficha Técnica de la Materia Prima</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <h3 class="card-title text-center mb-4 text-dark">{{ p.name }}</h3>
 
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <strong>Descripción:</strong> {{ p.description|default:"Sin descripción" }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Categoría:</strong> {{ p.category.name }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Stock Actual:</strong> {{ p.quantity }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Es perecible:</strong> {{ p.is_perishable|yesno:"Sí,No" }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Fecha de creación:</strong> {{ p.created_at|date:"d/m/Y"|default:"No aplica" }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Fecha de vencimiento:</strong> {{ p.expiration_date|date:"d/m/Y"|default:"No aplica" }}
-                            </li>
-                        </ul>
+                    {% if p %}
+                        
+                        {% if p.url_image %}
+                            <div class="text-center mb-4">
+                                <img src="{{ p.url_image }}" alt="Imagen de {{ p.name }}" class="img-fluid rounded border p-1" style="max-height: 250px; object-fit: cover;">
+                            </div>
+                        {% endif %}
 
-                        <div class="mt-4 text-center">
-                            <a href="{% url 'raw_material_update' p.id %}" class="btn btn-primary me-2">
-                                Editar
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-danger border-bottom pb-1">Identificación y Logística</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>SKU:</strong> <span class="badge bg-secondary">{{ p.sku }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>EAN/UPC:</strong> {{ p.ean_upc|default:"N/A" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Marca:</strong> {{ p.brand|default:"N/A" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Modelo / Código:</strong> {{ p.model|default:"N/A" }} / {{ p.model_code|default:"N/A" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Categoría:</strong> <span class="fw-bold">{{ p.category.name }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>U.M. (Venta):</strong> {{ p.get_uom_sale_display }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Factor de Conversión:</strong> {{ p.conversion_factor }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Ficha técnica:</strong> 
+                                        {% if p.technical_sheet %}
+                                            <a href="{{ p.technical_sheet.url }}" target="_blank" class="text-success fw-bold">Descargar</a>
+                                        {% else %}
+                                            <span class="text-muted">No adjunta</span>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+
+                                <h5 class="text-danger border-bottom pb-1 mt-4">Control y Tiempos</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item">
+                                        <strong>Control de Serie:</strong> {{ p.serie_control|yesno:"Sí,No" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Control de Lote:</strong> {{ p.batch_control|yesno:"Sí,No" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Fecha de Creación:</strong> {{ p.created_at|date:"d/m/Y H:i"|default:"N/A" }}
+                                    </li>
+                                    <li class="list-group-item {% if p.is_perishable %}list-group-item-warning{% endif %}">
+                                        <strong>Perecible:</strong> {{ p.is_perishable|yesno:"Sí,No" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Fecha de Vencimiento:</strong> {{ p.expiration_date|date:"d/m/Y"|default:"N/A" }}
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="text-danger border-bottom pb-1">Valores y Costos</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>Precio de Venta:</strong> <span class="text-success fw-bold">${{ p.price|default:"0.00" }}</span>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>IVA Aplicado:</strong> {{ p.iva }}%
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>Costo Estándar:</strong> <span class="text-info">${{ p.standard_cost|default:"0.00" }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <strong>Último Costo:</strong> <span class="text-info">${{ p.cost|default:"0.00" }}</span>
+                                    </li>
+                                </ul>
+
+                                <h5 class="text-danger border-bottom pb-1 mt-4">Stock y Alertas</h5>
+                                <ul class="list-group list-group-flush mb-4">
+                                    <li class="list-group-item">
+                                        <strong>Activo:</strong> {{ p.is_active|yesno:"Sí,Inactivo" }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Stock Mínimo:</strong> {{ p.min_stock }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Stock Máximo:</strong> {{ p.max_stock }}
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Nivel de Reorden:</strong> {{ p.reordering_level }}
+                                    </li>
+                                    <li class="list-group-item {% if p.alerta_bajo_stock %}list-group-item-danger{% else %}list-group-item-success{% endif %}">
+                                        <strong>Alerta Bajo Stock:</strong> {{ p.alerta_bajo_stock|yesno:"Activada,Desactivada" }}
+                                    </li>
+                                    <li class="list-group-item {% if p.alerta_por_vencer %}list-group-item-danger{% else %}list-group-item-success{% endif %}">
+                                        <strong>Alerta por Vencer:</strong> {{ p.alerta_por_vencer|yesno:"Activada,Desactivada" }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center border-top pt-3">
+                            <h5 class="text-danger">Descripción Detallada</h5>
+                            <p class="text-muted">{{ p.description|default:"No hay una descripción detallada para esta materia prima." }}</p>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-top text-center">
+                            <a href="{% url 'raw_material_update' pk=p.id %}" class="btn btn-primary me-2">
+                                <i class="bi bi-pencil-square me-1"></i> Editar Materia Prima
                             </a>
                             <a href="{% url 'raw_material_list' %}" class="btn btn-secondary me-2">
-                                Volver a la lista
+                                <i class="bi bi-list me-1"></i> Volver a la Lista
                             </a>
                             <button type="button" class="btn btn-danger btn-delete" 
-                                    data-url="{% url 'raw_material_delete' p.id %}"
+                                    data-url="{% url 'raw_material_delete' pk=p.id %}"
                                     data-item-name="{{ p.name }}">
-                                Eliminar
+                                <i class="bi bi-trash me-1"></i> Eliminar
                             </button>
                         </div>
-                    </div>
+
+                    {% else %}
+                        <div class="alert alert-warning text-center" role="alert">
+                            No fue posible cargar el detalle del la materia prima.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

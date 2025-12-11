@@ -15,11 +15,9 @@
                 <label class="input-group-text" for="per_page_select">Mostrar:</label>
                 <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
                     <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
-<<<<<<< HEAD
                     <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
-=======
                     <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
                     <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
 
@@ -156,7 +154,7 @@
                             <a href="{% url 'location_view' p.id %}" class="btn btn-weno btn-sm">Ver</a>
                             <a href="{% url 'location_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'location_delete' p.id %}"
                                     data-item-name="{{ p.name }}">
                                 Eliminar
@@ -190,16 +188,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">

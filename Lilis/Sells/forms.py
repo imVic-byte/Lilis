@@ -1,21 +1,60 @@
-from .models import Client, Location, Warehouse, WareClient,Transaction, SaleOrder, SaleOrderDetail
+from .models import Client, Warehouse, WareClient
+from Products.models import Producto, Transaction, Lote, Inventario
 from django import forms
 from Main.validators import *
 
-class ClientForm(forms.ModelForm):
+
+class LoteProductoForm(forms.ModelForm):
     class Meta:
-        model = Client
-        fields = ['bussiness_name', 'fantasy_name', 'rut', 'email', 'phone', 'credit_limit', 'debt' ,'max_debt' ,'is_suspended']
+        model = Lote
+        fields = [ 'cantidad_actual', 'fecha_expiracion', 'origen']
         labels = {
-            'bussiness_name': 'Razon social de la empresa',
-            'fantasy_name': 'Nombre fantasia de la empresa',
-            'rut': 'Rut de la empresa',
-            'email': 'Correo electronico',
-            'phone': 'Telefono',
-            'credit_limit': 'Limite de credito',
-            'debt': 'Deuda',
-            'max_debt': 'Maximo de deuda',
-            'is_suspended': 'Esta suspendido'
+            'cantidad_actual': 'Cantidad actual',
+            'fecha_expiracion': 'Fecha de vencimiento',
+            'origen': 'Origen',
+        }
+        widgets = {
+            'fecha_expiracion': forms.DateInput(attrs={'class': 'form-control','type': 'date'}),
+        }
+
+    def clean_fecha_expiracion(self):
+        return self.cleaned_data.get('fecha_expiracion')
+
+    def clean_origen(self):
+        return self.cleaned_data.get('origen')
+
+    def save(self, commit=True):
+        lote = super().save(commit=False)
+        if commit:
+            lote.save()
+            return lote
+        return lote
+
+class ClientForm(forms.ModelForm):
+    class Meta: 
+        model = Client
+        fields = [
+            'bussiness_name', 'fantasy_name', 'rut', 
+            'email', 'phone', 'address', 'city', 'country', 'web_site',
+            'payment_terms_days', 'currency', 'discount_percentage', 'trade_terms',
+            'is_preferred', 'lead_time_days'
+        ]
+        labels = {
+            'bussiness_name': 'Razón social (requerido)',
+            'fantasy_name': 'Nombre de fantasía',
+            'rut': 'RUT (requerido)',
+            'email': 'Correo electrónico (requerido)',
+            'phone': 'Teléfono',
+            'address': 'Dirección',
+            'city': 'Ciudad',
+            'country': 'País (requerido)',
+            'web_site': 'Sitio web',
+            'payment_terms_days': 'Plazo de pago (días) (requerido)',
+            'currency': 'Moneda (requerido)',
+            'discount_percentage': 'Descuento (%)',
+            'trade_terms': 'Términos comerciales',
+            'is_preferred': 'Proveedor preferente',
+            'lead_time_days': 'Tiempo de entrega (días)'
         }
     
     def clean_bussiness_name(self):
@@ -54,42 +93,32 @@ class ClientForm(forms.ModelForm):
             client.save()
             return client
         return client
-        
-class LocationForm(forms.ModelForm):
-    class Meta:
-        model = Location
-        fields = ['name', 'city', 'country']
-        labels = {
-            'name': 'Nombre de la localidad',
-            'city': 'Ciudad',
-            'country': 'Pais'
-        }
-        
-    def clean_name(self):
-        return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
-    def clean_city(self):
-        return validate_text_length(self.cleaned_data.get('city'), field_name="La ciudad")
+        
+PAISES = [
+    ("CL", "Chile"),
+    ("AR", "Argentina"),
+    ("PE", "Perú"),
+    ("CO", "Colombia"),
+    ("MX", "México"),
+    ("ES", "España"),
+    ("US", "Estados Unidos"),
+]
 
-    def clean_country(self):
-        return validate_text_length(self.cleaned_data.get('country'), field_name="El país")
-        
-    def save(self, commit=True):
-        location = super(LocationForm, self).save(commit=False)
-        if commit:
-            location.save()
-            return location
-        return location
-        
 class WarehouseForm(forms.ModelForm):
+    location = forms.ChoiceField(
+        choices=PAISES,
+        label="Localidad",
+    )
+
     class Meta:
         model = Warehouse
-        fields = ['name', 'address', 'total_area', 'location']
+        fields = ['name', 'address', 'location', 'total_area']
         labels = {
             'name': 'Nombre del almacén',
             'address': 'Direccion',
-            'total_area': 'Area total',
-            'location': 'Localidad'
+            'location': 'Localidad',
+            'total_area': 'Area total'
         }
         
     def clean_name(self):
@@ -109,44 +138,40 @@ class WarehouseForm(forms.ModelForm):
         return warehouse
         
 
-        
-class SaleOrderForm(forms.ModelForm):
+
+class TransactionForm(forms.ModelForm):
     class Meta:
-        model = SaleOrder
-        fields = ['client', 'confirmation_date', 'status', 'exchange', 'payment_terms', 'observation']
+        model = Transaction
+        fields = [
+            'warehouse', 'client', 'user', 'notes', 'quantity',
+             'code', 'expiration_date'
+        ]
         labels = {
+            'warehouse': 'Almacén',
             'client': 'Cliente',
-            'confirmation_date': 'Fecha de confirmacion',
-            'status': 'Estado',
-            'exchange': 'Tipo de cambio',
-            'payment_terms': 'Plazo de pago',
+            'user': 'Usuario',
+            'notes': 'Observaciones',
+            'quantity': 'Cantidad',
+            'code': 'Código',
+            'expiration_date': 'Vencimiento'
+        }
+        widgets = {
+            'user': forms.HiddenInput(),
+            'type': forms.TextInput(attrs={'class': 'd-none'}),
         }
 
-    def clean_confirmation_date(self):
-        conf_date = self.cleaned_data.get('confirmation_date')
-        if conf_date:
-            return validate_past_or_today_date(conf_date, field_name="La fecha de confirmación")
-        return conf_date
+    def __init__(self, *args, **kwargs):
+        base_transaction = kwargs.pop('base_transaction', None)
+        super().__init__(*args, **kwargs)
+        if base_transaction:
+            for field in self.fields:
+                self.fields[field].initial = getattr(base_transaction, field)
 
     def save(self, commit=True):
-        sale_order = super(SaleOrderForm, self).save(commit=False)
+        transaction = Transaction()
+        transaction.type = 'A'
+        for field in self.cleaned_data:
+            setattr(transaction, field, self.cleaned_data[field])
         if commit:
-            sale_order.save()
-            return sale_order
-        return sale_order
-        
-class SaleOrderDetailForm(forms.ModelForm):
-    class Meta:
-        model = SaleOrderDetail
-        fields = ['product', 'quantity']
-        labels = {
-            'product': 'Producto',
-            'quantity': 'Cantidad'
-        }
-        
-    def save(self, commit=True):
-        sale_order_detail = super(SaleOrderDetailForm, self).save(commit=False)
-        if commit:
-            sale_order_detail.save()
-            return sale_order_detail
-        return sale_order_detail
+            transaction.save()
+        return transaction

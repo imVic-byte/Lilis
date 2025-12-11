@@ -140,6 +140,21 @@ class UserService(CRUD ):
         except self.model.DoesNotExist:
             return False
     
+    def send_email_new_user(self, user, contraseña):
+        try:
+            asunto = 'Bienvenido a Lilis'
+            mensaje = f'Hola {user.first_name} {user.last_name},\n\nBienvenido a Lilis.\n\nTu nueva cuenta está lista para ser usada. \n\nPara iniciar sesión, ingresa a la plataforma, usa el correo electrónico y esta contraseña temporal: {contraseña}.\n\n'
+            send_mail(
+                asunto,
+                mensaje,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            return True
+        except self.model.DoesNotExist:
+            return False
+    
     def verify_token(self, token):
         try:
             token_entry = self.tokens.objects.get(token=token, is_used=False)

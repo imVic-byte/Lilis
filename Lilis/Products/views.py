@@ -1,328 +1,328 @@
-from django.shortcuts import render, redirect
-from .services import CategoryService, ProductService, SupplierService, RawMaterialService, BatchService, PriceHistoriesService
+from django.shortcuts import redirect
+from .services import CategoryService, ProductService, SupplierService, RawMaterialService
 from django.contrib.auth.decorators import login_required
 from Main.decorator import permission_or_redirect
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect 
 from Main.utils import generate_excel_response
+from Sells.services import InventarioService
+from django.views import View
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+from Main.mixins import GroupRequiredMixin, StaffRequiredMixin
 
+inventory_service = InventarioService()
 category_service = CategoryService()
 product_service = ProductService()
 supplier_service = SupplierService()
 raw_material_service = RawMaterialService()
-batch_service = BatchService()
-price_histories_service = PriceHistoriesService()
 
-@login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
+class CategoryListView(GroupRequiredMixin, ListView):
+    model = category_service.model
+    template_name = 'products/category_list.html'
+    context_object_name = 'categories'
+    paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q)
+            )
+        allowed_sort_fields = ['name', 'description']
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
+        try:
+            per_page = int(per_page) if per_page else default_per_page
+        except ValueError:
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+
+class CategoryCreateView(GroupRequiredMixin, CreateView):
+    model = category_service.model
+    form_class = category_service.form_class
+    success_url = reverse_lazy('category_list')
+    template_name = 'products/category_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
+
+class CategoryUpdateView(GroupRequiredMixin, UpdateView):
+    model = category_service.model
+    form_class = category_service.form_class
+    success_url = reverse_lazy('category_list')
+    template_name = 'products/category_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', 'Acceso limitado a Produccion')
+
+class CategoryDeleteView(GroupRequiredMixin, DeleteView):
+    model = category_service.model
+    success_url = reverse_lazy('category_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
+    
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+        
+class CategoryExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = category_service.list().order_by('name')
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q)
+            )
+
+        qs_limit = request.GET.get("limit")
+        if qs_limit:
+            try:
+                limit = int(qs_limit)
+                if limit > 0:
+                    qs = qs[:limit] 
+            except ValueError:
+                pass
+
+        headers = ["Nombre", "Descripción"]
+        data_rows = []
+
+        for c in qs:
+            data_rows.append([
+                c.name,
+                c.description
+            ])
+
+        return generate_excel_response(headers, data_rows, "Lilis_Categorias")
+
+class ProductListView(GroupRequiredMixin, ListView):
+    model = product_service.model
+    template_name = 'products/products_list.html'
+    context_object_name = 'products'
+    paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q)
+            )
+        allowed_sort_fields = ['name', 'category__name', 'sku']
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
+        try:
+            per_page = int(per_page) if per_page else default_per_page
+        except ValueError:
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+        
 def product_search(request):
     q = request.GET.get('q', '')
     products = product_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
-        Q(description__icontains=q) |
-        Q(category__name__icontains=q)
-    ).values('id', 'name', 'description', 'category__name', 'quantity', 'is_perishable')    
-    return JsonResponse(list(products), safe=False)
-
-@login_required
-@permission_or_redirect('Products.view_category','dashboard', 'No teni permiso')
-def category_list(request):
-    
-    q = (request.GET.get("q") or "").strip()
-    
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-    allowed_sort_fields = ['name', 'description']
-    sort_by = request.GET.get('sort_by', 'name')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = category_service.list()
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(description__icontains=q)
+        Q(description__icontains=q)
+    ).values(
+        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
         )
-    qs = qs.order_by(order_by_field)
+    return JsonResponse({'data':list(products)}, safe=False)
 
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
+def product_all(request):
+    products = product_service.model.objects.filter(is_active=True).values(
+        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
+    )
+    return JsonResponse({'data':list(products)}, safe=False)
 
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
+class ProductView(GroupRequiredMixin, DetailView):
+    model = product_service.model
+    template_name = 'products/product.html'
+    context_object_name = 'p'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        'Acceso limitado a Produccion',
+        'Acceso limitado a Finanzas'
+    )
 
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'products/category_list.html', context)
+class ProductCreateView(GroupRequiredMixin, CreateView):
+    model = product_service.model
+    form_class = product_service.form_class
+    success_url = reverse_lazy('products_list')
+    template_name = 'products/product_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-@login_required
-@permission_or_redirect('Products.add_category','dashboard', 'No teni permiso')
-def category_create(request):
-    form = category_service.form_class()
-    if request.method == 'POST':
-        success, obj = category_service.save(request.POST)
-        if success:
-            return redirect('category_list')
-        else:
-            return render(request, 'products/category_create.html', {'form': obj})
-    return render(request, 'products/category_create.html', {'form': form})
+class ProductUpdateView(GroupRequiredMixin, UpdateView):
+    model = product_service.model
+    form_class = product_service.form_class
+    success_url = reverse_lazy('products_list')
+    template_name = 'products/product_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
 
-
-@login_required
-@permission_or_redirect('Products.change_category','dashboard', 'No teni permiso')
-def category_update(request, id):
-    if request.method == 'POST':
-        success, obj = category_service.update(id, request.POST)
-        if success:
-            return redirect('category_list')
-        else:
-            return render(request, 'products/category_update.html', {'form': obj})
-    else:
-        category = category_service.get(id)
-        form = category_service.form_class(instance=category)
-    return render(request, 'products/category_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_category','dashboard', 'No teni permiso')
-def category_delete(request, id):
-    if request.method == 'GET':
-        success = category_service.delete(id)
-        if success:
-            return redirect('category_list')
-    return redirect('category_list') 
-
-@login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
-def export_categories_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = category_service.list().order_by('name')
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(description__icontains=q)
-        )
-
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass
-
-    headers = ["Nombre", "Descripción"]
-    data_rows = []
-
-    for c in qs:
-        data_rows.append([
-            c.name,
-            c.description
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Categorias")
-
-
-@login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
-def products_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
+class ProductDeleteView(GroupRequiredMixin, DeleteView):
+    model = product_service.model    
+    success_url = reverse_lazy('products_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
     
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
     
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+class ProductSearchView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+    def get(self, *args, **kwargs):
+        q = self.request.GET.get('q', '')
+        products = product_service.model.objects.filter(is_active=True).filter(
+            Q(name__icontains=q)
+        ).values('id', 'name', 'description', 'category__name', 'is_perishable')    
+        return JsonResponse(list(products), safe=False)
 
-    allowed_sort_fields = ['name', 'category__name', 'quantity','created_at', 'expiration_date']
-    sort_by = request.GET.get('sort_by', 'name')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
+class ProductExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q) |
+                Q(category__name__icontains=q)
+            )
         
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(description__icontains=q) |
-            Q(category__name__icontains=q)
-        )
-        
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'products/products_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
-def product_view(request, id):
-    product = product_service.get(id)
-    return render(request, 'products/product.html', {'p': product})
-
-@login_required
-@permission_or_redirect('Products.add_product','dashboard', 'No teni permiso')
-def product_create(request):
-    form = product_service.form_class()
-    if request.method == 'POST':
-        success, obj = product_service.save(request.POST)
-        if success:
-            return redirect('products_list')
-        else:
-            return render(request, 'products/product_create.html', {'form': obj})
-    return render(request, 'products/product_create.html', {'form': form})
-
-
-@login_required
-@permission_or_redirect('Products.change_product','dashboard', 'No teni permiso')
-def product_update(request, id):
-    if request.method == 'POST':
-        success, obj = product_service.update(id, request.POST)
-        if success:
-            return redirect('products_list')
-        else:
-            return render(request, 'products/product_update.html', {'form': obj})
-    else:
-        product = product_service.get(id)
-        form = product_service.form_class(instance=product)
-    return render(request, 'products/product_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_product','dashboard', 'No teni permiso')
-def product_delete(request, id):
-        if request.method == 'GET':
+        qs_limit = request.GET.get("limit")
+        if qs_limit:
             try:
-                product = product_service.get(id)
-                product.is_active = False
-                product.save()
-            except:
-                pass
+                limit = int(qs_limit)
+                if limit > 0:
+                    qs = qs[:limit] 
+            except ValueError:
+                pass 
 
-            return redirect('products_list')
-        return redirect('products_list')
-
-@login_required
-@permission_or_redirect('Products.view_product','dashboard', 'No teni permiso')
-def export_product_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = product_service.list().filter(is_active=True).select_related("category").order_by('name')
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(description__icontains=q) |
-            Q(category__name__icontains=q)
-        )
-    
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass 
-
-    headers = ["Nombre", "Categoría", "Stock", "Perecible", "Creación", "Vencimiento"]
-    data_rows = []
-    
-    for p in qs:
-        is_perishable_str = "Sí" if p.is_perishable else "No"
-        creation_date_str = p.created_at.strftime("%d-%m-%Y") if p.created_at else "N/A"
-        expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
+        headers = ["Nombre", "Categoría", "Stock", "Perecible", "Creación", "Vencimiento"]
+        data_rows = []
         
-        data_rows.append([
-            p.name,
-            p.category.name,
-            p.quantity,
-            is_perishable_str,
-            creation_date_str,
-            expiration_date_str
-        ])
+        for p in qs:
+            is_perishable_str = "Sí" if p.is_perishable else "No"
+            creation_date_str = p.created_at.strftime("%d-%m-%Y") if p.created_at else "N/A"
+            expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
+            
+            data_rows.append([
+                p.name,
+                p.category.name,
+                p.quantity,
+                is_perishable_str,
+                creation_date_str,
+                expiration_date_str
+            ])
 
-    return generate_excel_response(headers, data_rows, "Lilis_Productos")
+        return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
-
-@login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
 def supplier_search(request):
     q = request.GET.get('q', '')
     suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
@@ -330,616 +330,457 @@ def supplier_search(request):
         Q(fantasy_name__icontains=q) |
         Q(rut__icontains=q)
     ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
-    return JsonResponse(list(suppliers), safe=False)
+    return JsonResponse({'data':list(suppliers)}, safe=False)
 
-@login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
-def supplier_view(request, id):
-    supplier = supplier_service.get(id)
-    return render(request, 'suppliers/supplier_view.html', {'p': supplier})
-
-@login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
-def supplier_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-
-    allowed_sort_fields = ['fantasy_name', 'bussiness_name', 'rut', 'email', 'phone']
-    sort_by = request.GET.get('sort_by', 'fantasy_name')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'fantasy_name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = supplier_service.list_actives()
-
-    if q:
-        qs = qs.filter(
-            Q(fantasy_name__icontains=q) |
-            Q(bussiness_name__icontains=q) |
-            Q(rut__icontains=q) |
-            Q(email__icontains=q) |
-            Q(phone__icontains=q) |
-            Q(trade_terms__icontains=q)
-        )
-        
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'suppliers/supplier_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.add_supplier','dashboard', 'No teni permiso')
-def supplier_create(request):
-    form = supplier_service.form_class()
-    if request.method == 'POST':
-        success, obj = supplier_service.save(request.POST)
-        if success:
-            return redirect('supplier_list')
-        else:
-            return render(request, 'suppliers/supplier_create.html', {'form': obj})
-    return render(request, 'suppliers/supplier_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.change_supplier','dashboard', 'No teni permiso')
-def supplier_update(request, id):
-    if request.method == 'POST':
-        success, obj = supplier_service.update(id, request.POST)
-        if success:
-            return redirect('supplier_list')
-    else:
-        supplier = supplier_service.get(id)
-        form = supplier_service.form_class(instance=supplier)
-    return render(request, 'suppliers/supplier_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_supplier','dashboard', 'No teni permiso')
-def supplier_delete(request, id):
-    if request.method == 'GET':
-        success, obj = supplier_service.make_inactive(id)
-        if success:
-            return redirect('supplier_list')
-    return redirect('supplier_list')
-
-@login_required
-@permission_or_redirect('Products.view_supplier','dashboard', 'No teni permiso')
-def export_suppliers_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = supplier_service.list().order_by('fantasy_name')
-    if q:
-        qs = qs.filter(
-            Q(fantasy_name__icontains=q) |
-            Q(bussiness_name__icontains=q) |
-            Q(rut__icontains=q) |
-            Q(email__icontains=q) |
-            Q(phone__icontains=q) |
-            Q(trade_terms__icontains=q)
-        )
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass
-    headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono", "Términos"]
-    data_rows = []
-    for s in qs:
-        data_rows.append([
-            s.fantasy_name,
-            s.bussiness_name,
-            s.rut,
-            s.email,
-            s.phone,
-            s.trade_terms
-        ])
-    return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
-
-@login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = request.user.profile.per_page
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-    allowed_sort_fields = ['name', 'supplier__fantasy_name', 'category__name']
-    sort_by = request.GET.get('sort_by', 'name')
-    order = request.GET.get('order', 'asc')
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'name'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-    qs = raw_material_service.list_actives().select_related(
-        "supplier", 
-        "category"
+def supplier_all(request):
+    suppliers = supplier_service.model.objects.filter(is_active=True).values(
+        'bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms'
     )
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(supplier__fantasy_name__icontains=q) |
-            Q(category__name__icontains=q)
-        )
-    qs = qs.order_by(order_by_field)
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'raw_material/raw_material_list.html', context)
+    return JsonResponse({'data':list(suppliers)}, safe=False)
 
-@login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
+class SupplierDetailView(GroupRequiredMixin, DetailView):
+    model = supplier_service.model
+    template_name = 'suppliers/supplier_view.html'
+    context_object_name = 'p'
+    pk_url_kwarg = 'pk'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplier = self.object
+        raw_materials = raw_material_service.list().filter(supplier=supplier)
+        context['raw_materials'] = raw_materials
+        return context
+        
+
+class SupplierListView(GroupRequiredMixin, ListView):
+    model = supplier_service.model
+    template_name = 'suppliers/supplier_list.html'
+    context_object_name = 'suppliers'
+    paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(fantasy_name__icontains=q) |
+                Q(bussiness_name__icontains=q) |
+                Q(rut__icontains=q) |
+                Q(email__icontains=q) |
+                Q(phone__icontains=q) |
+                Q(trade_terms__icontains=q)
+            )
+        allowed_sort_fields = ['fantasy_name', 'bussiness_name', 'rut', 'email', 'phone']
+        sort_by = self.request.GET.get('sort_by', 'fantasy_name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'fantasy_name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+            
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)    
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'fantasy_name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })  
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
+        try:
+            per_page = int(per_page) if per_page else default_per_page
+        except ValueError:
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+
+class SupplierCreateView(GroupRequiredMixin, CreateView):
+    model = supplier_service.model
+    form_class = supplier_service.form_class
+    success_url = reverse_lazy('supplier_list')
+    template_name = 'suppliers/supplier_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
+
+class SupplierUpdateView(GroupRequiredMixin, UpdateView):
+    model = supplier_service.model
+    form_class = supplier_service.form_class
+    success_url = reverse_lazy('supplier_list')
+    template_name = 'suppliers/supplier_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
+
+class SupplierDeleteView(GroupRequiredMixin, DeleteView):
+    model = supplier_service.model
+    success_url = reverse_lazy('supplier_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
+    
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+class SupplierExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = supplier_service.list().order_by('fantasy_name')
+        if q:
+            qs = qs.filter(
+                Q(fantasy_name__icontains=q) |
+                Q(bussiness_name__icontains=q) |
+                Q(rut__icontains=q) |
+                Q(email__icontains=q) |
+                Q(phone__icontains=q) |
+                Q(trade_terms__icontains=q)
+            )
+        qs_limit = request.GET.get("limit")
+        if qs_limit:
+            try:
+                limit = int(qs_limit)
+                if limit > 0:
+                    qs = qs[:limit] 
+            except ValueError:
+                pass
+        headers = ["Nombre Fantasía", "Razón Social", "RUT", "Email", "Teléfono", "Términos"]
+        data_rows = []
+        for s in qs:
+            data_rows.append([
+                s.fantasy_name,
+                s.bussiness_name,
+                s.rut,
+                s.email,
+                s.phone,
+                s.trade_terms
+            ])
+        return generate_excel_response(headers, data_rows, "Lilis_Proveedores")
+
+class RawMaterialListView(GroupRequiredMixin, ListView):
+    model = raw_material_service.model
+    template_name = 'raw_material/raw_material_list.html'
+    context_object_name = 'raw_materials'
+    paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(description__icontains=q)
+            )
+        allowed_sort_fields = ['name', 'supplier__fantasy_name']
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'name'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+            
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'name')
+        order = self.request.GET.get('order', 'asc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
+        try:
+            per_page = int(per_page) if per_page else default_per_page
+        except ValueError:
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
+        else:
+            return default_per_page
+
 def raw_material_search(request):
     q = request.GET.get('q', '')
     raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
         Q(description__icontains=q)
     ).values(
-        'id', 'name', 'description','supplier', 'category__name', 'quantity', 'is_perishable', 'created_at', 'expiration_date', 'category', 'is_active'
+        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
+        )
+    return JsonResponse({'data':list(raw_materials)}, safe=False)
+
+def raw_material_all(request):
+    raw_materials = raw_material_service.model.objects.filter(is_active=True).values(
+        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
     )
-    return JsonResponse(list(raw_materials), safe=False)
+    return JsonResponse({'data':list(raw_materials)}, safe=False)
 
-@login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_view(request, id):
-    raw_material = raw_material_service.get(id)
-    return render(request, 'raw_material/raw_material_view.html', {'p': raw_material})
-
-@login_required
-@permission_or_redirect('Products.add_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_create(request):
-    form = raw_material_service.form_class()
-    if request.method == 'POST':
-        success, obj = raw_material_service.save(request.POST)
-        if success:
-            return redirect('raw_material_list')
-        else:
-            return render(request, 'products/raw_material_create.html', {'form': obj})
-    return render(request, 'raw_material/raw_material_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.change_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_update(request, id):
-    if request.method == 'POST':
-        success, obj = raw_material_service.update(id, request.POST)
-        if success:
-            return redirect('raw_material_list')
-    else:
-        raw_material = raw_material_service.get(id)
-        form = raw_material_service.form_class(instance=raw_material)
-    return render(request, 'raw_material/raw_material_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_rawmaterial','dashboard', 'No teni permiso')
-def raw_material_delete(request, id):
-    if request.method == 'GET':
-        success = raw_material_service.delete(id)
-        if success:
-            return redirect('raw_material_list')
-    return redirect('raw_material_list') 
-
-@login_required
-@permission_or_redirect('Products.view_rawmaterial','dashboard', 'No teni permiso')
-def export_raw_materials_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = raw_material_service.list_actives().select_related(
-        "supplier", 
-        "category"
-    ).order_by('name')
-
-    if q:
-        qs = qs.filter(
-            Q(name__icontains=q) |
-            Q(supplier__fantasy_name__icontains=q) |
-            Q(category__name__icontains=q)
-        )
-    
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass 
-
-    headers = ["Nombre", "Proveedor", "Categoría",  "Cantidad", "Perecible", "Creación", "Vencimiento"]
-    data_rows = []
-    
-    for rm in qs:
-        data_rows.append([
-            rm.name,
-            rm.supplier.fantasy_name,
-            rm.category.name,
-            rm.quantity,
-            "Sí" if rm.is_perishable else "No",
-            rm.created_at.strftime("%d-%m-%Y") if rm.created_at else "N/A",
-            rm.expiration_date.strftime("%d-%m-%Y") if rm.expiration_date else "N/A",
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def product_batch_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-
-    allowed_sort_fields = ['product__name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'batch_code'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = batch_service.list_product().select_related("product")
-
-    if q:
-        qs = qs.filter(
-            Q(product__name__icontains=q) |
-            Q(batch_code__icontains=q)
-        )
-
-    qs = qs.order_by(order_by_field)
-
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'batches/product_batch_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def product_batch_view(request, id):
-    batch = batch_service.get(id)
-    return render(request, 'batches/product_batch.html', {'b': batch})
-
-@login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
-def product_batch_create(request):
-    form = batch_service.product_form_class()
-    if request.method == 'POST':
-        success, obj = batch_service.save_product_batch(request.POST)
-        if success:
-            return redirect('product_batch_list')
-        else:
-            return render(request, 'batches/product_batch_create.html', {'form': obj})
-    return render(request, 'batches/product_batch_create.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
-def product_batch_update(request, id):
-    if request.method == 'POST':
-        success, obj = batch_service.update_product_batch(id, request.POST)
-        if success:
-            return redirect('product_batch_list')
-    else:
-        batch = batch_service.get(id)
-        form = batch_service.product_form_class(instance=batch)
-    return render(request, 'batches/product_batch_update.html', {'form': form})
-
-@login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
-def product_batch_delete(request, id):
-    if request.method == 'GET':
-        success = batch_service.delete_product_batch(id)
-        if success:
-            return redirect('product_batch_list')
-    return redirect('product_batch_list')
-
-@login_required
-@permission_or_redirect('Products.view_product_batch','dashboard', 'No teni permiso')
-def export_product_batches_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = batch_service.list_product().select_related("product").order_by('batch_code')
-    if q:
-        qs = qs.filter(
-            Q(product__name__icontains=q) | 
-            Q(batch_code__icontains=q)      
-        )
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
-        try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
-        except ValueError:
-            pass 
-    headers = ["Código Lote", "Producto", "Cantidad Actual", "Cantidad Máxima", "Cantidad Mínima"]
-    data_rows = []
-    for b in qs:
-        data_rows.append([
-            b.batch_code,
-            b.product.name,
-            b.current_quantity,
-            b.max_quantity,
-            b.min_quantity,
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Productos") 
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def raw_batch_list(request):
-    q = (request.GET.get("q") or "").strip()
-    default_per_page = 25
-    
-    try:
-        per_page = int(request.GET.get("per_page", default_per_page))
-    except ValueError:
-        per_page = default_per_page
-    
-    if per_page > 101 or per_page <= 0:
-        per_page = default_per_page
-
-    allowed_sort_fields = ['raw_material__name', 'raw_material__supplier__name', 'batch_code']
-    sort_by = request.GET.get('sort_by', 'batch_code')
-    order = request.GET.get('order', 'asc')
-
-    if sort_by not in allowed_sort_fields:
-        sort_by = 'batch_code'
-    if order not in ['asc', 'desc']:
-        order = 'asc'
-        
-    order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
-
-    qs = batch_service.list_raw_materials().select_related(
-        "raw_material", 
-        "raw_material__supplier"
+class RawMaterialView(GroupRequiredMixin, DetailView):
+    model = raw_material_service.model
+    template_name = 'raw_material/raw_material_view.html'
+    context_object_name = 'p'
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
     )
 
-    if q:
-        qs = qs.filter(
-            Q(raw_material__name__icontains=q) |
-            Q(batch_code__icontains=q) |
-            Q(raw_material__supplier__name__icontains=q)
-        )
-        
-    qs = qs.order_by(order_by_field)
+class RawMaterialCreateView(GroupRequiredMixin, CreateView):
+    model = raw_material_service.model
+    form_class = raw_material_service.form_class
+    success_url = reverse_lazy('raw_material_list')
+    template_name = 'raw_material/raw_material_create.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-    paginator = Paginator(qs, per_page)
-    page_number = request.GET.get("page")
-
-    try:
-        page_obj = paginator.get_page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-
-    params_pagination = request.GET.copy()
-    params_pagination.pop("page", None)
-    querystring_pagination = params_pagination.urlencode()
-
-    params_sorting = request.GET.copy()
-    params_sorting.pop("page", None)
-    params_sorting.pop("sort_by", None)
-    params_sorting.pop("order", None)
-    querystring_sorting = params_sorting.urlencode()
-
-    context = {
-        "page_obj": page_obj,  
-        "q": q,
-        "per_page": per_page,
-        "total": qs.count(),
-        
-        "querystring": querystring_pagination, 
-        
-        "querystring_sorting": querystring_sorting,
-        "current_sort_by": sort_by,
-        "current_order": order,
-        "order_next": "desc" if order == "asc" else "asc",
-    }
-    return render(request, 'batches/raw_batch_list.html', context)
-
-@login_required
-@permission_or_redirect('Products.view_batch','dashboard', 'No teni permiso')
-def raw_batch_view(request, id):
-    batch = batch_service.get(id)
-    return render(request, 'batches/raw_batch.html', {'b': batch})
-
-@login_required
-@permission_or_redirect('Products.add_batch','dashboard', 'No teni permiso')
-def raw_batch_create(request):
-    form = batch_service.raw_form_class()
-    if request.method == 'POST':
-        success, obj = batch_service.save_raw_batch(request.POST)
-        if success:
-            return redirect('raw_batch_list')
+    def get_supplier_object(self):
+        supplier_id = self.request.GET.get('supplier')
+        if supplier_id:
+            return supplier_service.model.objects.get(id=supplier_id)
         else:
-            return render(request, 'batches/raw_batch_create.html', {'form': obj})
-    return render(request, 'batches/raw_batch_create.html', {'form': form})
+            return None
+    
+    def get_inicial(self):
+        initial = super().get_initial()
+        supplier = self.get_supplier_object()
+        if supplier:
+            initial['supplier'] = supplier
+        return initial
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        supplier = self.get_supplier_object()
+        if supplier:
+            kwargs['supplier'] = supplier
+        return kwargs
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        supplier = self.get_supplier_object()
+        next_url = self.request.GET.get('next')
+        if supplier and next_url:
+            return redirect(next_url)
+        return response
+    
+class RawMaterialUpdateView(GroupRequiredMixin, UpdateView):
+    model = raw_material_service.model
+    form_class = raw_material_service.form_class
+    success_url = reverse_lazy('raw_material_list')
+    template_name = 'raw_material/raw_material_update.html'
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario', "Acceso limitado a Produccion")
 
-@login_required
-@permission_or_redirect('Products.change_batch','dashboard', 'No teni permiso')
-def raw_batch_update(request, id):
-    if request.method == 'POST':
-        success, obj = batch_service.update_raw_batch(id, request.POST)
-        if success:
-            return redirect('raw_batch_list')
-    else:
-        batch = batch_service.get(id)
-        form = batch_service.raw_form_class(instance=batch)
-    return render(request, 'batches/raw_batch_update.html', {'form': form})
+    def get_supplier_object(self):
+        supplier_id = self.request.POST.get('supplier')
+        if supplier_id:
+            return supplier_service.model.objects.get(id=supplier_id)
+        else:
+            return None
+    
+    def get_inicial(self):
+        initial = super().get_initial()
+        supplier = self.get_supplier_object()
+        if supplier:
+            initial['supplier'] = supplier
+        return initial
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        supplier = self.get_supplier_object()
+        if supplier:
+            kwargs['supplier'] = supplier
+        return kwargs
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        supplier = self.get_supplier_object()
+        next_url = self.request.GET.get('next')
+        if supplier and next_url:
+            return redirect(next_url)
+        return response
 
-@login_required
-@permission_or_redirect('Products.delete_batch','dashboard', 'No teni permiso')
-def raw_batch_delete(request, id):
-    if request.method == 'GET':
-        success = batch_service.delete_raw_batch(id)
-        if success:
-            return redirect('raw_batch_list')
-    return redirect('raw_batch_list')
+class RawMaterialDeleteView(GroupRequiredMixin, DeleteView):
+    model = raw_material_service.model
+    success_url = reverse_lazy('raw_material_list')
+    required_group =('Acceso Completo', 'Acceso limitado a Compras', 'Acceso limitado a Inventario')
 
-@login_required
-@permission_or_redirect('Products.view_raw_batch','dashboard', 'No teni permiso')
-def export_raw_batches_excel(request):
-    q = (request.GET.get("q") or "").strip()
-    qs = batch_service.list_raw_materials().select_related(
-        "raw_material", 
-        "raw_material__supplier"
-    ).order_by('batch_code')
-    if q:
-        qs = qs.filter(
-            Q(raw_material__name__icontains=q) | 
-            Q(batch_code__icontains=q) |         
-            Q(raw_material__supplier__name__icontains=q) 
-        )
-    qs_limit = request.GET.get("limit")
-    if qs_limit:
+    def get(self, request, *args, **kwargs):
+        return HttpResponse('Metodo no permitido')
+    
+    def form_valid(self, form):
+        self.object = self.get_object()
+        self.object.is_active = False
+        self.object.save()
+        return HttpResponseRedirect(self.get_success_url())
+    
+class RawMaterialExportView(GroupRequiredMixin, View):
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+    def get(self, request):
+        q = (request.GET.get("q") or "").strip()
+        qs = raw_material_service.list_actives().select_related(
+            "supplier", 
+            "category"
+        ).order_by('name')
+
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(supplier__fantasy_name__icontains=q) |
+                Q(category__name__icontains=q)
+            )
+        
+        qs_limit = request.GET.get("limit")
+        if qs_limit:
+            try:
+                limit = int(qs_limit)
+                if limit > 0:
+                    qs = qs[:limit] 
+            except ValueError:
+                pass 
+
+        headers = ["Nombre", "Proveedor", "Categoría", "Perecible", 'Unidad de medida']
+        data_rows = []
+        
+        for rm in qs:
+            data_rows.append([
+                rm.name,
+                rm.supplier.fantasy_name,
+                rm.category.name,
+                "Sí" if rm.is_perishable else "No",
+                rm.measurement_unit,
+            ])
+        return generate_excel_response(headers, data_rows, "Lilis_Materias_Primas")
+
+class InventoryListView(GroupRequiredMixin, ListView):
+    model = inventory_service.model
+    template_name = 'inventory/inventory_list.html'
+    context_object_name = 'inventory'
+    paginate_by = 25
+    required_group =(
+        'Acceso Completo',
+        'Acceso limitado a Compras',
+        'Acceso limitado a Inventario',
+        "Acceso limitado a Produccion",
+        "Acceso limitado a Finanzas"
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = (self.request.GET.get("q") or "").strip()
+        if q:
+            qs = qs.filter(
+                Q(materia_prima__name__icontains=q) |
+                Q(materia_prima__sku__icontains=q) |
+                Q(producto__name__icontains=q) |
+                Q(producto__sku__icontains=q)
+            )
+        allowed_sort_fields = ['materia_prima__name','materia_prima__sku', 'producto__name', 'producto__sku', 'stock_total']
+        sort_by = self.request.GET.get('sort_by', 'stock_total')
+        order = self.request.GET.get('order', 'desc')
+
+        if sort_by not in allowed_sort_fields:
+            sort_by = 'stock_total'
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+
+        order_by_field = f'-{sort_by}' if order == 'desc' else sort_by
+        qs = qs.order_by(order_by_field)
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.copy()
+        if 'page' in query:
+            query.pop('page')
+        context['querystring'] = query.urlencode()
+        q = (self.request.GET.get("q") or "").strip()
+        sort_by = self.request.GET.get('sort_by', 'stock_total')
+        order = self.request.GET.get('order', 'desc')
+        per_page = context['paginator'].per_page
+        context.update({
+            "q": q,
+            "current_sort_by": sort_by,
+            "current_order": order,
+            "order_next": "desc" if order == "asc" else "asc",
+            "per_page": per_page,
+        })
+        return context
+    
+    def get_paginate_by(self, queryset):
+        default_per_page = 25
+        per_page = self.request.GET.get('per_page')
         try:
-            limit = int(qs_limit)
-            if limit > 0:
-                qs = qs[:limit] 
+            per_page = int(per_page) if per_page else default_per_page
         except ValueError:
-            pass 
-    headers = ["Materia Prima","Código de Lote","Proveedor", "Cantidad Actual",  "Cantidad Máxima", "Cantidad Mínima"]
-    data_rows = []
-    for b in qs:
-        data_rows.append([
-            b.raw_material.name,
-            b.batch_code,
-            b.raw_material.supplier.name,            
-            b.current_quantity,
-            b.max_quantity,
-            b.min_quantity,
-        ])
-
-    return generate_excel_response(headers, data_rows, "Lilis_Lotes_Materias_Primas") 
-
-@login_required
-@permission_or_redirect('Products.change_pricehistories','dashboard', 'No teni permiso')
-def price_histories_save(request, id):
-    form = price_histories_service.form_class()
-    if request.method == 'POST':
-        product = product_service.get(id)
-        data = {
-            'product': product,
-            'unit_price' : request.POST.get('unit_price'),
-            'date' : request.POST.get('date'),
-            'iva': request.POST.get('iva')
-        }
-        success, obj = price_histories_service.save(data)
-        if success:
-            return redirect('product_view', id)
+            per_page = default_per_page
+        if 0 < per_page <= 100:
+            return per_page
         else:
-            return render(request, 'products/product.html', {'p': product, 'form': obj})
-    return render(request, 'products/product.html', {'p': product, 'form': form})
-
+            return default_per_page

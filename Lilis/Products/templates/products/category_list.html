@@ -11,23 +11,24 @@
 <div class="row mb-3 justify-content-center">
     <div class="col-md-10">
         <form method="GET" action="{% url 'category_list' %}" class="form">
-            <div class="input-group">
-                <label class="input-group-text" for="per_page_select">Mostrar:</label>
-                <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
-                    <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
-                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>   
-                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                </select>
-                <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
-                <input type="hidden" name="order" value="{{ current_order }}">
-
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, descripción...">
-                
-                <button class="btn btn-primary" type="submit">Buscar</button>
-            </div>
-        </form>
+    <div class="input-group">
+        
+        <label class="input-group-text" for="per_page_select">Mostrar:</label>
+        <select class="form-select" style="max-width: 100px;" id="per_page_select" name="per_page" onchange="this.form.submit()">
+            <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>  
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+        </select>
+        
+        <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
+        <input type="hidden" name="order" value="{{ current_order }}">
+        <input type="hidden" name="page" value="1"> <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por nombre, descripción...">
+        
+        <button class="btn btn-primary" type="submit">Buscar</button>
+    </div>
+</form>
     </div>
 </div>
 
@@ -62,15 +63,19 @@
                         <div class="col-5 text-end">
                             <td>
                                 <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
-                                <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                <button type="button" class="btn btn-sm btn-delete"
+                                style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'category_delete' p.id %}" data-item-name="{{ p.name }}">
                                     Eliminar
                                 </button>
+                                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                             </td>
                         </div>
 
                     </div>
                     <p class="card-text">Descripcion: {{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
+                    <p class="card-text">Productos: {{ p.count_products }}</p>
+                    <p class="card-text">Materias Primarias: {{ p.count_raw_materials }}</p>
                     
                 </div>
             </div>
@@ -103,6 +108,8 @@
                                 {% endif %}
                             </a>
                         </th>
+                        <th><strong>Productos</strong></th>
+                        <th><strong>Materias Primas</strong></th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -111,9 +118,12 @@
                     <tr>
                         <td>{{ p.name }}</td>
                         <td>{{ p.description|default:"-" }}</td>
+                        <td>{{ p.count_products }}</td>
+                        <td>{{ p.count_raw_materials }}</td>
                         <td>
                             <a href="{% url 'category_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
+                            style = "background-color: #D30A11; color: white;"
                                     class="btn btn-danger btn-sm btn-delete" 
                                     data-url="{% url 'category_delete' p.id %}"
                                     data-item-name="{{ p.name }}">
@@ -148,16 +158,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">

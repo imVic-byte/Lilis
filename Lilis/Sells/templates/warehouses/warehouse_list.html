@@ -85,7 +85,7 @@
                             <strong>Superficie total:</strong> {{ w.total_area }} m²
                         </li>
                         <li class="list-group-item">
-                            <strong>Ubicación:</strong> {{ w.location.name }}
+                            <strong>Ubicación:</strong> {{ w.location }}
                         </li>
                     </ul>
 
@@ -137,9 +137,9 @@
                             </a>
                         </th>
                         <th>
-                            <a href="?{{ querystring_sorting }}&sort_by=location__name&order={% if current_sort_by == 'location__name' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
+                            <a href="?{{ querystring_sorting }}&sort_by=location&order={% if current_sort_by == 'location' %}{{ order_next }}{% else %}asc{% endif %}" class="text-decoration-none text-dark">
                                 <strong>Ubicación</strong>
-                                {% if current_sort_by == 'location__name' %}
+                                {% if current_sort_by == 'location' %}
                                     {% if current_order == 'asc' %} ▲{% else %} ▼{% endif %}
                                 {% endif %}
                             </a>
@@ -160,13 +160,13 @@
                     <tr>
                         <td>{{ w.name }}</td>
                         <td>{{ w.address }}</td>
-                        <td>{{ w.location.name }}</td>
+                        <td>{{ w.location }}</td>
                         <td>{{ w.total_area }} m²</td>
                         <td>
                             <a href="{% url 'warehouse_view' w.id %}" class="btn btn-weno btn-sm">Ver</a>
                             <a href="{% url 'warehouse_update' w.id %}" class="btn btn-primary btn-sm">Editar</a>
                             <button type="button" 
-                                    class="btn btn-danger btn-sm btn-delete" 
+                                    class="btn btn-danger btn-sm btn-delete"  style = "background-color: #D30A11; color: white;"
                                     data-url="{% url 'warehouse_delete' w.id %}"
                                     data-item-name="{{ w.name }}">
                                 Eliminar
@@ -201,16 +201,51 @@
     {% endif %}
 
     {% for i in page_obj.paginator.page_range %}
-      {% if page_obj.number == i %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ i }}</span>
+
+    {# Mostrar todas si hay pocas páginas #}
+    {% if page_obj.paginator.num_pages <= 10 %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+            <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                {{ i }}
+            </a>
         </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
+    {% else %}
+
+        {# Mostrar primera página #}
+        {% if i == 1 %}
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
+            </li>
+
+            {% if page_obj.number > 5 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar rango alrededor de la actual (actual ±3) #}
+        {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %}
+            {% if i != 1 and i != page_obj.paginator.num_pages %}
+                <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+
+        {# Mostrar última página #}
+        {% if i == page_obj.paginator.num_pages %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+
+            <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
+                    {{ i }}
+                </a>
+            </li>
+        {% endif %}
+
+    {% endif %}
+{% endfor %}
 
     {% if page_obj.has_next %}
       <li class="page-item">

@@ -1,0 +1,168 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Detalle Lilis {% endblock title %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">Detalle de Lilis</h4>
+            </div>
+
+            <div class="card-body">
+
+                <h4 class="text-center mb-4">{{ b.fantasy_name }}</h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-4">Información General</h5>
+                        <ul class="list-group mb-4">
+                            <li class="list-group-item"><strong>Razón social:</strong> {{ b.bussiness_name }}</li>
+                            <li class="list-group-item"><strong>RUT:</strong> {{ b.rut }}</li>
+                            <li class="list-group-item"><strong>Email de contacto:</strong> {{ b.email|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Teléfono de contacto:</strong> {{ b.phone|default:"No registrado" }}</li>
+                            <li class="list-group-item"><strong>Dirección:</strong> {{ b.address|default:"No registrado" }}</li>
+                            </li>
+                            </li>
+                            <li class="list-group-item"><strong>Sitio web:</strong> {{ b.web_site|default:"No registrado" }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row mb-2">
+                            <div class="col-6">
+                                <h5 class="">Bodegas Asociadas</h5>
+                            </div>
+                            <div class="col-6 text-end align-text-bottom align-top">
+                                <button type="button" class="btn btn-danger align-text-bottom align-top"
+                                    id="warehouse_assign_button">
+                                    <i class="bi bi-plus"></i> Asignar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="available_warehouses_container" class="mt-3" style="display: none;">
+                        </div>
+
+                        {% if b.warehouse %}
+                        <div class="list-group">
+                            {% for w in b.warehouse %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ w.name }}</strong><br>
+                                    <small class="text-muted">{{ w.address }} - {{ w.location }} - {{w.wareclients.first.association_date }}</small>
+                                    {% if w.is_active == True %}
+                                    <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="{% url 'warehouse_update' w.id %}?next={{ request.path }}"
+                                    class="btn btn-sm btn-outline-primary me-2">
+                                    Editar
+                                </a>
+                                <a href="{% url 'lilis_warehouse_unassign' %}?warehouse={{ w.id }}"
+                                    class="btn btn-sm btn-outline-danger">
+                                    Desasignar
+                                </a>
+
+                                </div>
+                                
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-secondary text-center">
+                            No hay bodegas asociadas.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'lilis_update' %}" class="btn btn-primary me-2">Editar</a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary me-2">Volver</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+{% block scripts %}
+<script>
+    const clientId = "{{ b.id }}"; 
+    const assignButton = document.getElementById('warehouse_assign_button');
+    const availableWarehousesContainer = document.getElementById('available_warehouses_container');
+    let isVisible = false;
+    let isLoaded = false; 
+    assignButton.addEventListener('click', function () {
+        isVisible = !isVisible;
+        availableWarehousesContainer.style.display = isVisible ? 'block' : 'none';
+
+        if (isVisible) {
+            assignButton.innerHTML = '<i class="bi bi-x-lg"></i> Cerrar';
+            assignButton.classList.remove('btn-danger');
+            assignButton.classList.add('btn-secondary');
+            if (!isLoaded) {
+                availableWarehousesContainer.innerHTML = '<div class="alert alert-info text-center">Cargando bodegas disponibles...</div>';
+                
+                fetch("{% url 'warehouse_list_for_lilis' %}")
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`La vista devolvió el código ${response.status}.`);
+                        }
+                        return response.json(); 
+                    })
+                    .then(data => {
+                        let htmlContent = '';
+                        
+                        if (data.warehouses && data.warehouses.length > 0) {
+                            htmlContent += '<h6 class="mt-3">Bodegas disponibles:</h6>';
+                            htmlContent += '<table class="table table-sm table-striped"><thead><tr><th>Nombre</th><th>Ubicación</th><th class="text-center">Acción</th></tr></thead><tbody>';
+                            
+                            data.warehouses.forEach(warehouse => {
+                                htmlContent += `
+                                    <tr>
+                                        <td><strong>${warehouse.name}</strong></td>
+                                        <td>${warehouse.location}</td>
+                                        <td class="text-center">
+                                            <a href="{% url 'lilis_warehouse_assign' %}?warehouse=${warehouse.id}&next={{ request.path }}" class="btn btn-sm btn-outline-primary">
+                                                Asignar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                            htmlContent += '</tbody></table>';
+                            
+                            availableWarehousesContainer.innerHTML = htmlContent;
+                            isLoaded = true;
+                        } else {
+                            availableWarehousesContainer.innerHTML = '<div class="alert alert-success text-center">No hay más bodegas disponibles para asignar.</div>';
+                            isLoaded = true;
+                        }
+                        
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar bodegas:', error);
+                        availableWarehousesContainer.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                        assignButton.innerHTML = '<i class="bi bi-plus"></i> Asignar (Error)';
+                        assignButton.classList.remove('btn-secondary');
+                        assignButton.classList.add('btn-danger');
+                        isVisible = false;
+                    });
+            }
+        } else {
+            assignButton.innerHTML = '<i class="bi bi-plus"></i> Asignar';
+            assignButton.classList.remove('btn-secondary');
+            assignButton.classList.add('btn-danger');
+        }
+    });
+</script>
+{% endblock %}
+    
