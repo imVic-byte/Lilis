@@ -207,7 +207,6 @@ class ProductListView(GroupRequiredMixin, ListView):
             return default_per_page
         
 def product_search(request):
-    print("buscando producto")
     q = request.GET.get('q', '')
     products = product_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
@@ -218,7 +217,6 @@ def product_search(request):
     return JsonResponse({'data':list(products)}, safe=False)
 
 def product_all(request):
-    print("buscando todos los productos")
     products = product_service.model.objects.filter(is_active=True).values(
         'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
     )
@@ -325,22 +323,20 @@ class ProductExportView(GroupRequiredMixin, View):
 
         return generate_excel_response(headers, data_rows, "Lilis_Productos")
 
-class SupplierSearchView(GroupRequiredMixin, View):
-    required_group =(
-        'Acceso Completo',
-        'Acceso limitado a Compras',
-        'Acceso limitado a Inventario',
-        "Acceso limitado a Produccion",
-        "Acceso limitado a Finanzas"
+def supplier_search(request):
+    q = request.GET.get('q', '')
+    suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
+        Q(bussiness_name__icontains=q) |
+        Q(fantasy_name__icontains=q) |
+        Q(rut__icontains=q)
+    ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
+    return JsonResponse({'data':list(suppliers)}, safe=False)
+
+def supplier_all(request):
+    suppliers = supplier_service.model.objects.filter(is_active=True).values(
+        'bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms'
     )
-    def get(self, *args, **kwargs):
-        q = self.request.GET.get('q', '')
-        suppliers = supplier_service.model.objects.filter( is_active=True ).filter(
-            Q(bussiness_name__icontains=q) |
-            Q(fantasy_name__icontains=q) |
-            Q(rut__icontains=q)
-        ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
-        return JsonResponse(list(suppliers), safe=False)
+    return JsonResponse({'data':list(suppliers)}, safe=False)
 
 class SupplierDetailView(GroupRequiredMixin, DetailView):
     model = supplier_service.model
@@ -564,23 +560,21 @@ class RawMaterialListView(GroupRequiredMixin, ListView):
         else:
             return default_per_page
 
-class RawMaterialSearchView(GroupRequiredMixin, View):
-    required_group =(
-        'Acceso Completo',
-        'Acceso limitado a Compras',
-        'Acceso limitado a Inventario',
-        "Acceso limitado a Produccion",
-        "Acceso limitado a Finanzas"
+def raw_material_search(request):
+    q = request.GET.get('q', '')
+    raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
+        Q(name__icontains=q) |
+        Q(description__icontains=q)
+    ).values(
+        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
+        )
+    return JsonResponse({'data':list(raw_materials)}, safe=False)
+
+def raw_material_all(request):
+    raw_materials = raw_material_service.model.objects.filter(is_active=True).values(
+        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
     )
-    def get(self, *args, **kwargs):
-        q = self.request.GET.get('q', '')
-        raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
-            Q(name__icontains=q) |
-            Q(description__icontains=q)
-        ).values(
-            'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
-            )
-        return JsonResponse(list(raw_materials), safe=False)
+    return JsonResponse({'data':list(raw_materials)}, safe=False)
 
 class RawMaterialView(GroupRequiredMixin, DetailView):
     model = raw_material_service.model

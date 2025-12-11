@@ -8,7 +8,8 @@ clients = [
     path('client_delete/<int:pk>/', views.ClientDeleteView.as_view(), name='client_delete'),
     path('client_view/<int:pk>/', views.ClientDetailView.as_view(), name='client_view'),
     path('export_clients_excel/', views.ClientExportView.as_view(), name='export_clients_excel'),
-    path('client_search/', views.ClientSearchView.as_view(), name='client_search'),
+    path('client_search/', views.client_search, name='client_search'),
+    path('client_all/', views.client_all, name='client_all'),
 ]
 
 

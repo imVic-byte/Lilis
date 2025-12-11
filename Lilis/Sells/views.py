@@ -176,22 +176,18 @@ class ClientExportView(GroupRequiredMixin, View):
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Clientes")
 
-class ClientSearchView(GroupRequiredMixin, View):
-    required_group =(
-        'Acceso Completo',
-        'Acceso limitado a Ventas',
-        'Acceso limitado a Inventario',
-        "Acceso limitado a Produccion",
-        "Acceso limitado a Finanzas"
-    )
-    def get(self, *args, **kwargs):
-        q = self.request.GET.get('q', '')
-        clients = client_service.model.objects.filter(is_suspended=False).filter(
-            Q(fantasy_name__icontains=q) |
-            Q(bussiness_name__icontains=q) |
-            Q(rut__icontains=q)
-        ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_suspended', 'credit_limit', 'debt', 'max_debt')
-        return JsonResponse(list(clients), safe=False)
+def client_search(request):
+    q = request.GET.get('q', '')
+    clients = client_service.model.objects.filter(is_active=True).filter(
+        Q(fantasy_name__icontains=q) |
+        Q(bussiness_name__icontains=q) |
+        Q(rut__icontains=q)
+    ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_active')
+    return JsonResponse({'data': list(clients)}, safe=False)
+
+def client_all(request):
+    clients = client_service.model.objects.filter(is_active=True).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_active')
+    return JsonResponse({'data': list(clients)}, safe=False)
 
 class ClientDetailView(GroupRequiredMixin, DetailView):
     required_group =(

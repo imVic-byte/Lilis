@@ -28,7 +28,8 @@ suppliers = [
     path('supplier_update/<int:pk>/', views.SupplierUpdateView.as_view(), name='supplier_update'),
     path('supplier_delete/<int:pk>/', views.SupplierDeleteView.as_view(), name='supplier_delete'),
     path('export_suppliers_excel/', views.SupplierExportView.as_view(), name='export_suppliers_excel'),
-    path('supplier_search/', views.SupplierSearchView.as_view(), name='supplier_search'),
+    path('supplier_all/', views.supplier_all, name='supplier_all'),
+    path('supplier_search/', views.supplier_search, name='supplier_search'),
 ]
 
 raw_materials = [
@@ -38,7 +39,8 @@ raw_materials = [
     path('raw_material_update/<int:pk>/', views.RawMaterialUpdateView.as_view(), name='raw_material_update'),
     path('raw_material_delete/<int:pk>/', views.RawMaterialDeleteView.as_view(), name='raw_material_delete'),
     path('export_raw_materials_excel/', views.RawMaterialExportView.as_view(), name='export_raw_materials_excel'),
-    path('raw_material_search/', views.RawMaterialSearchView.as_view(), name='raw_material_search'),
+    path('raw_material_search/', views.raw_material_search, name='raw_material_search'),
+    path('raw_material_all/', views.raw_material_all, name='raw_material_all'),
 ]
 
 inventory = [

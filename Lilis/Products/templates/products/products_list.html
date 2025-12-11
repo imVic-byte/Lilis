@@ -67,11 +67,12 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
     <div class="row">
-        <div class="col-7">
+        <div class="col-6">
             <h5 class="card-title">{{ p.name|default:"—" }}</h5>
             <h6 class="card-subtitle text-muted">SKU: {{ p.sku|default:"—" }}</h6>
         </div>
-        <div class="col-5 text-end">
+        <div class="col-6 text-end">
+            <a href="{% url 'product_view' p.id %}" class="btn btn-warning btn-sm">Ver</a>
             <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
             <button type="button" class="btn btn-sm btn-delete"
                 style = "background-color: #D30A11; color: white;"
@@ -144,7 +145,7 @@
     </tr>
 </thead>
 
-<tbody>
+<tbody id="product-table-body">
     {% for p in page_obj %}
     <tr>
         <td>{{ p.name|default:"—" }}</td>
@@ -160,7 +161,8 @@
                 <span class="badge bg-danger">No</span>
             {% endif %}
         </td>
-        <td>
+        <td>    
+            <a href="{% url 'product_view' p.id %}" class="btn btn-warning btn-sm">Ver</a>
             <a href="{% url 'product_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
             <button type="button"
                 class="btn btn-sm btn-delete"
@@ -198,8 +200,6 @@
         </li>
         {% endif %}
         {% for i in page_obj.paginator.page_range %}
-
-        {# Mostrar todas si hay pocas páginas #}
         {% if page_obj.paginator.num_pages <= 10 %} <li
             class="page-item {% if page_obj.number == i %}active{% endif %}">
             <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">
@@ -207,8 +207,6 @@
             </a>
             </li>
             {% else %}
-
-            {# Mostrar primera página #}
             {% if i == 1 %}
             <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
                 <a class="page-link" href="?page=1{% if querystring %}&amp;{{ querystring }}{% endif %}">1</a>
@@ -218,8 +216,6 @@
             <li class="page-item disabled"><span class="page-link">...</span></li>
             {% endif %}
             {% endif %}
-
-            {# Mostrar rango alrededor de la actual (actual ±3) #}
             {% if i >= page_obj.number|add:"-3" and i <= page_obj.number|add:"3" %} {% if i !=1 and i
                 !=page_obj.paginator.num_pages %} <li class="page-item {% if page_obj.number == i %}active{% endif %}">
                 <a class="page-link" href="?page={{ i }}{% if querystring %}&amp;{{ querystring }}{% endif %}">{{ i
@@ -227,8 +223,6 @@
                 </li>
                 {% endif %}
                 {% endif %}
-
-                {# Mostrar última página #}
                 {% if i == page_obj.paginator.num_pages %}
                 {% if page_obj.number < page_obj.paginator.num_pages|add:"-4" %} <li class="page-item disabled"><span
                         class="page-link">...</span></li>
@@ -281,13 +275,10 @@
         updateView(savedView);
 
         toggleBtn.addEventListener('click', function () {
-            // Lógica para cambiar la vista (mantiene el almacenamiento local)
             const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
             const newView = currentView === 'cards' ? 'table' : 'cards';
             localStorage.setItem('productView', newView);
             updateView(newView);
-            
-            // Si hay un query, relanzar la búsqueda al cambiar de vista
             if (searchInput.value.length > 0) {
                  searchInput.dispatchEvent(new Event('input'));
             }
@@ -308,36 +299,71 @@
 </script>
 
 <script>
-    // URLs de acciones (se mantienen sin cambios)
     const VIEW_URL = "{% url 'product_view' 0 %}".replace('0', '__ID__');
     const UPDATE_URL = "{% url 'product_update' 0 %}".replace('0', '__ID__');
     const DELETE_URL = "{% url 'product_delete' 0 %}".replace('0', '__ID__');
 
     document.addEventListener('DOMContentLoaded', function () {
         const cardView = document.getElementById('product-cards-view');
-        const tableView = document.getElementById('product-table-view');
+        const tableView = document.getElementById('product-table-body');
         const searchInput = document.getElementById('q');
         const toggleViewBtn = document.getElementById('toggle-view-btn');
-
-        // --- Funciones de Construcción (se mantienen sin cambios) ---
         function buildCard(item) {
-            // Nota: Aquí se deben corregir los nombres de las propiedades si el JSON difiere (e.g., item.category__name)
+            const isActiveBadge = item.is_active ? 'Sí' : 'No';
+            const controls = `${item.serie_control ? 'Serie ' : ''}${item.batch_control ? 'Lote' : ''}` || '—';
+            const imageUrl = item.url_image || '';
+
             return `
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <img src="${item.url_image}" class="card-img-top" alt="${item.name}">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">${item.name}</h5>
-                        <p class="card-text">${item.description}</p>
-                        <p class="card-text">Deficit: ${item.deficit}</p>
-                        <p class="card-text">IVA: ${item.iva}</p>
-                        <p class="card-text">Unidad de medida: ${item.measurement_unit}</p>
-                        <p class="card-text">Marca: ${item.brand}</p>
-                        <p class="card-text">Categoría: ${item.category__name || item.category}</p> 
-                        <p class="card-text">Perecible: ${item.is_perishable}</p>
-                        <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-primary">Ver</a>
-                        <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-warning">Editar</a>
-                        <a href="${DELETE_URL.replace('__ID__', item.id)}" class="btn btn-delete">Eliminar</a>
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="card-title">${item.name || '—'}</h5>
+                                <h6 class="card-subtitle text-muted">SKU: ${item.sku || '—'}</h6>
+                            </div>
+                            <div class="col-6 text-end">
+                                <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-warning btn-sm">Ver</a>
+                                <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-sm btn-delete"
+                                    style="background-color: #D30A11; color: white;"
+                                    data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                                    data-item-name="${item.name}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+        
+                        ${imageUrl ? 
+                            `<div class="text-center mt-2">
+                                <img src="${imageUrl}" alt="Imagen" class="img-fluid rounded"
+                                    style="max-height:120px; object-fit:contain;">
+                            </div>` : ''}
+        
+                        <ul class="list-group list-group-flush mt-2">
+                            <li class="list-group-item"><strong>EAN/UPC:</strong> ${item.ean_upc || '—'}</li>
+                            <li class="list-group-item"><strong>Modelo:</strong> ${item.model || '—'}</li>
+                            <li class="list-group-item"><strong>Marca:</strong> ${item.brand || '—'}</li>
+                            <li class="list-group-item"><strong>Categoría:</strong> ${item.category__name || item.category || '—'}</li>
+                            <li class="list-group-item">
+                                <strong>U. Compra:</strong> ${item.get_uom_purchase_display || '—'} |
+                                <strong>U. Venta:</strong> ${item.get_uom_sale_display || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Precio:</strong> $${item.price || '0'} |
+                                <strong>IVA:</strong> ${item.iva || '0'}%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Stock Min:</strong> ${item.min_stock || '—'} |
+                                <strong>Stock Max:</strong> ${item.max_stock || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Activo:</strong> ${isActiveBadge}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Controles:</strong> ${controls}
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -345,40 +371,46 @@
         }
 
         function buildRow(item) {
-            // Nota: Aquí se deben corregir los nombres de las propiedades si el JSON difiere (e.g., item.category__name)
+
+            const isActiveBadge = item.is_active 
+                ? '<span class="badge bg-success">Sí</span>' 
+                : '<span class="badge bg-danger">No</span>';
+
             return `
             <tr>
-                <td>${item.name}</td>
-                <td>${item.sku}</td>
-                <td>${item.brand}</td>
-                <td>${item.category__name || item.category}</td>
-                <td>${item.price}</td>
-                <td>${item.iva}</td>
-                <td>${item.is_active}</td>
+                <td>${item.name || '—'}</td>
+                <td>${item.sku || '—'}</td>
+                <td>${item.brand || '—'}</td>
+                <td>${item.category__name || item.category || '—'}</td>
+                <td>$${item.price || '0'}</td>
+                <td>${item.iva || '0'}%</td>
+                <td>${isActiveBadge}</td>
                 <td>
-                    <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-primary">Ver</a>
-                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-warning">Editar</a>
-                    <a href="${DELETE_URL.replace('__ID__', item.id)}" class="btn btn-delete">Eliminar</a>
+                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                    <button type="button"
+                        class="btn btn-sm btn-delete"
+                        style="background-color: #D30A11; color: white;"
+                        data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                        data-item-name="${item.name}">
+                        Eliminar
+                    </button>
                 </td>
             </tr>
             `;
         }
-        
-        // --- Función Central de Petición y Renderizado (DRY) ---
+
         function fetchDataAndRender(url, renderFunction, container) {
-            // Mostrar spinner en el contenedor
             container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
 
             fetch(url)
                 .then(response => {
                     if (!response.ok) {
-                        // Lanza un error si la respuesta no es 2xx (por ejemplo, 404)
                         throw new Error(`Error HTTP: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    container.innerHTML = ''; // Limpiar
+                    container.innerHTML = '';
                     let htmlContent = '';
                     
                     if (data.data && data.data.length > 0) {
@@ -395,23 +427,22 @@
                     container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
                 });
         }
-        
-        // --- Event Listener para la Búsqueda ---
-        searchInput.addEventListener('input', function () {
-            const q = searchInput.value.trim(); // Usar trim() para quitar espacios al inicio/final
 
-            // 1. Determinar la URL (CORREGIDO: Incluye /products/)
+        searchInput.addEventListener('input', function () {
+            const q = searchInput.value.trim();
+
+
             const url = q.length === 0 
                 ? '/products/product_all/' 
                 : `/products/product_search/?q=${q}`;
 
-            // 2. Determinar la vista y la función de renderizado (CORREGIDO: Lógica del botón)
+
             
-            // Si el botón dice "Ver Tarjetas", significa que la vista ACTUAL es la TABLA
+
             if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
                 fetchDataAndRender(url, buildRow, tableView);
             } 
-            // Si el botón dice "Ver Tabla", significa que la vista ACTUAL es la TARJETA
+
             else if (toggleViewBtn.textContent === 'Ver Tabla') { 
                 fetchDataAndRender(url, buildCard, cardView);
             }

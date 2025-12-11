@@ -87,10 +87,27 @@
     {% endif %}
 
     <ul class="list-group list-group-flush mt-2">
+        <li class="list-group-item"><strong>EAN/UPC:</strong> {{ p.ean_upc|default:"—" }}</li>
+        <li class="list-group-item"><strong>Modelo:</strong> {{ p.model|default:"—" }}</li>
+        <li class="list-group-item"><strong>Marca:</strong> {{ p.brand|default:"—" }}</li>
+        <li class="list-group-item"><strong>Categoría:</strong> {{ p.category.name }}</li>
         <li class="list-group-item">
-            <p class="card-text">Descripcion: {{ p.description|truncatechars:40|default:"Sin descripción" }}</p>
-            <p class="card-text">Productos: {{ p.count_products }}</p>
-            <p class="card-text">Materias Primarias: {{ p.count_raw_materials }}</p>
+            <strong>U. Compra:</strong> {{ p.get_uom_purchase_display }} |
+            <strong>U. Venta:</strong> {{ p.get_uom_sale_display }}
+        </li>
+        <li class="list-group-item">
+            <strong>Precio:</strong> ${{ p.price }} |
+            <strong>IVA:</strong> {{ p.iva }}%
+        </li>
+        <li class="list-group-item">
+            <strong>Stock Min:</strong> {{ p.min_stock }} |
+            <strong>Stock Max:</strong> {{ p.max_stock }}
+        </li>
+        <li class="list-group-item">
+            <strong>Activo:</strong>
+            {% if p.is_active %}Sí{% else %}No{% endif %}
+        </li>
+        <li class="list-group-item">
             <strong>Controles:</strong>
             {% if p.serie_control %}Serie {% endif %}
             {% if p.batch_control %}Lote{% endif %}
@@ -125,7 +142,7 @@
     </tr>
 </thead>
 
-<tbody>
+<tbody id="raw-material-table-body">
     {% for p in page_obj %}
     <tr>
         <td>{{ p.name|default:"—" }}</td>
@@ -347,6 +364,159 @@
         document.querySelector('form').addEventListener('submit', function(e) {
             if (searchResults.style.display === 'block' && e.submitter !== document.querySelector('.btn-primary')) {
                 e.preventDefault();
+            }
+        });
+    });
+</script>
+<script>
+    const VIEW_URL = "{% url 'raw_material_view' 0 %}".replace('0', '__ID__');
+    const UPDATE_URL = "{% url 'raw_material_update' 0 %}".replace('0', '__ID__');
+    const DELETE_URL = "{% url 'raw_material_delete' 0 %}".replace('0', '__ID__');
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const cardView = document.getElementById('raw-material-cards-view');
+        const tableView = document.getElementById('raw-material-table-body');
+        const searchInput = document.getElementById('q');
+        const toggleViewBtn = document.getElementById('toggle-view-btn');
+        function buildCard(item) {
+            console.log(item)
+            const isActiveBadge = item.is_active ? 'Sí' : 'No';
+            const controls = `${item.serie_control ? 'Serie ' : ''}${item.batch_control ? 'Lote' : ''}` || '—';
+            const imageUrl = item.url_image || '';
+
+            return `
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <h5 class="card-title">${item.name || '—'}</h5>
+                                <h6 class="card-subtitle text-muted">SKU: ${item.sku || '—'}</h6>
+                            </div>
+                            <div class="col-6 text-end">
+                                <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-warning btn-sm">Ver</a>
+                                <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                                <button type="button" class="btn btn-sm btn-delete"
+                                    style="background-color: #D30A11; color: white;"
+                                    data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                                    data-item-name="${item.name}">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+        
+                        ${imageUrl ? 
+                            `<div class="text-center mt-2">
+                                <img src="${imageUrl}" alt="Imagen" class="img-fluid rounded"
+                                    style="max-height:120px; object-fit:contain;">
+                            </div>` : ''}
+        
+                        <ul class="list-group list-group-flush mt-2">
+                            <li class="list-group-item"><strong>EAN/UPC:</strong> ${item.ean_upc || '—'}</li>
+                            <li class="list-group-item"><strong>Modelo:</strong> ${item.model || '—'}</li>
+                            <li class="list-group-item"><strong>Marca:</strong> ${item.brand || '—'}</li>
+                            <li class="list-group-item"><strong>Categoría:</strong> ${item.category__name || item.category || '—'}</li>
+                            <li class="list-group-item">
+                                <strong>U. Compra:</strong> ${item.get_uom_purchase_display || '—'} |
+                                <strong>U. Venta:</strong> ${item.get_uom_sale_display || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Precio:</strong> $${item.price || '0'} |
+                                <strong>IVA:</strong> ${item.iva || '0'}%
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Stock Min:</strong> ${item.min_stock || '—'} |
+                                <strong>Stock Max:</strong> ${item.max_stock || '—'}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Activo:</strong> ${isActiveBadge}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Controles:</strong> ${controls}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function buildRow(item) {
+
+            const isActiveBadge = item.is_active 
+                ? '<span class="badge bg-success">Sí</span>' 
+                : '<span class="badge bg-danger">No</span>';
+
+            return `
+            <tr>
+                <td>${item.name || '—'}</td>
+                <td>${item.sku || '—'}</td>
+                <td>${item.brand || '—'}</td>
+                <td>${item.category__name || item.category || '—'}</td>
+                <td>$${item.price || '0'}</td>
+                <td>${item.iva || '0'}%</td>
+                <td>${isActiveBadge}</td>
+                <td>
+                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                    <button type="button"
+                        class="btn btn-sm btn-delete"
+                        style="background-color: #D30A11; color: white;"
+                        data-url="${DELETE_URL.replace('__ID__', item.id)}"
+                        data-item-name="${item.name}">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+            `;
+        }
+
+        function fetchDataAndRender(url, renderFunction, container) {
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data)
+                    container.innerHTML = '';
+                    let htmlContent = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            htmlContent += renderFunction(item);
+                        });
+                    } else {
+                        htmlContent = '<p class="col-12 text-center mt-3">No se encontraron resultados para su búsqueda.</p>';
+                    }
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud AJAX:', error);
+                    container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
+                });
+        }
+
+        searchInput.addEventListener('input', function () {
+            const q = searchInput.value.trim();
+
+
+            const url = q.length === 0 
+                ? '/products/raw_material_all/' 
+                : `/products/raw_material_search/?q=${q}`;
+
+
+            
+
+            if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
+                fetchDataAndRender(url, buildRow, tableView);
+            } 
+
+            else if (toggleViewBtn.textContent === 'Ver Tabla') { 
+                fetchDataAndRender(url, buildCard, cardView);
             }
         });
     });
