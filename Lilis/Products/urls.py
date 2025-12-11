@@ -17,8 +17,8 @@ products = [
     path('product_delete/<int:pk>/' , views.ProductDeleteView.as_view() ,name='product_delete'),
     path('product_update/<int:pk>/' , views.ProductUpdateView.as_view() ,name='product_update'),
     path('export_product_excel/', views.ProductExportView.as_view(), name='export_product_excel'),
-    path('products_list/product_search/', views.product_search, name='product_search'),
-    path('products_list/product_all/', views.product_all, name='product_all'),
+    path('product_search/', views.product_search, name='product_search'),
+    path('product_all/', views.product_all, name='product_all'),
 ]
 
 suppliers = [

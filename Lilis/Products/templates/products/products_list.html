@@ -269,7 +269,6 @@
 
 {% block scripts %}
 {{ block.super }}
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('toggle-view-btn');
@@ -282,10 +281,16 @@
         updateView(savedView);
 
         toggleBtn.addEventListener('click', function () {
+            // Lógica para cambiar la vista (mantiene el almacenamiento local)
             const currentView = cardsView.style.display === 'none' ? 'table' : 'cards';
             const newView = currentView === 'cards' ? 'table' : 'cards';
             localStorage.setItem('productView', newView);
             updateView(newView);
+            
+            // Si hay un query, relanzar la búsqueda al cambiar de vista
+            if (searchInput.value.length > 0) {
+                 searchInput.dispatchEvent(new Event('input'));
+            }
         });
 
         function updateView(view) {
@@ -301,16 +306,22 @@
         }
     });
 </script>
+
 <script>
+    // URLs de acciones (se mantienen sin cambios)
     const VIEW_URL = "{% url 'product_view' 0 %}".replace('0', '__ID__');
     const UPDATE_URL = "{% url 'product_update' 0 %}".replace('0', '__ID__');
     const DELETE_URL = "{% url 'product_delete' 0 %}".replace('0', '__ID__');
+
     document.addEventListener('DOMContentLoaded', function () {
         const cardView = document.getElementById('product-cards-view');
         const tableView = document.getElementById('product-table-view');
         const searchInput = document.getElementById('q');
         const toggleViewBtn = document.getElementById('toggle-view-btn');
+
+        // --- Funciones de Construcción (se mantienen sin cambios) ---
         function buildCard(item) {
+            // Nota: Aquí se deben corregir los nombres de las propiedades si el JSON difiere (e.g., item.category__name)
             return `
             <div class="col-md-4 mb-3">
                 <div class="card">
@@ -322,7 +333,7 @@
                         <p class="card-text">IVA: ${item.iva}</p>
                         <p class="card-text">Unidad de medida: ${item.measurement_unit}</p>
                         <p class="card-text">Marca: ${item.brand}</p>
-                        <p class="card-text">Categoría: ${item.category}</p>
+                        <p class="card-text">Categoría: ${item.category__name || item.category}</p> 
                         <p class="card-text">Perecible: ${item.is_perishable}</p>
                         <a href="${VIEW_URL.replace('__ID__', item.id)}" class="btn btn-primary">Ver</a>
                         <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-warning">Editar</a>
@@ -334,12 +345,13 @@
         }
 
         function buildRow(item) {
+            // Nota: Aquí se deben corregir los nombres de las propiedades si el JSON difiere (e.g., item.category__name)
             return `
             <tr>
                 <td>${item.name}</td>
                 <td>${item.sku}</td>
                 <td>${item.brand}</td>
-                <td>${item.category}</td>
+                <td>${item.category__name || item.category}</td>
                 <td>${item.price}</td>
                 <td>${item.iva}</td>
                 <td>${item.is_active}</td>
@@ -351,59 +363,59 @@
             </tr>
             `;
         }
+        
+        // --- Función Central de Petición y Renderizado (DRY) ---
+        function fetchDataAndRender(url, renderFunction, container) {
+            // Mostrar spinner en el contenedor
+            container.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        // Lanza un error si la respuesta no es 2xx (por ejemplo, 404)
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    container.innerHTML = ''; // Limpiar
+                    let htmlContent = '';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(item => {
+                            htmlContent += renderFunction(item);
+                        });
+                    } else {
+                        htmlContent = '<p class="col-12 text-center mt-3">No se encontraron resultados para su búsqueda.</p>';
+                    }
+                    container.innerHTML = htmlContent;
+                })
+                .catch(error => {
+                    console.error('Error en la solicitud AJAX:', error);
+                    container.innerHTML = `<p class="col-12 text-center mt-3 text-danger">Error al cargar los datos. Ver consola.</p>`;
+                });
+        }
+        
+        // --- Event Listener para la Búsqueda ---
         searchInput.addEventListener('input', function () {
-            const q = searchInput.value;
-            if (toggleViewBtn.textContent === 'Ver Tarjetas') {
-                cardView.innerHTML = '<div class="spinner-border text-primary" role="status"></div>';
-                if (q.length === 0) {
-                    fetch('product_all/')
-                        .then(response => response.json())
-                        .then(data => {
-                            cardView.innerHTML = '';
-                            data.data.forEach(item => {
-                                cardView.innerHTML += buildCard(item);
-                            });
-                        })
-                        .catch(error => console.error(error));
-                }
-                else {
-                    fetch(`product_search/?q=${q}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            cardView.innerHTML = '';
-                            data.data.forEach(item => {
-                                cardView.innerHTML += buildCard(item);
-                            });
-                        })
-                        .catch(error => console.error(error));
-                }
+            const q = searchInput.value.trim(); // Usar trim() para quitar espacios al inicio/final
+
+            // 1. Determinar la URL (CORREGIDO: Incluye /products/)
+            const url = q.length === 0 
+                ? '/products/product_all/' 
+                : `/products/product_search/?q=${q}`;
+
+            // 2. Determinar la vista y la función de renderizado (CORREGIDO: Lógica del botón)
+            
+            // Si el botón dice "Ver Tarjetas", significa que la vista ACTUAL es la TABLA
+            if (toggleViewBtn.textContent === 'Ver Tarjetas') { 
+                fetchDataAndRender(url, buildRow, tableView);
             } 
-            else if (toggleViewBtn.textContent === 'Ver Tabla') {
-                tableView.innerHTML = '<div class="spinner-border text-primary" role="status"></div>';
-                if (q.length === 0) {
-                    fetch('product_all/')
-                        .then(response => response.json())
-                        .then(data => {
-                            tableView.innerHTML = '';
-                            data.data.forEach(item => {
-                                tableView.innerHTML += buildRow(item);
-                            });
-                        })
-                        .catch(error => console.error(error));
-                }
-                else {
-                    fetch(`product_search/?q=${q}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            tableView.innerHTML = '';
-                            data.data.forEach(item => {
-                                tableView.innerHTML += buildRow(item);
-                            });
-                        })
-                        .catch(error => console.error(error));
-                }
+            // Si el botón dice "Ver Tabla", significa que la vista ACTUAL es la TARJETA
+            else if (toggleViewBtn.textContent === 'Ver Tabla') { 
+                fetchDataAndRender(url, buildCard, cardView);
             }
-        })
+        });
     });
 </script>
 <style>
