@@ -84,7 +84,7 @@
                 <input type="hidden" name="sort_by" value="{{ current_sort_by }}">
                 <input type="hidden" name="order" value="{{ current_order }}">
 
-                <input type="text" class="form-control" name="q" value="{{ q|default:'' }}" placeholder="Buscar por SKU, tipo, RUT cliente...">
+                <input type="text" class="form-control" id="q" name="q" value="{{ q|default:'' }}" placeholder="Buscar por SKU, tipo, RUT cliente...">
                 
                 <button class="btn btn-primary" type="submit">Buscar</button>
             </div>
@@ -117,7 +117,7 @@
         </tr>
     </thead>
 
-    <tbody>
+    <tbody id="transactions-table-body">
         {% for t in page_obj %}
         <tr>
             <td>{{ t.date }}</td>
@@ -381,5 +381,73 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+</script>
+<script>
+    const UPDATE_URL = "{% url 'transaction_update' 0 %}".replace('0', '__ID__');
+    const findUrl = "{% url 'transaction_search' %}";
+    const allUrl = "{% url 'transaction_all' %}";
+
+    const tableBody = document.getElementById('transactions-table-body');
+    const searchInput = document.getElementById('q');
+
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        fetchDataAndRender(allUrl, buildRow, tableBody, 'table');
+
+        function buildRow(item) {
+            return `
+            <tr>
+                <td>${item.date || '—'}</td>
+                <td>${item.type || '—'}</td>
+                <td>${item.producto || '—'}</td>
+                <td>${item.cliente || '—'}</td>
+                <td>${item.bodega || '—'}</td>
+                <td>${item.quantity || '—'}</td>
+                <td>${item.code || '—'}</td>
+                <td>${item.vencimiento || '—'}</td>
+                <td>${item.observaciones || '—'}</td>
+                <td>${item.stock || '—'}</td>
+                <td>
+                    <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
+                </td>
+            </tr>
+            `
+        }
+        
+        function fetchDataAndRender(url, renderFunction, container) {
+            container.innerHTML = '<tr><td colspan="12" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(jsonData => {
+                    const data = jsonData.data || jsonData; 
+
+                    if (data && data.length > 0) {
+                        container.innerHTML = data.map(renderFunction).join('');
+                    } else {
+                        container.innerHTML = '<tr><td colspan="12" class="text-center">No se encontraron transacciones.</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    container.innerHTML = `<tr><td colspan="12" class="text-center"><div class="alert alert-danger mt-3">Error al cargar los datos. Ver consola.</div></td></tr>`;
+                });
+        }
+
+        searchInput.addEventListener('input', function () {
+            const query = searchInput.value.trim();
+            const url = query.length === 0 
+                ? allUrl 
+                : `${findUrl}?q=${encodeURIComponent(query)}`;
+                
+            fetchDataAndRender(url, buildRow, tableBody);
+        });
+        searchInput.dispatchEvent(new Event('input'));
+    });
 </script>
 {% endblock %}
