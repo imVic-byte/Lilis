@@ -50,6 +50,58 @@ class ProductForm(forms.ModelForm):
             'measurement_unit': forms.Select(choices=[('U','Unidades'), ('KG','Kilogramos'), ('L','Litros')]),
             'is_perishable': forms.CheckboxInput(),
         }
+    
+    def clean_conversion_factor(self):
+        factor = self.cleaned_data.get('conversion_factor')
+        if factor and factor <= 0:
+            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
+        return factor
+    
+    def clean_cost(self):
+        cost = self.cleaned_data.get('cost')
+        if cost and cost <= 0:
+            raise forms.ValidationError('El costo debe ser mayor a 0')
+        return cost
+
+    def clean_standard_cost(self):
+        cost = self.cleaned_data.get('standard_cost')
+        if cost and cost <= 0:
+            raise forms.ValidationError('El costo estándar debe ser mayor a 0')
+        return cost
+
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price and price <= 0:
+            raise forms.ValidationError('El precio debe ser mayor a 0')
+        return price
+
+    def clean_min_stock(self):
+        stock = self.cleaned_data.get('min_stock')
+        if stock and stock <= 0:
+            raise forms.ValidationError('El stock mínimo debe ser mayor a 0')
+        return stock
+
+    def clean_max_stock(self):
+        stock = self.cleaned_data.get('max_stock')
+        if stock and stock <= 0:
+            raise forms.ValidationError('El stock máximo debe ser mayor a 0')
+        return stock
+
+    def clean_reordering_level(self):
+        level = self.cleaned_data.get('reordering_level')
+        if level and level <= 0:
+            raise forms.ValidationError('El nivel de reorden debe ser mayor a 0')
+        return level
+
+    def clean_batch_control(self):
+        if self.cleaned_data.get('batch_control') and self.cleaned_data.get('serie_control'):
+            raise forms.ValidationError('No puede haber control por lote y por serie al mismo tiempo')
+        return self.cleaned_data.get('batch_control')
+
+    def clean_controles(self):
+        if self.cleaned_data.get('batch_control') or self.cleaned_data.get('serie_control'):
+            return True
+        raise forms.ValidationError('Debe haber al menos un control')
 
     def clean_name(self):
         return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
@@ -62,12 +114,6 @@ class ProductForm(forms.ModelForm):
 
     def clean_category(self):
         return self.cleaned_data.get('category')
-
-    def clean_conversion_factor(self):
-        factor = self.cleaned_data.get('conversion_factor')
-        if factor and factor <= 0:
-            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
-        return factor
 
     def clean_iva(self):
         iva = self.cleaned_data.get('iva')
@@ -247,6 +293,58 @@ class RawMaterialForm(forms.ModelForm):
             self.fields['supplier'].initial = supplier
             self.fields['supplier'].widget.attrs['readonly'] = True
 
+    def clean_conversion_factor(self):
+        factor = self.cleaned_data.get('conversion_factor')
+        if factor and factor <= 0:
+            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
+        return factor
+    
+    def clean_cost(self):
+        cost = self.cleaned_data.get('cost')
+        if cost and cost <= 0:
+            raise forms.ValidationError('El costo debe ser mayor a 0')
+        return cost
+
+    def clean_standard_cost(self):
+        cost = self.cleaned_data.get('standard_cost')
+        if cost and cost <= 0:
+            raise forms.ValidationError('El costo estándar debe ser mayor a 0')
+        return cost
+
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+        if price and price <= 0:
+            raise forms.ValidationError('El precio debe ser mayor a 0')
+        return price
+
+    def clean_min_stock(self):
+        stock = self.cleaned_data.get('min_stock')
+        if stock and stock <= 0:
+            raise forms.ValidationError('El stock mínimo debe ser mayor a 0')
+        return stock
+
+    def clean_max_stock(self):
+        stock = self.cleaned_data.get('max_stock')
+        if stock and stock <= 0:
+            raise forms.ValidationError('El stock máximo debe ser mayor a 0')
+        return stock
+
+    def clean_reordering_level(self):
+        level = self.cleaned_data.get('reordering_level')
+        if level and level <= 0:
+            raise forms.ValidationError('El nivel de reorden debe ser mayor a 0')
+        return level
+
+    def clean_batch_control(self):
+        if self.cleaned_data.get('batch_control') and self.cleaned_data.get('serie_control'):
+            raise forms.ValidationError('No puede haber control por lote y por serie al mismo tiempo')
+        return self.cleaned_data.get('batch_control')
+
+    def clean_controles(self):
+        if self.cleaned_data.get('batch_control') or self.cleaned_data.get('serie_control'):
+            return True
+        raise forms.ValidationError('Debe haber al menos un control')
+
     def clean_name(self):
         return validate_text_length(self.cleaned_data.get('name'), field_name="El nombre")
 
@@ -258,12 +356,6 @@ class RawMaterialForm(forms.ModelForm):
 
     def clean_category(self):
         return self.cleaned_data.get('category')
-
-    def clean_conversion_factor(self):
-        factor = self.cleaned_data.get('conversion_factor')
-        if factor and factor <= 0:
-            raise forms.ValidationError('El factor de conversión debe ser mayor a 0')
-        return factor
 
     def clean_iva(self):
         iva = self.cleaned_data.get('iva')
