@@ -298,10 +298,12 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log(fechaHoyISO);
         let errores = [];
 
-        if (!fecha) {
+        if(!codigo) errores.push("Debe ingresar un código.");
+        if(!codigo.length < 6) errores.push("El código debe tener al menos 6 caracteres.");
+        if (vencimientoInput && !vencimientoInput.value) {
             errores.push("Debe seleccionar una fecha.");
         }
-        if (vencimientoInput && vencimientoInput.value < fechaHoyISO) {
+        else if (vencimientoInput && vencimientoInput.value < fechaHoyISO) {
             errores.push("La fecha de vencimiento no puede ser una fecha pasada.");
         }
         if (!tipo) errores.push("Debe seleccionar un tipo de movimiento.");
