@@ -24,7 +24,7 @@ product_service = ProductService()
 raw_material_service = RawMaterialService()
 supplier_service = SupplierService()
 
-API_ENDPOINT = 'http://127.0.0.1:8000/api/lilis/'
+API_ENDPOINT = 'http://3.228.61.121/api/lilis/'
 
 # ===================================
 # VISTAS DE CLIENTES

@@ -299,25 +299,33 @@ def user_search(request):
     q = request.GET.get("q")
     users = user_service.model.objects.filter(
         Q(username__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q)
-    ).values(
-        "id",
-        "username",
-        "first_name",
-        "last_name",
-        "email",
-        "groups__name",
-        "profile__run",
     )
-    return JsonResponse({'data': list(users)}, safe=False)
+    data = []
+    for user in users:
+        data.append({
+            "id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "groups_first_name": user.groups.first().name,
+            "profile_run": user.profile.run,
+            "profile_phone": user.profile.phone,
+        })
+    return JsonResponse({'data': data}, safe=False)
     
 def all_users(request):
-    users = user_service.model.objects.all().values(
-        "id",
-        "username",
-        "first_name",
-        "last_name",
-        "email",
-        "groups__name",
-        "profile__run",
-    )
-    return JsonResponse({'data': list(users)}, safe=False)
+    users = user_service.model.objects.all()
+    data = []
+    for user in users:
+        data.append({
+            "id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "groups_first_name": user.groups.first().name,
+            "profile_run": user.profile.run,
+            "profile_phone": user.profile.phone,
+        })
+    return JsonResponse({'data': data}, safe=False)
