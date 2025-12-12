@@ -457,13 +457,12 @@ class WarehouseExportView(GroupRequiredMixin, View):
     )
     def get(self, request):
         q = (request.GET.get("q") or "").strip()
-        qs = warehouse_service.model.objects.select_related("location").all().order_by('name')
+        qs = warehouse_service.model.objects.all().order_by('name')
         limit = request.GET.get("limit")
         if q:
             qs = qs.filter(
                 Q(name__icontains=q) |  
-                Q(address__icontains=q) |
-                Q(location__name__icontains=q)
+                Q(address__icontains=q) 
             )
         if limit:
             try:
@@ -471,14 +470,15 @@ class WarehouseExportView(GroupRequiredMixin, View):
                 qs = qs[:limit]
             except ValueError:
                 pass
-        headers = ["Nombre", "Dirección", "Ubicación", "Área Total"]
+        headers = ["Nombre", "Dirección", "Ubicación", "Área Total", "Propietario"]
         data_rows = []
         for warehouse in qs:
             data_rows.append([
                 warehouse.name,
                 warehouse.address,
-                warehouse.location.name if warehouse.location else "N/A",
+                warehouse.location,
                 warehouse.total_area,
+                warehouse.lilis,
             ])
         return generate_excel_response(headers, data_rows, "Lilis_Bodegas")
 
@@ -823,9 +823,9 @@ class TransactionExportView(GroupRequiredMixin, View):
         limit = request.GET.get("limit")
         if q:
             qs = qs.filter(
-                Q(product__sku__istartswith=q)|
                 Q(type__icontains=q)|
-                Q(client__rut__startswith=q)
+                Q(client__rut__startswith=q)|
+                Q(code__icontains=q)
             )
         if limit:
             try:
@@ -835,18 +835,19 @@ class TransactionExportView(GroupRequiredMixin, View):
                 pass
         data_rows = []
         for transaction in qs:
+            if transaction.client:
+                c = transaction.client.rut
+            else:
+                c = "Lilis"
             data_rows.append([
                 transaction.type,
-                transaction.product.sku,
-                transaction.client.rut,
-                transaction.warehouse.name,
+                c,
+                transaction.code,
                 transaction.date.strftime("%Y-%m-%d"),
                 transaction.expiration_date.strftime("%Y-%m-%d") if transaction.expiration_date else "",
-                transaction.batch_code,
-                transaction.serie_code,
                 transaction.notes,
             ])
-        headers = ["Tipo", "SKU", "Cliente", "Bodega", "Fecha", "Vencimiento", "Lote", "Serie", "Observaciones"]
+        headers = ["Tipo", "Cliente", "Código", "Fecha", "Vencimiento", "Observaciones"]
         return generate_excel_response(headers, data_rows, "Lilis_Transacciones")
 
 @login_required

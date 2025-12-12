@@ -319,21 +319,27 @@ class ProductExportView(GroupRequiredMixin, View):
             except ValueError:
                 pass 
 
-        headers = ["Nombre", "Categoría", "Stock", "Perecible", "Creación", "Vencimiento"]
+        headers = [
+            "Nombre",
+            "SKU",
+            "Deficit",
+            "Categoría",
+            "Control por lote",
+            "Control por serie",
+            "Perecible",
+        ]
         data_rows = []
         
         for p in qs:
             is_perishable_str = "Sí" if p.is_perishable else "No"
-            creation_date_str = p.created_at.strftime("%d-%m-%Y") if p.created_at else "N/A"
-            expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
-            
             data_rows.append([
                 p.name,
+                p.sku,
+                p.deficit,
                 p.category.name,
-                p.quantity,
+                p.batch_control,
+                p.serie_control,
                 is_perishable_str,
-                creation_date_str,
-                expiration_date_str
             ])
 
         return generate_excel_response(headers, data_rows, "Lilis_Productos")

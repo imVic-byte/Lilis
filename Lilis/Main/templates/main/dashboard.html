@@ -99,7 +99,11 @@
                     {% endif %}
                 {% endif %}
             {% endwith %}
+            {% if t.client %}
                         <td>{{ t.client.rut }}</td>
+                    {% else %}
+                        <td>Lilis</td>
+                    {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
