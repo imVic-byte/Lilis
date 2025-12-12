@@ -10,7 +10,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from Main.mixins import GroupRequiredMixin, StaffRequiredMixin
-
+from datetime import date, timedelta
 inventory_service = InventarioService()
 category_service = CategoryService()
 product_service = ProductService()
@@ -233,6 +233,21 @@ class ProductView(GroupRequiredMixin, DetailView):
         'Acceso limitado a Produccion',
         'Acceso limitado a Finanzas'
     )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.batch_control:
+            inventory_items = inventory_service.model.objects.filter(
+                producto=self.object
+            ).prefetch_related('lotes')
+            context['inventory'] = inventory_items 
+            context['control'] = 'lotes'
+        else:
+            inventory_items = inventory_service.model.objects.filter(
+                producto=self.object
+            ).prefetch_related('series')
+            context['inventory'] = inventory_items 
+            context['control'] = 'series'
+        return context
 
 class ProductCreateView(GroupRequiredMixin, CreateView):
     model = product_service.model
@@ -304,21 +319,27 @@ class ProductExportView(GroupRequiredMixin, View):
             except ValueError:
                 pass 
 
-        headers = ["Nombre", "Categoría", "Stock", "Perecible", "Creación", "Vencimiento"]
+        headers = [
+            "Nombre",
+            "SKU",
+            "Deficit",
+            "Categoría",
+            "Control por lote",
+            "Control por serie",
+            "Perecible",
+        ]
         data_rows = []
         
         for p in qs:
             is_perishable_str = "Sí" if p.is_perishable else "No"
-            creation_date_str = p.created_at.strftime("%d-%m-%Y") if p.created_at else "N/A"
-            expiration_date_str = p.expiration_date.strftime("%d-%m-%Y") if p.expiration_date else "N/A"
-            
             data_rows.append([
                 p.name,
+                p.sku,
+                p.deficit,
                 p.category.name,
-                p.quantity,
+                p.batch_control,
+                p.serie_control,
                 is_perishable_str,
-                creation_date_str,
-                expiration_date_str
             ])
 
         return generate_excel_response(headers, data_rows, "Lilis_Productos")
@@ -587,6 +608,21 @@ class RawMaterialView(GroupRequiredMixin, DetailView):
         "Acceso limitado a Produccion",
         "Acceso limitado a Finanzas"
     )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.object.batch_control:
+            inventory_items = inventory_service.model.objects.filter(
+                materia_prima=self.object
+            ).prefetch_related('lotes')
+            context['inventory'] = inventory_items 
+            context['control'] = 'lotes'
+        else:
+            inventory_items = inventory_service.model.objects.filter(
+                materia_prima=self.object
+            ).prefetch_related('series')
+            context['inventory'] = inventory_items 
+            context['control'] = 'series'
+        return context
 
 class RawMaterialCreateView(GroupRequiredMixin, CreateView):
     model = raw_material_service.model
@@ -764,12 +800,14 @@ class InventoryListView(GroupRequiredMixin, ListView):
         sort_by = self.request.GET.get('sort_by', 'stock_total')
         order = self.request.GET.get('order', 'desc')
         per_page = context['paginator'].per_page
+        alerta_vencimiento = date.today() + timedelta(days=10)
         context.update({
             "q": q,
             "current_sort_by": sort_by,
             "current_order": order,
             "order_next": "desc" if order == "asc" else "asc",
             "per_page": per_page,
+            "alerta_vencimiento": alerta_vencimiento,
         })
         return context
     

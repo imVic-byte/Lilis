@@ -336,9 +336,16 @@ class RawMaterialForm(forms.ModelForm):
         return level
 
     def clean_batch_control(self):
-        if self.cleaned_data.get('batch_control') and self.cleaned_data.get('serie_control'):
+        batch_control = self.cleaned_data.get('batch_control')
+        serie_control = self.cleaned_data.get('serie_control')
+        if batch_control and serie_control:
             raise forms.ValidationError('No puede haber control por lote y por serie al mismo tiempo')
-        return self.cleaned_data.get('batch_control')
+        elif not batch_control and not serie_control:
+            raise forms.ValidationError('Debe haber al menos un control')
+        elif batch_control:
+            return batch_control
+        elif serie_control:
+            return serie_control
 
     def clean_controles(self):
         if self.cleaned_data.get('batch_control') or self.cleaned_data.get('serie_control'):

@@ -48,8 +48,8 @@
                         <div class="col-md-4">{{ form.alerta_bajo_stock|as_crispy_field }}</div>
                         <div class="col-md-4">{{ form.alerta_por_vencer|as_crispy_field }}</div>
 
-                        <div class="col-md-4">{{ form.serie_control|as_crispy_field }}</div>
-                        <div class="col-md-4">{{ form.batch_control|as_crispy_field }}</div>
+                        <div class="col-md-4" id = "serie_control">{{ form.serie_control|as_crispy_field }}</div>
+                        <div class="col-md-4" id = "batch_control">{{ form.batch_control|as_crispy_field }}</div>
                         <div class="col-md-4">{{ form.is_perishable|as_crispy_field }}</div>
                     </div>
 
@@ -68,7 +68,7 @@
                             <i class="bi bi-arrow-left me-1"></i> Volver
                         </a>
                         <button type="submit" class="btn btn-primary btn-lg px-4 btn-guardar-confirmar"
-                            data-title="¿Crear nuevo producto?">
+                            data-title="¿Crear nuevo producto?" id="guardar">
                             <i class="bi bi-check2-circle me-1"></i> Guardar
                         </button>
                     </div>
