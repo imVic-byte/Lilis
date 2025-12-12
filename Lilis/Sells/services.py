@@ -131,6 +131,9 @@ class InventarioService(CRUD):
         self.serie = Serie
         self.bodegas = WarehouseService
     
+    
+
+    
     def actualizar_stock(self, inventario):
         if inventario.lotes.exists():
             print("actualizando stock, lotes")
@@ -314,7 +317,83 @@ class InventarioService(CRUD):
                 print("deficit actualizado",inventario.materia_prima.deficit)
                 return True
         return False
-  
+
+    def agregar_lotes_inventario(self, inventario, cantidad):
+        cantidad = Decimal(cantidad)
+        lotes = self.lote.objects.filter(inventario=inventario).order_by('-fecha_expiracion')
+        for l in lotes:
+            if cantidad == 0:
+                break
+            if l.cantidad_actual == 0:
+                l.cantidad_actual += cantidad
+                l.save()
+                cantidad = 0
+                break
+        if cantidad > 0:
+            self.lote.objects.create(inventario=inventario, fecha_expiracion=None, cantidad_actual=cantidad)
+        self.actualizar_stock(inventario)
+        return True
+    
+    def agregar_series_inventario(self, inventario, cantidad):
+        try:
+            cantidad_a_agregar = int(cantidad)
+        except Exception:
+            print("Error: La cantidad de series debe ser un número entero válido.")
+            return False
+            
+        if cantidad_a_agregar <= 0:
+            self.actualizar_stock(inventario)
+            return True
+            
+        series_inactivas_qs = self.serie.objects.filter(
+            inventario=inventario, 
+            estado='I'
+        ).values_list('id', flat=True) 
+        num_a_reusar = min(cantidad_a_agregar, series_inactivas_qs.count())
+        
+        if num_a_reusar > 0:
+            ids_a_activar = list(series_inactivas_qs[:num_a_reusar])
+            self.serie.objects.filter(id__in=ids_a_activar).update(estado='A')
+            
+        cantidad_restante_a_crear = cantidad_a_agregar - num_a_reusar
+            
+        if cantidad_restante_a_crear > 0:
+            nuevas_series = [
+                self.serie(inventario=inventario, estado='A', fecha_expiracion=None)
+                for _ in range(cantidad_restante_a_crear)
+            ]
+            self.serie.objects.bulk_create(nuevas_series)
+        self.actualizar_stock(inventario)
+        return True
+    
+    def editar_stock(self, inventario, cantidad):
+        try:
+            stock = float(inventario.stock_total)
+            cant = float(cantidad)
+        except:
+            print("Error al formatear cantidades")
+            stock = 0
+            cant = 0    
+        diferencia = cant - stock
+        if inventario.producto:
+            item = inventario.producto
+        else:
+            item = inventario.materia_prima
+        match diferencia:
+            case diferencia if diferencia < 0:
+                if item.batch_control:
+                    self.consumir_lotes_inventario(inventario, abs(diferencia))
+                else:
+                    self.consumir_series_inventario(inventario, abs(diferencia))
+            case diferencia if diferencia > 0:
+                if item.batch_control:
+                    self.agregar_lotes_inventario(inventario, diferencia)
+                else:
+                    self.agregar_series_inventario(inventario, diferencia)
+            case diferencia if diferencia == 0:
+                return False
+        return True
+
     def transferir(self, transaction, inventario, cantidad):
         item = None
         control = None

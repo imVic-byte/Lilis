@@ -780,7 +780,6 @@ class InventoryListView(GroupRequiredMixin, ListView):
         allowed_sort_fields = ['materia_prima__name','materia_prima__sku', 'producto__name', 'producto__sku', 'stock_total']
         sort_by = self.request.GET.get('sort_by', 'stock_total')
         order = self.request.GET.get('order', 'desc')
-
         if sort_by not in allowed_sort_fields:
             sort_by = 'stock_total'
         if order not in ['asc', 'desc']:
@@ -822,3 +821,9 @@ class InventoryListView(GroupRequiredMixin, ListView):
             return per_page
         else:
             return default_per_page
+
+def editar_inventario(request):
+    inventario = inventory_service.model.objects.get(pk=request.GET.get('id'))
+    stock = request.GET.get('stock')
+    inventory_service.editar_stock(inventario, stock)
+    return redirect('inventory_list')
