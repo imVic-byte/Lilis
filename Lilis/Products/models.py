@@ -145,6 +145,64 @@ class Inventario(models.Model):
             return f'{self.producto.name} - {self.producto.sku}'
         return f'{self.materia_prima.name} - {self.materia_prima.sku}'
 
+    @property
+    def alerta_vencimiento(self):
+        if self.producto:
+            return self.producto.alerta_por_vencer
+        return self.materia_prima.alerta_por_vencer
+    
+    @property
+    def alerta_bajo_stock(self):
+        if self.producto:
+            return self.producto.alerta_bajo_stock
+        return self.materia_prima.alerta_bajo_stock
+    
+    @property
+    def ultimo_control_con_fecha(self):
+        if self.lotes.exists():
+            lote_reciente = self.lotes.filter(
+                cantidad_actual__gt=0, 
+                fecha_expiracion__isnull=False
+            ).order_by('-fecha_creacion').first()
+            if lote_reciente:
+                print(lote_reciente)
+                return lote_reciente
+        if self.series.exists():
+            serie_reciente = self.series.filter(
+                estado='A',
+                fecha_expiracion__isnull=False
+            ).order_by('-fecha_creacion').first()
+            if serie_reciente:
+                return serie_reciente
+        return None
+    
+    @property
+    def series_count(self):
+        return self.series.filter(estado='A').count()
+    
+    @property
+    def reorder(self):
+        if self.producto:
+            return self.producto.reordering_level
+        return self.materia_prima.reordering_level
+
+    @property
+    def get_inv(self):
+        if self.lotes.exists():
+            return self.lotes
+        if self.series.exists():
+            return self.series
+        return None
+    
+    @property
+    def cant_inv(self):
+        if self.lotes.exists():
+            return self.lotes.count()
+        if self.series.exists():
+            return self.series.count()
+        return None
+
+
 class Lote(models.Model):
     codigo = models.CharField(max_length=100)
     inventario = models.ForeignKey(Inventario, on_delete=models.PROTECT, related_name="lotes")

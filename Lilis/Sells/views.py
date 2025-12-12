@@ -1068,7 +1068,7 @@ def transaction_search(request):
             rut = "Lilis"
         data.append({
             'id': t.id,
-            'fecha': t.date,
+            'fecha': t.date.strftime("%Y-%m-%d") if hasattr(t, 'date') else 'N/A',
             'tipo': t.type,
             'codigo': t.code,
             'cliente': rut,
@@ -1089,7 +1089,7 @@ def transaction_all(request):
             rut = "Lilis"
         data.append({
             'id': t.id,
-            'fecha': t.date,
+            'fecha': t.date.strftime("%Y-%m-%d") if hasattr(t, 'date') else 'N/A',
             'tipo': t.type,
             'codigo': t.code,
             'cliente': rut,

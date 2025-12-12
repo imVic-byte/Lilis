@@ -84,6 +84,7 @@
                                 {% endif %}
                             </a>
                         </th>
+                        <th style="min-width: 130px;">Vencimiento</th>
 
                     </tr>
                 </thead>
@@ -115,11 +116,32 @@
 
                         <!-- Bodega -->
                         <td>{{ item.bodega.name }}</td>
-
-                        <!-- Stock total -->
-                        <td class="fw-bold">{{ item.stock_total }}</td>
-
-
+                        {% if item.producto.alerta_bajo_stock %}
+                            {% if item.stock_total < item.producto.min_stock or item.stock_total < item.materia_prima.min_stock %}
+                            <td class="fw-bold text-danger">{{ item.stock_total }}
+                            {% if item.reorder and item.alerta_bajo_stock %} 
+                            <span class="badge text-dark bg-warning">!Reordenar!</span> {% endif %}
+                            </td> 
+                            {% else %}
+                            <td class="fw-bold text-success">{{ item.stock_total }}</td>
+                            {% endif %}
+                        {% else %}
+                            <td class="fw-bold text-success">{{ item.stock_total }}</td>
+                        {% endif %}
+                        {% if item.alerta_vencimiento %}
+                            {% if item.ultimo_control_con_fecha %}
+                                {% if item.ultimo_control_con_fecha.fecha_expiracion < alerta_vencimiento %}
+                                    <td class="fw-bold text-danger">{{ item.ultimo_control_con_fecha.fecha_expiracion }}</td>
+                                {% else %}
+                                    <td class="fw-bold text-success">{{ item.ultimo_control_con_fecha.fecha_expiracion }}</td>
+                                {% endif %}
+                            {% else %}
+                                <td class="fw-bold text-success">No expira</td>
+                            {% endif %}
+                        {% else %}
+                            <td class="fw-bold text-success">No expira</td>
+                        {% endif %}
+                        
                     </tr>
 
                     {% empty %}
