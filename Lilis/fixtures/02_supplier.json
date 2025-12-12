@@ -1,0 +1,302 @@
+[
+  {
+    "model": "Products.Supplier",
+    "pk": 1,
+    "fields": {
+      "bussiness_name": "Tecno Global SpA",
+      "fantasy_name": "TecnoChip",
+      "rut": "76.123.456-1",
+      "email": "contacto@tecnoglobal.cl",
+      "phone": "+56221112222",
+      "address": "Av. Central 100, Santiago",
+      "city": "Santiago",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "5.00",
+      "is_preferred": true,
+      "lead_time_days": 5,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 2,
+    "fields": {
+      "bussiness_name": "USA Polymers Inc.",
+      "fantasy_name": "PlasticWorld",
+      "rut": "50.987.654-2",
+      "email": "sales@usapolymers.com",
+      "phone": "+12125550100",
+      "address": "123 Trade St, Miami",
+      "city": "Miami",
+      "country": "USA",
+      "payment_terms_days": 60,
+      "currency": "USD",
+      "discount_percentage": "10.00",
+      "is_preferred": true,
+      "lead_time_days": 15,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 3,
+    "fields": {
+      "bussiness_name": "Quimica Andina Ltda.",
+      "fantasy_name": null,
+      "rut": "77.543.210-k",
+      "email": "ventas@quimicaandina.cl",
+      "phone": "+56323334444",
+      "address": "Ruta 5 Sur, Kilómetro 20",
+      "city": "Rancagua",
+      "country": "Chile",
+      "payment_terms_days": 7,
+      "currency": "CLP",
+      "discount_percentage": "0.00",
+      "is_preferred": false,
+      "lead_time_days": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 4,
+    "fields": {
+      "bussiness_name": "Fast Shipping Express",
+      "fantasy_name": "FSE Logistics",
+      "rut": "60.000.001-9",
+      "email": "atencion@fse.cl",
+      "phone": "+56987654321",
+      "address": "Calle Ficticia 456",
+      "city": "Valparaíso",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "2.50",
+      "is_preferred": false,
+      "lead_time_days": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 5,
+    "fields": {
+      "bussiness_name": "Metal Steel EU S.L.",
+      "fantasy_name": "EuroMetales",
+      "rut": "90.123.456-7",
+      "email": "info@eurosteel.es",
+      "phone": "+34917000000",
+      "address": "Carrer Major 5",
+      "city": "Barcelona",
+      "country": "España",
+      "payment_terms_days": 90,
+      "currency": "EUR",
+      "discount_percentage": "15.00",
+      "is_preferred": true,
+      "lead_time_days": 25,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 6,
+    "fields": {
+      "bussiness_name": "Distribuidora Chile Norte",
+      "fantasy_name": null,
+      "rut": "76.765.432-1",
+      "email": "contactonorte@dcn.cl",
+      "phone": "+56556667777",
+      "address": "Calle Seca 10",
+      "city": "Antofagasta",
+      "country": "Chile",
+      "payment_terms_days": 15,
+      "currency": "CLP",
+      "discount_percentage": "0.00",
+      "is_preferred": false,
+      "lead_time_days": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 7,
+    "fields": {
+      "bussiness_name": "Software & Support Ltda.",
+      "fantasy_name": "S&S",
+      "rut": "76.999.888-7",
+      "email": "soporte@sys.cl",
+      "phone": "+56224445555",
+      "address": "Torre Las Condes, 3er Piso",
+      "city": "Santiago",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "0.00",
+      "is_preferred": true,
+      "lead_time_days": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 8,
+    "fields": {
+      "bussiness_name": "China Fiber Co.",
+      "fantasy_name": "SilkyRoad",
+      "rut": "80.000.000-0",
+      "email": "export@chinFiber.cn",
+      "phone": "+862112345678",
+      "address": "Yiwu Market E-30",
+      "city": "Yiwu",
+      "country": "China",
+      "payment_terms_days": 120,
+      "currency": "USD",
+      "discount_percentage": "20.00",
+      "is_preferred": false,
+      "lead_time_days": 45,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 9,
+    "fields": {
+      "bussiness_name": "Madera Premium",
+      "fantasy_name": "Forestal Sur",
+      "rut": "78.234.567-8",
+      "email": "ventas@maderaprem.cl",
+      "phone": "+56637778888",
+      "address": "Camino Interior s/n",
+      "city": "Valdivia",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "3.00",
+      "is_preferred": true,
+      "lead_time_days": 7,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 10,
+    "fields": {
+      "bussiness_name": "Papelera Central S.A.",
+      "fantasy_name": null,
+      "rut": "76.543.000-2",
+      "email": "contacto@papelcentral.cl",
+      "phone": "+56229990000",
+      "address": "Calle Imprenta 123",
+      "city": "San Bernardo",
+      "country": "Chile",
+      "payment_terms_days": 45,
+      "currency": "CLP",
+      "discount_percentage": "0.00",
+      "is_preferred": false,
+      "lead_time_days": 5,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 11,
+    "fields": {
+      "bussiness_name": "Swiss Precision Tools",
+      "fantasy_name": "SwissTools",
+      "rut": "90.909.090-0",
+      "email": "export@swisstools.ch",
+      "phone": "+41441234567",
+      "address": "Bahnhofstrasse 10",
+      "city": "Zurich",
+      "country": "Suiza",
+      "payment_terms_days": 30,
+      "currency": "EUR",
+      "discount_percentage": "7.50",
+      "is_preferred": true,
+      "lead_time_days": 18,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 12,
+    "fields": {
+      "bussiness_name": "Oceanic Fishing Inc.",
+      "fantasy_name": "DeepSea",
+      "rut": "60.998.877-6",
+      "email": "commercial@oceanic.com",
+      "phone": "+56651112222",
+      "address": "Muelle Sur S/N",
+      "city": "Puerto Montt",
+      "country": "Chile",
+      "payment_terms_days": 7,
+      "currency": "CLP",
+      "discount_percentage": "1.00",
+      "is_preferred": false,
+      "lead_time_days": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 13,
+    "fields": {
+      "bussiness_name": "Hardware del Pacífico",
+      "fantasy_name": "HDP",
+      "rut": "76.111.222-3",
+      "email": "ventas@hdp.cl",
+      "phone": "+56228889999",
+      "address": "Calle Fierro 789",
+      "city": "Concepción",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "4.00",
+      "is_preferred": false,
+      "lead_time_days": 8,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 14,
+    "fields": {
+      "bussiness_name": "Microchips Asia",
+      "fantasy_name": "MAC",
+      "rut": "85.444.555-1",
+      "email": "order@microasia.hk",
+      "phone": "+85223456789",
+      "address": "Kowloon Bay, Tower 5",
+      "city": "Hong Kong",
+      "country": "China",
+      "payment_terms_days": 60,
+      "currency": "USD",
+      "discount_percentage": "12.00",
+      "is_preferred": true,
+      "lead_time_days": 35,
+      "is_active": true
+    }
+  },
+  {
+    "model": "Products.Supplier",
+    "pk": 15,
+    "fields": {
+      "bussiness_name": "Vidrios Modernos SpA",
+      "fantasy_name": "Vitral",
+      "rut": "76.333.333-5",
+      "email": "contacto@vidriosmodernos.cl",
+      "phone": "+56221010101",
+      "address": "Av. Sur 45",
+      "city": "Talca",
+      "country": "Chile",
+      "payment_terms_days": 30,
+      "currency": "CLP",
+      "discount_percentage": "0.00",
+      "is_preferred": false,
+      "lead_time_days": 6,
+      "is_active": true
+    }
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "model": "Sells.WareClient",
+    "pk": 1,
+    "fields": {
+      "client": 1,
+      "warehouse": 1,
+      "association_date": "2025-01-15",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 2,
+    "fields": {
+      "client": 2,
+      "warehouse": 5,
+      "association_date": "2025-02-20",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 3,
+    "fields": {
+      "client": 3,
+      "warehouse": 9,
+      "association_date": "2025-03-01",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 4,
+    "fields": {
+      "client": 4,
+      "warehouse": 2,
+      "association_date": "2025-04-10",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 5,
+    "fields": {
+      "client": 5,
+      "warehouse": 3,
+      "association_date": "2025-05-05",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 6,
+    "fields": {
+      "client": 6,
+      "warehouse": 14,
+      "association_date": "2025-06-12",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 7,
+    "fields": {
+      "client": 7,
+      "warehouse": 11,
+      "association_date": "2025-07-01",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 8,
+    "fields": {
+      "client": 8,
+      "warehouse": 10,
+      "association_date": "2025-08-25",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 9,
+    "fields": {
+      "client": 1,
+      "warehouse": 6,
+      "association_date": "2025-09-01",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 10,
+    "fields": {
+      "client": 10,
+      "warehouse": 13,
+      "association_date": "2025-10-18",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 11,
+    "fields": {
+      "client": 11,
+      "warehouse": 1,
+      "association_date": "2025-11-01",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 12,
+    "fields": {
+      "client": 12,
+      "warehouse": 5,
+      "association_date": "2025-12-05",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 13,
+    "fields": {
+      "client": 13,
+      "warehouse": 3,
+      "association_date": "2025-01-01",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 14,
+    "fields": {
+      "client": 14,
+      "warehouse": 8,
+      "association_date": "2025-02-14",
+      "is_active": true
+    }
+  },
+  {
+    "model": "Sells.WareClient",
+    "pk": 15,
+    "fields": {
+      "client": 15,
+      "warehouse": 12,
+      "association_date": "2025-03-22",
+      "is_active": true
+    }
+  }
+]

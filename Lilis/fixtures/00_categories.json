@@ -1,7 +1,122 @@
 [
-  { "model": "Products.Category", "pk": 1, "fields": { "name": "Chocolates", "description": "Diferentes tipos de chocolate" } },
-  { "model": "Products.Category", "pk": 2, "fields": { "name": "Dulces", "description": "Caramelos y piruletas" } },
-  { "model": "Products.Category", "pk": 3, "fields": { "name": "Galletas", "description": "Variedad de galletas y bizcochos" } },
-  { "model": "Products.Category", "pk": 4, "fields": { "name": "Pasteles", "description": "Pasteles y repostería" } },
-  { "model": "Products.Category", "pk": 5, "fields": { "name": "Snacks", "description": "Snacks dulces empaquetados" } }
+  {
+    "model": "Products.Category",
+    "pk": 1,
+    "fields": {
+      "name": "Componentes Electrónicos",
+      "description": "Chips, circuitos, y placas base."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 2,
+    "fields": {
+      "name": "Herramientas Manuales",
+      "description": "Destornilladores, alicates, y llaves."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 3,
+    "fields": {
+      "name": "Materiales Químicos",
+      "description": "Solventes, resinas y adhesivos."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 4,
+    "fields": {
+      "name": "Empaques y Embalaje",
+      "description": "Cajas, plásticos y materiales de protección."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 5,
+    "fields": {
+      "name": "Textiles y Telas",
+      "description": "Fibras naturales y sintéticas."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 6,
+    "fields": {
+      "name": "Metales y Aleaciones",
+      "description": "Aluminio, acero y cobre."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 7,
+    "fields": {
+      "name": "Productos Terminados A",
+      "description": "Bienes de alto margen."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 8,
+    "fields": {
+      "name": "Productos Terminados B",
+      "description": "Bienes de consumo general."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 9,
+    "fields": {
+      "name": "Accesorios y Extras",
+      "description": "Cables, cargadores y adaptadores."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 10,
+    "fields": {
+      "name": "Servicios",
+      "description": "Garantías, soporte técnico y horas hombre."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 11,
+    "fields": {
+      "name": "Plásticos y Polímeros",
+      "description": "Piezas moldeadas y láminas."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 12,
+    "fields": {
+      "name": "Maderas",
+      "description": "Tableros, listones y chapas."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 13,
+    "fields": {
+      "name": "Suministros de Oficina",
+      "description": "Papelería, tinta y tóner."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 14,
+    "fields": {
+      "name": "Periféricos",
+      "description": "Monitores, teclados y mouses."
+    }
+  },
+  {
+    "model": "Products.Category",
+    "pk": 15,
+    "fields": {
+      "name": "Hogar Inteligente",
+      "description": "Dispositivos IoT y automatización."
+    }
+  }
 ]
