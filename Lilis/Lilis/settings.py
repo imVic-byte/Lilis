@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-unsafe')
 
 # Usar solo codear
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = ['localhost','127.0.0.1','ec2-35-169-91-111.compute-1.amazonaws.com','35.169.91.111']
+ALLOWED_HOSTS = ['3.228.61.121','localhost','127.0.0.1','ec2-35-169-91-111.compute-1.amazonaws.com','35.169.91.111']
 
 
 DEBUG = True
@@ -136,6 +136,7 @@ DATE_FORMAT = 'd-m-Y'
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",

@@ -92,26 +92,23 @@
         <li class="list-group-item"><strong>Marca:</strong> {{ p.brand|default:"—" }}</li>
         <li class="list-group-item"><strong>Categoría:</strong> {{ p.category.name }}</li>
         <li class="list-group-item">
-            <strong>U. Compra:</strong> {{ p.get_uom_purchase_display }} |
-            <strong>U. Venta:</strong> {{ p.get_uom_sale_display }}
-        </li>
-        <li class="list-group-item">
             <strong>Precio:</strong> ${{ p.price }} |
             <strong>IVA:</strong> {{ p.iva }}%
         </li>
         <li class="list-group-item">
-            <strong>Stock Min:</strong> {{ p.min_stock }} |
-            <strong>Stock Max:</strong> {{ p.max_stock }}
+            <strong>Stock Min:</strong> {{ p.min_stock }} 
         </li>
         <li class="list-group-item">
             <strong>Activo:</strong>
             {% if p.is_active %}Sí{% else %}No{% endif %}
         </li>
         <li class="list-group-item">
-            <strong>Controles:</strong>
-            {% if p.serie_control %}Serie {% endif %}
-            {% if p.batch_control %}Lote{% endif %}
-            {% if not p.serie_control and not p.batch_control %}—{% endif %}
+            <strong>Lote:</strong>
+            {% if p.batch_control %}Sí{% else %}No{% endif %}
+        </li>
+        <li class="list-group-item">
+            <strong>Serie:</strong>
+            {% if p.serie_control %}Sí{% else %}No{% endif %}
         </li>
     </ul>
 </div>
@@ -133,7 +130,6 @@
         <th>Nombre</th>
         <th>SKU</th>
         <th>Marca</th>
-        <th>Proveedor</th>
         <th>Categoría</th>
         <th>Precio</th>
         <th>IVA</th>
@@ -148,7 +144,6 @@
         <td>{{ p.name|default:"—" }}</td>
         <td>{{ p.sku|default:"—" }}</td>
         <td>{{ p.brand|default:"—" }}</td>
-        <td>{{ p.supplier.bussiness_name|default:"—" }}</td>
         <td>{{ p.category.name|default:"—" }}</td>
         <td>${{ p.price|default:"0" }}</td>
         <td>{{ p.iva|default:"0" }}%</td>
@@ -379,7 +374,6 @@
         const searchInput = document.getElementById('q');
         const toggleViewBtn = document.getElementById('toggle-view-btn');
         function buildCard(item) {
-            console.log(item)
             const isActiveBadge = item.is_active ? 'Sí' : 'No';
             const controls = `${item.serie_control ? 'Serie ' : ''}${item.batch_control ? 'Lote' : ''}` || '—';
             const imageUrl = item.url_image || '';
@@ -415,25 +409,17 @@
                             <li class="list-group-item"><strong>EAN/UPC:</strong> ${item.ean_upc || '—'}</li>
                             <li class="list-group-item"><strong>Modelo:</strong> ${item.model || '—'}</li>
                             <li class="list-group-item"><strong>Marca:</strong> ${item.brand || '—'}</li>
-                            <li class="list-group-item"><strong>Categoría:</strong> ${item.category__name || item.category || '—'}</li>
-                            <li class="list-group-item">
-                                <strong>U. Compra:</strong> ${item.get_uom_purchase_display || '—'} |
-                                <strong>U. Venta:</strong> ${item.get_uom_sale_display || '—'}
-                            </li>
+                            <li class="list-group-item"><strong>Categoría:</strong> ${item.category || '—'}</li>
                             <li class="list-group-item">
                                 <strong>Precio:</strong> $${item.price || '0'} |
                                 <strong>IVA:</strong> ${item.iva || '0'}%
                             </li>
                             <li class="list-group-item">
-                                <strong>Stock Min:</strong> ${item.min_stock || '—'} |
-                                <strong>Stock Max:</strong> ${item.max_stock || '—'}
+                                <strong>Stock Min:</strong> ${item.min_stock || '—'}
                             </li>
-                            <li class="list-group-item">
-                                <strong>Activo:</strong> ${isActiveBadge}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Controles:</strong> ${controls}
-                            </li>
+                            ${item.is_active ? '<li class="list-group-item"><strong>Activo:</strong> Sí</li>' : '<li class="list-group-item"><strong>Activo:</strong> No</li>'}
+                            ${item.batch_control ? '<li class="list-group-item"><strong>Lote:</strong> Sí</li>' : '<li class="list-group-item"><strong>Lote:</strong> No</li>'}
+                            ${item.serie_control ? '<li class="list-group-item"><strong>Serie:</strong> Sí</li>' : '<li class="list-group-item"><strong>Serie:</strong> No</li>'}
                         </ul>
                     </div>
                 </div>

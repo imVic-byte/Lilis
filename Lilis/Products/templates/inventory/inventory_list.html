@@ -7,26 +7,21 @@
 
 <div class="container mt-4">
 
-    <!-- ================= HEADER ================= -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-semibold mb-0">Inventario</h3>
         <span class="text-muted">Total: {{ total }}</span>
     </div>
 
-    <!-- ================= FILTROS ================= -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
 
             <form method="get" class="row g-3">
-
-                <!-- Buscador -->
-                <div class="col-md-6">
+                {% csrf_token %} <div class="col-md-6">
                     <label class="form-label fw-semibold">Buscar</label>
                     <input type="text" name="q" value="{{ q }}" class="form-control"
                            placeholder="Buscar materia prima o producto...">
                 </div>
 
-                <!-- Per page -->
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Resultados por página</label>
                     <select name="per_page" class="form-select" onchange="this.form.submit()">
@@ -45,14 +40,12 @@
         </div>
     </div>
 
-    <!-- ================= TABLE ================= -->
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
 
                 <thead class="table-light">
                     <tr>
-                        <!-- Nombre -->
                         <th style="min-width: 180px;">
                             <a class="text-decoration-none" href="?{{ querystring_sorting }}&sort_by=materia_prima__name&order={% if current_sort_by == 'materia_prima__name' %}{{ order_next }}{% else %}asc{% endif %}">
                                 Producto
@@ -62,7 +55,6 @@
                             </a>
                         </th>
 
-                        <!-- SKU -->
                         <th style="min-width: 110px;">
                             <a class="text-decoration-none" href="?{{ querystring_sorting }}&sort_by=materia_prima__sku&order={% if current_sort_by == 'materia_prima__sku' %}{{ order_next }}{% else %}asc{% endif %}">
                                 SKU
@@ -72,10 +64,8 @@
                             </a>
                         </th>
 
-                        <!-- Bodega -->
                         <th style="min-width: 150px;">Bodega</th>
 
-                        <!-- Stock total -->
                         <th style="min-width: 130px;">
                             <a class="text-decoration-none" href="?{{ querystring_sorting }}&sort_by=stock_total&order={% if current_sort_by == 'stock_total' %}{{ order_next }}{% else %}desc{% endif %}">
                                 Stock total
@@ -85,6 +75,7 @@
                             </a>
                         </th>
                         <th style="min-width: 130px;">Vencimiento</th>
+                        <th style="min-width: 130px;">Editar stock</th>
 
                     </tr>
                 </thead>
@@ -112,9 +103,6 @@
                             {% endif %}
                         </td>
 
-                      
-
-                        <!-- Bodega -->
                         <td>{{ item.bodega.name }}</td>
                         {% if item.producto.alerta_bajo_stock %}
                             {% if item.stock_total < item.producto.min_stock or item.stock_total < item.materia_prima.min_stock %}
@@ -141,12 +129,29 @@
                         {% else %}
                             <td class="fw-bold text-success">No expira</td>
                         {% endif %}
-                        
+                        <td style="min-width: 250px;">
+                        <form method="get" action="{% url 'editar_inventario' %}" class="d-flex align-items-center editar-inventario-form">
+                            <input type="hidden" name="id" value="{{ item.id }}">
+                            <input type="number" 
+                                name="stock"
+                                class="form-control form-control-sm"
+                                value="{{ item.stock_total }}"
+                                min="0"
+                                step="0.01"
+                                style="max-width: 150px; margin-right: 5px;">
+                            
+                            <button class="btn btn-primary btn-sm" 
+                                    type="submit"
+                                    title="Guardar nuevo stock">
+                                <i class="bi bi-check"></i>
+                            </button>
+                        </form>
+                    </td>
+                        </td>                  
                     </tr>
-
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-3 text-muted">
+                        <td colspan="7" class="text-center py-3 text-muted">
                             No se encontraron resultados.
                         </td>
                     </tr>
@@ -157,7 +162,6 @@
         </div>
     </div>
 
-    <!-- ================= PAGINACIÓN ================= -->
     <div class="d-flex justify-content-center mt-4">
         <nav>
             <ul class="pagination">
@@ -192,4 +196,46 @@
 
 </div>
 
+{% endblock content %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const forms = document.querySelectorAll(".editar-inventario-form");
+
+    forms.forEach(form => {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const stockInput = form.querySelector('input[name="stock"]');
+            const nuevoStock = stockInput.value.trim();
+
+            if (nuevoStock === "" || isNaN(nuevoStock)) {
+                Swal.fire("Error", "Debe ingresar un valor numérico.", "error");
+                return;
+            }
+            if (nuevoStock < 0) {
+                Swal.fire("Error", "El stock no puede ser negativo.", "error");
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: "¿Guardar nuevo stock?",
+                html: "Nuevo stock: <b>" + nuevoStock + "</b>",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, guardar",
+                cancelButtonText: "Cancelar"
+            });
+
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+
+});
+</script>
 {% endblock %}

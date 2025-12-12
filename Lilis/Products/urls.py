@@ -45,6 +45,7 @@ raw_materials = [
 
 inventory = [
     path('inventory_list/', views.InventoryListView.as_view(), name='inventory_list'),
+    path('editar_inventario/', views.editar_inventario, name='editar_inventario'),
 ]
 
 urlpatterns = [

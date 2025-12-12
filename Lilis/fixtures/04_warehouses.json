@@ -1,0 +1,182 @@
+[
+  {
+    "model": "Sells.Warehouse",
+    "pk": 1,
+    "fields": {
+      "name": "Bodega Principal Santiago",
+      "address": "Calle Industrial 500, Maipú",
+      "total_area": "2500.00",
+      "location": "Zona Industrial Poniente",
+      "is_active": true,
+      "lilis": true
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 2,
+    "fields": {
+      "name": "Centro de Distribución Norte",
+      "address": "Puerto Seco, Antofagasta",
+      "total_area": "1500.50",
+      "location": "Antofagasta",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 3,
+    "fields": {
+      "name": "Bodega de Envíos Rápidos",
+      "address": "Calle Express 10, Pudahuel",
+      "total_area": "500.00",
+      "location": "Cercana a Aeropuerto",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 4,
+    "fields": {
+      "name": "Bodega Temporal Químicos",
+      "address": "Sector Seguro 20, Quilicura",
+      "total_area": "800.00",
+      "location": "Santiago",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 5,
+    "fields": {
+      "name": "CD Sur Concepción",
+      "address": "Ruta 5 Sur Km 500",
+      "total_area": "3000.00",
+      "location": "Concepción",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 6,
+    "fields": {
+      "name": "Bodega de Retiro Clientes",
+      "address": "Av. Cliente 444, Las Condes",
+      "total_area": "150.00",
+      "location": "Santiago",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 7,
+    "fields": {
+      "name": "Bodega Desactivada Test",
+      "address": "Calle Inactiva 000",
+      "total_area": "100.00",
+      "location": "Santiago",
+      "is_active": false,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 8,
+    "fields": {
+      "name": "Bodega de Retornos",
+      "address": "Centro Logístico, Lampa",
+      "total_area": "400.00",
+      "location": "Santiago",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 9,
+    "fields": {
+      "name": "CD Región de Valparaíso",
+      "address": "Calle Muelle 80",
+      "total_area": "1200.00",
+      "location": "Valparaíso",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 10,
+    "fields": {
+      "name": "Bodega de Madera",
+      "address": "Sector Forestal, Valdivia",
+      "total_area": "2800.00",
+      "location": "Valdivia",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 11,
+    "fields": {
+      "name": "Bodega de Alta Seguridad",
+      "address": "Sector Privado 1",
+      "total_area": "300.00",
+      "location": "Santiago",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 12,
+    "fields": {
+      "name": "Bodega Exterior",
+      "address": "Puerto Exterior s/n",
+      "total_area": "1000.00",
+      "location": "San Antonio",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 13,
+    "fields": {
+      "name": "Punto de Venta Iquique",
+      "address": "Zona Franca 101",
+      "total_area": "200.00",
+      "location": "Iquique",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 14,
+    "fields": {
+      "name": "Bodega Inerte",
+      "address": "Calle Cemento 55",
+      "total_area": "600.00",
+      "location": "Puerto Montt",
+      "is_active": true,
+      "lilis": false
+    }
+  },
+  {
+    "model": "Sells.Warehouse",
+    "pk": 15,
+    "fields": {
+      "name": "Bodega de Prueba LILIS",
+      "address": "Centro de Desarrollo 1",
+      "total_area": "50.00",
+      "location": "Santiago",
+      "is_active": true,
+      "lilis": true
+    }
+  }
+]

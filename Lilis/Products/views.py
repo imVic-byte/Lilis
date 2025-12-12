@@ -11,6 +11,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from Main.mixins import GroupRequiredMixin, StaffRequiredMixin
 from datetime import date, timedelta
+from django.template.defaultfilters import truncatechars
+
 inventory_service = InventarioService()
 category_service = CategoryService()
 product_service = ProductService()
@@ -208,19 +210,55 @@ class ProductListView(GroupRequiredMixin, ListView):
         
 def product_search(request):
     q = request.GET.get('q', '')
+    data = []
     products = product_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
         Q(description__icontains=q)
-    ).values(
-        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
-        )
-    return JsonResponse({'data':list(products)}, safe=False)
+    )
+    for p in products:
+        data.append({
+            'id': p.id,
+            'name': p.name,
+            'sku': p.sku,
+            'deficit': p.deficit,
+            'description': p.description,
+            'category': p.category.name,
+            'is_perishable': p.is_perishable,
+            'is_active': p.is_active,
+            'batch_control': p.batch_control,
+            'serie_control':p.serie_control,
+            'ean_upc':p.ean_upc,
+            'model':p.model,
+            'brand':p.brand,
+            'price':p.price,
+            'iva':p.iva,
+            'min_stock':p.min_stock,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 def product_all(request):
-    products = product_service.model.objects.filter(is_active=True).values(
-        'id', 'name', 'sku', 'deficit', 'description', 'category__name', 'is_perishable', 'category', 'is_active' 
-    )
-    return JsonResponse({'data':list(products)}, safe=False)
+    products = product_service.model.objects.filter(is_active=True)
+    data = []
+    for p in products:
+        data.append({
+            'id': p.id,
+            'name': p.name,
+            'sku': p.sku,
+            'deficit': p.deficit,
+            'description': p.description,
+            'category': p.category.name,
+            'is_perishable': p.is_perishable,
+            'is_active': p.is_active,
+            'batch_control': p.batch_control,
+            'serie_control':p.serie_control,
+            'ean_upc':p.ean_upc,
+            'model':p.model,
+            'brand':p.brand,
+            'price':p.price,
+            'iva':p.iva,
+            'min_stock':p.min_stock,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 class ProductView(GroupRequiredMixin, DetailView):
     model = product_service.model
@@ -350,14 +388,56 @@ def supplier_search(request):
         Q(bussiness_name__icontains=q) |
         Q(fantasy_name__icontains=q) |
         Q(rut__icontains=q)
-    ).values('bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms')
-    return JsonResponse({'data':list(suppliers)}, safe=False)
+    )
+    data = []
+    for s in suppliers:
+        if s.trade_terms:
+            trade_terms = truncatechars(s.trade_terms, 10)
+        else:
+            trade_terms = '—'
+        data.append({
+            'id': s.id,
+            'bussiness_name': s.bussiness_name,
+            'fantasy_name': s.fantasy_name,
+            'rut': s.rut,
+            'email': s.email,
+            'phone': s.phone,
+            'trade_terms': trade_terms,
+            'is_active': s.is_active,
+            'lead_time_days': s.lead_time_days,
+            'address': s.address,
+            'city': s.city,
+            'country': s.country,
+            'payment_terms_days': s.payment_terms_days,
+            'discount_percentage': s.discount_percentage,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 def supplier_all(request):
-    suppliers = supplier_service.model.objects.filter(is_active=True).values(
-        'bussiness_name', 'email', 'fantasy_name', 'id', 'is_active', 'phone', 'rut', 'trade_terms'
-    )
-    return JsonResponse({'data':list(suppliers)}, safe=False)
+    suppliers = supplier_service.model.objects.filter(is_active=True)
+    data = []
+    for s in suppliers:
+        if s.trade_terms:
+            trade_terms = truncatechars(s.trade_terms, 10)
+        else:
+            trade_terms = '—'
+        data.append({
+            'id': s.id,
+            'bussiness_name': s.bussiness_name,
+            'fantasy_name': s.fantasy_name,
+            'rut': s.rut,
+            'email': s.email,
+            'phone': s.phone,
+            'trade_terms': trade_terms,
+            'is_active': s.is_active,
+            'lead_time_days': s.lead_time_days,
+            'address': s.address,
+            'city': s.city,
+            'country': s.country,
+            'payment_terms_days': s.payment_terms_days,
+            'discount_percentage': s.discount_percentage,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 class SupplierDetailView(GroupRequiredMixin, DetailView):
     model = supplier_service.model
@@ -583,19 +663,53 @@ class RawMaterialListView(GroupRequiredMixin, ListView):
 
 def raw_material_search(request):
     q = request.GET.get('q', '')
+    data = []
     raw_materials = raw_material_service.model.objects.filter( is_active=True ).filter(
         Q(name__icontains=q) |
         Q(description__icontains=q)
-    ).values(
-        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
-        )
-    return JsonResponse({'data':list(raw_materials)}, safe=False)
+    )
+    for rm in raw_materials:
+        data.append({
+            'id': rm.id,
+            'sku': rm.sku,
+            'name': rm.name,
+            'description': rm.description,
+            'category': rm.category.name,
+            'is_perishable': rm.is_perishable,
+            'is_active': rm.is_active,
+            'batch_control': rm.batch_control,
+            'serie_control':rm.serie_control,
+            'ean_upc':rm.ean_upc,
+            'model':rm.model,
+            'brand':rm.brand,
+            'price':rm.price,
+            'iva':rm.iva,
+            'min_stock':rm.min_stock,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 def raw_material_all(request):
-    raw_materials = raw_material_service.model.objects.filter(is_active=True).values(
-        'id', 'name', 'description','supplier', 'category__name', 'is_perishable', 'category', 'is_active' 
-    )
-    return JsonResponse({'data':list(raw_materials)}, safe=False)
+    raw_materials = raw_material_service.model.objects.filter(is_active=True)
+    data = []
+    for rm in raw_materials:
+        data.append({
+            'id': rm.id,
+            'sku': rm.sku,
+            'name': rm.name,
+            'description': rm.description,
+            'category': rm.category.name,
+            'is_perishable': rm.is_perishable,
+            'is_active': rm.is_active,
+            'batch_control': rm.batch_control,
+            'serie_control':rm.serie_control,
+            'ean_upc':rm.ean_upc,
+            'model':rm.model,
+            'brand':rm.brand,
+            'price':rm.price,
+            'iva':rm.iva,
+            'min_stock':rm.min_stock,
+        })
+    return JsonResponse({'data':data}, safe=False)
 
 class RawMaterialView(GroupRequiredMixin, DetailView):
     model = raw_material_service.model
@@ -780,7 +894,6 @@ class InventoryListView(GroupRequiredMixin, ListView):
         allowed_sort_fields = ['materia_prima__name','materia_prima__sku', 'producto__name', 'producto__sku', 'stock_total']
         sort_by = self.request.GET.get('sort_by', 'stock_total')
         order = self.request.GET.get('order', 'desc')
-
         if sort_by not in allowed_sort_fields:
             sort_by = 'stock_total'
         if order not in ['asc', 'desc']:
@@ -822,3 +935,9 @@ class InventoryListView(GroupRequiredMixin, ListView):
             return per_page
         else:
             return default_per_page
+
+def editar_inventario(request):
+    inventario = inventory_service.model.objects.get(pk=request.GET.get('id'))
+    stock = request.GET.get('stock')
+    inventory_service.editar_stock(inventario, stock)
+    return redirect('inventory_list')

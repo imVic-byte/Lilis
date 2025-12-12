@@ -13,7 +13,7 @@ from Main.mixins import StaffRequiredMixin, GroupRequiredMixin
 
 from API import serializers
 
-API_ENDPOINT = 'http://127.0.0.1:8000/api/lilis/'
+API_ENDPOINT = 'http://3.228.61.121/api/lilis/'
 
 def health(request):
     return JsonResponse({'status': 'ok'})
