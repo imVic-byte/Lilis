@@ -15,6 +15,7 @@ from Main.mixins import GroupRequiredMixin
 import requests
 from django.core.serializers import serialize
 from django.db.models.functions import Coalesce
+from django.template.defaultfilters import truncatechars
 
 client_service = ClientService()
 warehouse_service = WarehouseService()
@@ -184,12 +185,56 @@ def client_search(request):
         Q(fantasy_name__icontains=q) |
         Q(bussiness_name__icontains=q) |
         Q(rut__icontains=q)
-    ).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_active')
-    return JsonResponse({'data': list(clients)}, safe=False)
+    )
+    data = []
+    for s in clients:
+        if s.trade_terms:
+            trade_terms = truncatechars(s.trade_terms, 40)
+        else:
+            trade_terms = "-"
+        data.append({
+            'id': s.id,
+            'bussiness_name': s.bussiness_name,
+            'fantasy_name': s.fantasy_name,
+            'rut': s.rut,
+            'email': s.email,
+            'phone': s.phone,
+            'trade_terms': trade_terms,
+            'is_active': s.is_active,
+            'lead_time_days': s.lead_time_days,
+            'address': s.address,
+            'city': s.city,
+            'country': s.country,
+            'payment_terms_days': s.payment_terms_days,
+            'discount_percentage': s.discount_percentage,
+        })
+    return JsonResponse({'data': data}, safe=False)
 
 def client_all(request):
-    clients = client_service.model.objects.filter(is_active=True).values('id', 'fantasy_name', 'bussiness_name', 'rut', 'email', 'phone', 'is_active')
-    return JsonResponse({'data': list(clients)}, safe=False)
+    clients = client_service.model.objects.filter(is_active=True)
+    data = []
+    for s in clients:
+        if s.trade_terms:
+            trade_terms = truncatechars(s.trade_terms, 40)
+        else:
+            trade_terms = "-"
+        data.append({
+            'id': s.id,
+            'bussiness_name': s.bussiness_name,
+            'fantasy_name': s.fantasy_name,
+            'rut': s.rut,
+            'email': s.email,
+            'phone': s.phone,
+            'trade_terms': trade_terms,
+            'is_active': s.is_active,
+            'lead_time_days': s.lead_time_days,
+            'address': s.address,
+            'city': s.city,
+            'country': s.country,
+            'payment_terms_days': s.payment_terms_days,
+            'discount_percentage': s.discount_percentage,
+        })
+    return JsonResponse({'data': data}, safe=False)
 
 class ClientDetailView(GroupRequiredMixin, DetailView):
     required_group =(

@@ -182,7 +182,13 @@
                         <td>{{ p.rut|default:"-" }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
-                        <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
+                        <td>
+                            {% if p.trade_terms %}
+                                {{ p.trade_terms|truncatechars:40|default:"-" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>
                             <a class="btn btn-warning btn-sm" href="{% url 'client_view' p.id %}">Ver</a>
                             <a href="{% url 'client_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
@@ -442,7 +448,7 @@
                                 <strong>Telefono: </strong> ${item.phone || '—'}
                             </li>
                             <li class="list-group-item">
-                                <strong>Terminos: </strong>${truncatedTerms}
+                                <strong>Terminos: </strong>${item.trade_terms || '—'}
                             </li>
                             <li class="list-group-item">
                                 <strong>Lead Time: </strong>${item.lead_time_days || '—'} días

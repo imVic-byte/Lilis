@@ -86,7 +86,12 @@
                             <strong>Telefono: </strong> {{ p.phone|default:"-" }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Terminos: </strong>{{ p.trade_terms|truncatechars:40|default:"-" }}
+                            <strong>Terminos: </strong>
+                            {% if p.trade_terms %}
+                                {{ p.trade_terms|truncatechars:40 }}
+                            {% else %}
+                                -
+                            {% endif %}
                         </li>
                         <li class="list-group-item">
                             <strong>Lead Time: </strong>{{ p.lead_time_days|default:"-" }} días
@@ -181,7 +186,13 @@
                         <td>{{ p.rut|default:"-" }}</td>
                         <td>{{ p.email|default:"-" }}</td>
                         <td>{{ p.phone|default:"-" }}</td>
-                        <td>{{ p.trade_terms|truncatechars:40|default:"-" }}</td>
+                        <td>
+                            {% if p.trade_terms %}
+                                {{ p.trade_terms|truncatechars:40 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>
                             <a class="btn btn-warning btn-sm" href="{% url 'supplier_view' p.id %}">Ver</a>
                             <a href="{% url 'supplier_update' p.id %}" class="btn btn-primary btn-sm">Editar</a>
@@ -369,7 +380,7 @@
                                 <strong>Telefono: </strong> ${item.phone || '—'}
                             </li>
                             <li class="list-group-item">
-                                <strong>Terminos: </strong>${truncatedTerms}
+                                <strong>Terminos: </strong>${item.trade_terms || '—'}
                             </li>
                             <li class="list-group-item">
                                 <strong>Lead Time: </strong>${item.lead_time_days || '—'} días
@@ -406,7 +417,7 @@
                 <td>${item.rut || '—'}</td>
                 <td>${item.email || '—'}</td>
                 <td>${item.phone || '—'}</td>
-                <td>${truncatedTerms}</td>
+                <td>${item.trade_terms || '—'}</td>
                 <td>
                     <a class="btn btn-warning btn-sm" href="${VIEW_URL.replace('__ID__', item.id)}">Ver</a>
                     <a href="${UPDATE_URL.replace('__ID__', item.id)}" class="btn btn-primary btn-sm">Editar</a>
